@@ -2016,7 +2016,8 @@ observation locations or arbitrary points.
       \item{\code{PtE2}}{Optional second point set for cross-covariance.}
       \item{\code{sigma_source}}{Optional source-vertex anchoring variances.}
       \item{\code{normalized}}{Whether point distances are normalized to \verb{[0, 1]}.}
-      \item{\code{cpp}}{Use the C++ dendritic fast path when available.}
+      \item{\code{cpp}}{Use C++ numeric setup and the C++ in-tree covariance fill
+when available; out-trees use the mirrored fast R fill.}
     }
     \if{html}{\out{</div>}}
   }

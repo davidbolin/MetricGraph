@@ -54,29 +54,30 @@ graph_reversed <- columbia_make_graph(component, reversed = TRUE)
 # K1/K2: profile-likelihood evaluation with the K1/K2 directional weights on
 # the original (downstream-flowing) graph. continuity: K1 weights on the
 # reversed graph, i.e. timing the reversed-direction continuity condition.
-# K2_covariance: direct dense-covariance evaluation instead of the profile
-# likelihood, capped at maximum_covariance_n observations.
-methods <- list(
-  K1 = list(
-    graph = "original", weights = "K1",
-    use_dense_covariance = FALSE, maximum_n = Inf
-  ),
-  K2 = list(
-    graph = "original", weights = "K2",
-    use_dense_covariance = FALSE, maximum_n = Inf
-  ),
-  continuity = list(
-    graph = "reversed", weights = "K1",
-    use_dense_covariance = FALSE, maximum_n = Inf
-  ),
-  K2_covariance = list(
-    graph = "original", weights = "K2",
-    use_dense_covariance = TRUE, maximum_n = maximum_covariance_n
+# Each family also gets a _covariance counterpart built from the same
+# (graph, weights) pair, timing direct dense-covariance evaluation instead of
+# the profile likelihood, capped at maximum_covariance_n observations.
+base_configs <- list(
+  K1         = list(graph = "original", weights = "K1"),
+  K2         = list(graph = "original", weights = "K2"),
+  continuity = list(graph = "reversed", weights = "K1")
+)
+methods <- c(
+  lapply(base_configs, function(config) {
+    c(config, use_dense_covariance = FALSE, maximum_n = Inf)
+  }),
+  stats::setNames(
+    lapply(base_configs, function(config) {
+      c(config, use_dense_covariance = TRUE, maximum_n = maximum_covariance_n)
+    }),
+    paste0(names(base_configs), "_covariance")
   )
 )
 # Plot color per method, derived from `methods` so a renamed or added method
 # can't silently drop off the plots in plot_stage() below.
-method_palette <- c("black", "steelblue", "darkgreen", "orange")
+method_palette <- c(
+  "black", "steelblue", "darkgreen", "orange", "purple", "deeppink"
+)
 if (length(method_palette) < length(methods)) {
   stop(
     "method_palette needs at least as many colors as methods; got ",
@@ -229,6 +230,9 @@ for (n_obs in n_obs_values) {
   })
 
   message("n_obs = ", n_obs)
+  # Derived from the actual names so the log columns stay aligned regardless
+  # of which methods are configured above.
+  method_name_width <- max(nchar(names(methods)))
   for (method_name in names(methods)) {
     method <- methods[[method_name]]
     if (n_obs > method$maximum_n) {
@@ -250,8 +254,9 @@ for (n_obs in n_obs_values) {
       row.names = NULL
     )
     message(
-      sprintf("  %-13s precompute %.4fs, evaluate %.4fs",
-              method_name, timing[["precompute"]], timing[["evaluate"]])
+      sprintf("  %-*s precompute %.4fs, evaluate %.4fs",
+              method_name_width, method_name,
+              timing[["precompute"]], timing[["evaluate"]])
     )
   }
 }

@@ -337,9 +337,10 @@ precompute_directional_ou_covariance <- function(graph, data_name = NULL,
 #' @param reml If `TRUE`, return the restricted (REML) log-likelihood
 #'  instead of the profile log-likelihood.
 #' @param cpp If `TRUE`, use [directional_ou_covariance_from_setup_cpp()]
-#'  (the C++-backed dendritic fast path; falls back to R automatically on
-#'  non-dendritic graphs) instead of [directional_ou_covariance_from_setup()]
-#'  to build `Sigma`; `FALSE` always uses the pure-R path. Same
+#'  (the C++ in-tree covariance fill, with the mirrored fast R fill for
+#'  out-trees and the generic R fallback for irregular trees) instead of
+#'  [directional_ou_covariance_from_setup()] to build `Sigma`; `FALSE` always
+#'  uses the pure-R path. Same
 #'  spirit as `likelihood_alpha1_directional_profile_precompute()`'s own
 #'  `cpp` argument (R/graph_likelihoods_v2.R), though that one is tri-state
 #'  (`NULL`/not-`NULL`) while this one is a plain logical.

@@ -5307,7 +5307,8 @@ coordinates!"))
      #' @param PtE2 Optional second point set for cross-covariance.
      #' @param sigma_source Optional source-vertex anchoring variances.
      #' @param normalized Whether point distances are normalized to `[0, 1]`.
-     #' @param cpp Use the C++ dendritic fast path when available.
+     #' @param cpp Use C++ numeric setup and the C++ in-tree covariance fill
+     #'  when available; out-trees use the mirrored fast R fill.
      #' @return A dense covariance matrix.
      compute_directional_covariance = function(kappa, tau, PtE = NULL,
                                                PtE2 = NULL,

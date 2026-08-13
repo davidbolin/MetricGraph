@@ -93,9 +93,10 @@
 #'  `which(graph$get_degrees("indegree") == 0)`.
 #' @param normalized If `TRUE` (default), `distance_on_edge` in `PtE`/`PtE2`
 #'  is in `[0, 1]`; if `FALSE`, distances are absolute.
-#' @param cpp If `TRUE` (default), use the C++ numeric setup and dendritic
-#'  covariance fill. Non-dendritic graphs fall back to the R covariance fill.
-#'  Set to `FALSE` to use the pure-R reference implementation.
+#' @param cpp If `TRUE` (default), use the C++ numeric setup and the C++
+#'  covariance fill for in-trees. Out-trees use the mirrored fast R covariance
+#'  fill; irregular trees use the generic R fallback. Set to `FALSE` to use
+#'  the pure-R implementation throughout.
 #'
 #' @return A dense `matrix` with `nrow(PtE)` rows and `nrow(PtE2)` columns.
 #' @seealso [directional_ou_variance()] for the diagonal only.
@@ -203,9 +204,8 @@ directional_ou_covariance_from_setup <- function(setup, PtE, PtE2 = NULL,
 # through the O(n^2) C++ kernel
 # (directional_ou_covariance_dendritic_cpp(), src/directional_ou_covariance.cpp),
 # and falls back to the plain-R directional_ou_covariance_from_setup() for
-# non-dendritic graphs -- same dispatch shape as directional_log_transfer()'s
-# own is_dendritic check, just one level up (whole dense-matrix fill instead
-# of a single pair).
+# non-dendritic graphs. Out-trees still use their Euler/parent-pointer fast
+# path inside the R fill; only irregular trees reach the generic graph walks.
 #' @noRd
 directional_ou_covariance_from_setup_cpp <- function(setup, PtE, PtE2 = NULL,
                                                        normalized = TRUE) {
@@ -389,8 +389,10 @@ count_undirected_components <- function(E, nE, nV) {
 #'  vertex weight functions set, as in [directional_ou_covariance()].
 #' @return A list with components `graph`, `E`, `nE`, `nV`, `V_indegree`,
 #'  `V_outdegree`, `topo_order`, `out_by_edge`, `in_by_edge`, `is_dendritic`,
-#'  `in_edges_by_vertex`, `out_edges_by_vertex`, `enter`, `exit` (the last
-#'  two `NULL` unless `is_dendritic`).
+#'  `tree_orientation` (`"in"`/`"out"`/`"irregular"`),
+#'  `in_edges_by_vertex`, `out_edges_by_vertex`, `enter`, `exit`, and `depth`
+#'  (the last three `NULL` for irregular trees), plus `parent_edge` (`NULL`
+#'  unless `tree_orientation == "out"`).
 #' @noRd
 directional_ou_setup_structure <- function(graph) {
   if (is.null(graph$DirectionalWeightFunction_in)) {
@@ -427,6 +429,14 @@ directional_ou_setup_structure <- function(graph) {
   in_by_edge <- weight_vectors$in_by_edge
 
   is_dendritic <- all(V_outdegree <= 1)
+  is_out_tree <- !is_dendritic && all(V_indegree <= 1)
+  tree_orientation <- if (is_dendritic) {
+    "in"
+  } else if (is_out_tree) {
+    "out"
+  } else {
+    "irregular"
+  }
 
   # Vertex -> incident-edge lookups, replacing which(E[,2]==v)/which(E[,1]==v)
   # scans (each O(nE)) with an O(1) list index. split() keys its result by
@@ -437,7 +447,10 @@ directional_ou_setup_structure <- function(graph) {
   in_edges_by_vertex <- split(seq_len(nE), E[, 2])
   out_edges_by_vertex <- split(seq_len(nE), E[, 1])
 
-  ancestor_labels <- directional_ou_ancestor_labels(E, V_outdegree, in_edges_by_vertex, is_dendritic)
+  ancestor_labels <- directional_ou_ancestor_labels(
+    E, V_indegree, V_outdegree, in_edges_by_vertex,
+    out_edges_by_vertex, tree_orientation
+  )
 
   list(
     graph = graph,
@@ -450,42 +463,60 @@ directional_ou_setup_structure <- function(graph) {
     out_by_edge = out_by_edge,
     in_by_edge = in_by_edge,
     is_dendritic = is_dendritic,
+    tree_orientation = tree_orientation,
     in_edges_by_vertex = in_edges_by_vertex,
     out_edges_by_vertex = out_edges_by_vertex,
     enter = ancestor_labels$enter,
-    exit = ancestor_labels$exit
+    exit = ancestor_labels$exit,
+    depth = ancestor_labels$depth,
+    parent_edge = ancestor_labels$parent_edge
   )
 }
 
-#' Euler-tour interval labels for O(1) ancestor tests (dendritic graphs only)
+#' Euler-tour interval labels for O(1) ancestor tests on oriented trees
 #'
-#' On a dendritic graph (outdegree <= 1 everywhere) every edge has at most
-#' one downstream neighbour -- the out-edge at its head vertex -- so the
-#' edges form a tree/forest rooted at the outlet(s) (edges whose head vertex
-#' has outdegree 0). One DFS from each root, numbering entry/exit events with
-#' a running counter (classic Euler tour numbering), assigns `enter[e]`/
-#' `exit[e]` such that `to_edge` is reachable forward from `from_edge` (i.e.
-#' `from_edge` is upstream of or equal to `to_edge`) iff
-#' `enter[to_edge] <= enter[from_edge] && exit[from_edge] <= exit[to_edge]`
-#' -- a standard ancestor-via-interval-containment result. Returns
-#' `list(enter = NULL, exit = NULL)` when `!is_dendritic`, since parent() is
-#' not uniquely defined off the dendritic path.
+#' In-trees are rooted at outlets and walked upstream; out-trees are rooted
+#' at sources and walked downstream. The resulting interval-containment test
+#' is used by [directional_edge_downstream_of()]. Irregularly oriented trees
+#' return `NULL` labels and retain the generic graph-walk fallback.
 #'
 #' @param E The graph's edge matrix (columns `(tail, head)`).
+#' @param V_indegree Indegree of each vertex.
 #' @param V_outdegree Outdegree of each vertex.
 #' @param in_edges_by_vertex List (as produced by `split()`, keyed by
 #'  `as.character(vertex)`) of in-edges at each vertex.
-#' @param is_dendritic `TRUE` if every vertex has outdegree `<= 1`.
-#' @return `list(enter, exit)`, each a length-`nrow(E)` integer vector, or
-#'  both `NULL` if `!is_dendritic`.
+#' @param out_edges_by_vertex Corresponding list of out-edges.
+#' @param tree_orientation One of `"in"`, `"out"`, or `"irregular"`.
+#' @return `list(enter, exit, depth, parent_edge)`. `parent_edge` is only
+#'  populated for out-trees.
 #' @noRd
-directional_ou_ancestor_labels <- function(E, V_outdegree, in_edges_by_vertex, is_dendritic) {
-  if (!is_dendritic) return(list(enter = NULL, exit = NULL))
+directional_ou_ancestor_labels <- function(E, V_indegree, V_outdegree,
+                                           in_edges_by_vertex,
+                                           out_edges_by_vertex,
+                                           tree_orientation) {
+  if (!(tree_orientation %in% c("in", "out"))) {
+    return(list(
+      enter = NULL, exit = NULL, depth = NULL, parent_edge = NULL
+    ))
+  }
+
   nE <- nrow(E)
   enter <- integer(nE)
   exit <- integer(nE)
+  depth <- integer(nE)
   counter <- 0L
-  roots <- which(V_outdegree[E[, 2]] == 0)
+
+  if (tree_orientation == "in") {
+    roots <- which(V_outdegree[E[, 2]] == 0)
+    children_of <- function(edge) {
+      in_edges_by_vertex[[as.character(E[edge, 1])]]
+    }
+  } else {
+    roots <- which(V_indegree[E[, 1]] == 0)
+    children_of <- function(edge) {
+      out_edges_by_vertex[[as.character(E[edge, 2])]]
+    }
+  }
 
   # Iterative, explicit-stack DFS. A recursive visit() (one R call per edge
   # along the deepest upstream chain) can exhaust the native C stack --an
@@ -499,31 +530,49 @@ directional_ou_ancestor_labels <- function(E, V_outdegree, in_edges_by_vertex, i
   # next sibling is popped, just as nested recursive calls would.
   stack_edge <- integer(2L * nE)
   stack_is_enter <- logical(2L * nE)
+  stack_depth <- integer(2L * nE)
   sp <- 0L
-  push <- function(edge, is_enter) {
+  push <- function(edge, is_enter, edge_depth) {
     sp <<- sp + 1L
     stack_edge[sp] <<- edge
     stack_is_enter[sp] <<- is_enter
+    stack_depth[sp] <<- edge_depth
   }
 
   for (root in roots) {
-    push(root, TRUE)
+    push(root, TRUE, 0L)
     while (sp > 0L) {
       edge <- stack_edge[sp]
       is_enter <- stack_is_enter[sp]
+      edge_depth <- stack_depth[sp]
       sp <- sp - 1L
       if (is_enter) {
         counter <- counter + 1L
         enter[edge] <- counter
-        push(edge, FALSE)
-        for (child in rev(in_edges_by_vertex[[as.character(E[edge, 1])]])) push(child, TRUE)
+        depth[edge] <- edge_depth
+        push(edge, FALSE, edge_depth)
+        for (child in rev(children_of(edge))) {
+          push(child, TRUE, edge_depth + 1L)
+        }
       } else {
         counter <- counter + 1L
         exit[edge] <- counter
       }
     }
   }
-  list(enter = enter, exit = exit)
+
+  parent_edge <- NULL
+  if (tree_orientation == "out") {
+    parent_edge <- rep(NA_integer_, nE)
+    for (edge in seq_len(nE)) {
+      parent <- in_edges_by_vertex[[as.character(E[edge, 1])]]
+      if (!is.null(parent)) parent_edge[edge] <- parent[1]
+    }
+  }
+
+  list(
+    enter = enter, exit = exit, depth = depth, parent_edge = parent_edge
+  )
 }
 
 #' Resolve `sigma_source` into a flat, per-vertex anchoring-variance vector
@@ -632,31 +681,47 @@ directional_ou_setup_numeric <- function(structure, kappa, tau, sigma_source) {
     var_head[e] <- c2 * var_tail[e] + (1 - c2) * sigma_stationary
   }
 
-  # Root-normalised log-transfer accumulators, built upstream from the
-  # outlet(s): logG_tail[e]/signG_tail[e] give log|A(tail(e), outlet)| and
-  # its sign, logG_head[e]/signG_head[e] the same for head(e). Processed in
-  # reverse topological order so the downstream out-edge g used at each step
-  # is already done.
+  # Root-normalised log-transfer accumulators. In-trees are normalised toward
+  # their outlet and processed in reverse topological order. Out-trees are
+  # normalised from their source and processed in forward topological order.
+  # The latter is the orientation produced by reversing a dendritic river
+  # graph for the continuity stand-in.
   logG_head <- numeric(nE)
   logG_tail <- numeric(nE)
   signG_head <- numeric(nE)
   signG_tail <- numeric(nE)
-  for (e in rev(topo_order)) {
-    v <- E[e, 2]
-    if (V_outdegree[v] == 0) {
-      logG_head[e] <- 0
-      signG_head[e] <- 1
-    } else {
-      # outdegree(v) > 1 only occurs off the dendritic path; logG/signG are
-      # then only well-defined per-out-edge, so this picks the first
-      # out-edge and downstream code guards on is_dendritic before trusting it.
-      g <- out_edges_by_vertex[[as.character(v)]][1]  # replaces which(E[,1]==v)[1]; V_outdegree[v]>0 guarantees a non-NULL key here
-      beta_ge <- -in_by_edge[e] / out_by_edge[g]  # beta_v(g,e): g out-edge, e in-edge at v
-      logG_head[e] <- logG_tail[g] + log(abs(beta_ge))
-      signG_head[e] <- signG_tail[g] * sign(beta_ge)
+  if (identical(structure$tree_orientation, "out")) {
+    for (e in topo_order) {
+      v <- E[e, 1]
+      if (V_indegree[v] == 0) {
+        logG_tail[e] <- 0
+        signG_tail[e] <- 1
+      } else {
+        f <- in_edges_by_vertex[[as.character(v)]][1]
+        beta_ef <- -in_by_edge[f] / out_by_edge[e]
+        logG_tail[e] <- logG_head[f] + log(abs(beta_ef))
+        signG_tail[e] <- signG_head[f] * sign(beta_ef)
+      }
+      logG_head[e] <- logG_tail[e] - kappa * edge_lengths[e]
+      signG_head[e] <- signG_tail[e]
     }
-    logG_tail[e] <- logG_head[e] - kappa * edge_lengths[e]
-    signG_tail[e] <- signG_head[e]
+  } else {
+    for (e in rev(topo_order)) {
+      v <- E[e, 2]
+      if (V_outdegree[v] == 0) {
+        logG_head[e] <- 0
+        signG_head[e] <- 1
+      } else {
+        # Off the in-tree path the first out-edge is arbitrary, so irregular
+        # trees never consume these accumulators.
+        g <- out_edges_by_vertex[[as.character(v)]][1]
+        beta_ge <- -in_by_edge[e] / out_by_edge[g]
+        logG_head[e] <- logG_tail[g] + log(abs(beta_ge))
+        signG_head[e] <- signG_tail[g] * sign(beta_ge)
+      }
+      logG_tail[e] <- logG_head[e] - kappa * edge_lengths[e]
+      signG_tail[e] <- signG_head[e]
+    }
   }
 
   list(
@@ -690,9 +755,8 @@ directional_ou_setup_numeric <- function(structure, kappa, tau, sigma_source) {
 #' @return A list with components `graph`, `kappa`, `tau`, `sigma_stationary`,
 #'  `V_indegree`, `V_outdegree`, `topo_order`, `out_by_edge`, `in_by_edge`,
 #'  `var_tail`, `var_head`, `logG_head`, `logG_tail`, `signG_head`,
-#'  `signG_tail`, `is_dendritic`, `enter`, `exit` (the last two `NULL`
-#'  unless `is_dendritic`; Euler-tour interval labels used by
-#'  [directional_edge_downstream_of()] for O(1) forward-reachability tests).
+#'  `signG_tail`, `is_dendritic`, `tree_orientation`, `enter`, `exit`,
+#'  `depth`, and `parent_edge`.
 #' @noRd
 # Compose the structural and numeric setup pieces in one place. Public
 # covariance calls and cached likelihood calls use the same object shape.
@@ -715,8 +779,11 @@ directional_ou_compose_setup <- function(structure, numeric_part) {
     signG_head = numeric_part$signG_head,
     signG_tail = numeric_part$signG_tail,
     is_dendritic = structure$is_dendritic,
+    tree_orientation = structure$tree_orientation,
     enter = structure$enter,
     exit = structure$exit,
+    depth = structure$depth,
+    parent_edge = structure$parent_edge,
     in_edges_by_vertex = structure$in_edges_by_vertex,
     out_edges_by_vertex = structure$out_edges_by_vertex
   )
@@ -739,7 +806,8 @@ directional_ou_skeleton <- function(structure) {
     V_outdegree = structure$V_outdegree,
     out_by_edge = structure$out_by_edge,
     in_by_edge = structure$in_by_edge,
-    topo_order = structure$topo_order
+    topo_order = structure$topo_order,
+    tree_orientation = structure$tree_orientation
   )
 }
 
@@ -829,7 +897,11 @@ directional_lca <- function(setup, point_s, point_t) {
 
   # Case 3: neither contains the other -- non-dendritic diffluence case.
   if (!setup$is_dendritic) {
-    lca <- directional_lca_edge_nondendritic(setup, point_s[1], point_t[1])
+    lca <- if (identical(setup$tree_orientation, "out")) {
+      directional_lca_edge_out_tree(setup, point_s[1], point_t[1])
+    } else {
+      directional_lca_edge_nondendritic(setup, point_s[1], point_t[1])
+    }
     if (!is.null(lca)) {
       if (!is.null(lca$root)) {
         # The two branches share a common source vertex (indegree 0) but no
@@ -883,15 +955,18 @@ directional_edge_reachable_forward <- function(E, out_edges_by_vertex, from_edge
 }
 
 # Is to_edge reachable forward from from_edge (i.e. from_edge is upstream of
-# or equal to to_edge)? O(1) via Euler-tour interval containment when the
-# graph is dendritic (setup$enter/setup$exit non-NULL, from
-# directional_ou_ancestor_labels()); otherwise falls back to the explicit
-# BFS in directional_edge_reachable_forward() (needed anyway for case 3's
-# non-dendritic path).
+# or equal to to_edge)? O(1) via orientation-aware Euler interval containment
+# for in/out trees; otherwise use the explicit BFS fallback.
 #' @noRd
 directional_edge_downstream_of <- function(setup, from_edge, to_edge) {
   if (!is.null(setup$enter)) {
-    setup$enter[to_edge] <= setup$enter[from_edge] && setup$exit[from_edge] <= setup$exit[to_edge]
+    if (identical(setup$tree_orientation, "out")) {
+      setup$enter[from_edge] <= setup$enter[to_edge] &&
+        setup$exit[to_edge] <= setup$exit[from_edge]
+    } else {
+      setup$enter[to_edge] <= setup$enter[from_edge] &&
+        setup$exit[from_edge] <= setup$exit[to_edge]
+    }
   } else {
     directional_edge_reachable_forward(setup$graph$E, setup$out_edges_by_vertex, from_edge, to_edge)
   }
@@ -960,6 +1035,49 @@ directional_lca_edge_nondendritic <- function(setup, edge_s, edge_t) {
   }
 
   NULL
+}
+
+#' Last common ancestor edge on an out-tree
+#'
+#' Uses precomputed parent pointers and depths to align two edges, then climbs
+#' them in lockstep until they meet. The caller has already ruled out either
+#' edge being an ancestor of the other, so a match is the third edge above a
+#' genuine diffluence.
+#'
+#' @param setup A setup list from [directional_ou_setup()] with
+#'  `tree_orientation == "out"`.
+#' @param edge_s,edge_t Edge numbers.
+#' @return `list(edge, root)` for an edge-anchorable LCA, or `NULL` for
+#'  different components. A branching-source-only LCA remains unsupported.
+#' @noRd
+directional_lca_edge_out_tree <- function(setup, edge_s, edge_t) {
+  depth <- setup$depth
+  parent_edge <- setup$parent_edge
+  E <- setup$graph$E
+
+  a <- edge_s
+  b <- edge_t
+  while (depth[a] > depth[b]) a <- parent_edge[a]
+  while (depth[b] > depth[a]) b <- parent_edge[b]
+
+  while (a != b) {
+    if (depth[a] == 0L) {
+      if (E[a, 1] == E[b, 1]) {
+        stop(sprintf(
+          paste0(
+            "directional_lca(): LCA at a branching source vertex ",
+            "(indegree 0, outdegree > 1) is not yet supported -- vertex %d"
+          ),
+          E[a, 1]
+        ))
+      }
+      return(NULL)
+    }
+    a <- parent_edge[a]
+    b <- parent_edge[b]
+  }
+
+  list(edge = a, root = NULL)
 }
 
 #' Marginal variance at arbitrary points (vectorized)
@@ -1053,13 +1171,12 @@ directional_transfer_walk <- function(setup, from, to) {
   list(sign = sign_acc, log_abs = log_abs)
 }
 
-#' Log-transfer factor A(from, to) -- fast dendritic path or explicit walk
+#' Log-transfer factor A(from, to) -- fast oriented-tree path or explicit walk
 #'
 #' Dispatches to the O(1) root-normalised accumulators (`logG_tail`/
-#' `signG_tail` from [directional_ou_setup()]) when the graph is dendritic
-#' (every vertex has outdegree <= 1, so `A(x,y) = A(x,outlet)/A(y,outlet)`
-#' is well-defined without picking an out-edge at any branch); otherwise
-#' falls back to [directional_transfer_walk()].
+#' `signG_tail` from [directional_ou_setup()]) for in/out trees. In-trees
+#' use outlet-normalised ratios; out-trees use source-normalised ratios in
+#' the opposite subtraction order. Irregular trees retain the explicit walk.
 #'
 #' @param setup A setup list from [directional_ou_setup()].
 #' @param from,to Length-2 `c(edge_number, absolute_distance)` vectors, with
@@ -1068,6 +1185,15 @@ directional_transfer_walk <- function(setup, from, to) {
 #' @return `list(sign, log_abs)` with `sign * exp(log_abs) == A(from, to)`.
 #' @noRd
 directional_log_transfer <- function(setup, from, to) {
+  if (identical(setup$tree_orientation, "out")) {
+    logG_at <- function(point) {
+      setup$logG_tail[point[1]] - setup$kappa * point[2]
+    }
+    log_abs <- logG_at(to) - logG_at(from)
+    sign_val <- setup$signG_tail[from[1]] * setup$signG_tail[to[1]]
+    return(list(sign = sign_val, log_abs = log_abs))
+  }
+
   if (!setup$is_dendritic) {
     return(directional_transfer_walk(setup, from, to))
   }

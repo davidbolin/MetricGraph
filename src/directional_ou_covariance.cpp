@@ -34,6 +34,7 @@ List directional_ou_setup_numeric_cpp(List skeleton, double kappa, double tau,
   NumericVector out_by_edge = as<NumericVector>(skeleton["out_by_edge"]);
   NumericVector in_by_edge = as<NumericVector>(skeleton["in_by_edge"]);
   IntegerVector topo_order = as<IntegerVector>(skeleton["topo_order"]);
+  std::string tree_orientation = as<std::string>(skeleton["tree_orientation"]);
 
   int nV = V_indegree.size();
 
@@ -73,24 +74,44 @@ List directional_ou_setup_numeric_cpp(List skeleton, double kappa, double tau,
     var_head[e] = c2 * var_tail[e] + (1.0 - c2) * sigma_stationary;
   }
 
-  // Second pass, reverse topo_order: root-normalised log-transfer
-  // accumulators logG_head/logG_tail/signG_head/signG_tail.
+  // Second pass: root-normalised log-transfer accumulators. In-trees are
+  // normalised toward their outlet and processed in reverse topological
+  // order. Out-trees are normalised from their source and processed forward.
   NumericVector logG_head(nE), logG_tail(nE), signG_head(nE), signG_tail(nE);
-  for (int idx = nE - 1; idx >= 0; --idx) {
-    int e = topo_order[idx] - 1;  // 0-indexed edge
-    int v = E(e, 1) - 1;          // head vertex of e, 0-indexed
-    if (V_outdegree[v] == 0) {
-      logG_head[e] = 0.0;
-      signG_head[e] = 1.0;
-    } else {
-      int g = out_edges_by_vertex[v][0];  // first out-edge at v, 0-indexed
-      double beta_ge = -in_by_edge[e] / out_by_edge[g];
-      logG_head[e] = logG_tail[g] + std::log(std::fabs(beta_ge));
-      double sign_beta_ge = (beta_ge > 0.0) - (beta_ge < 0.0);
-      signG_head[e] = signG_tail[g] * sign_beta_ge;
+  if (tree_orientation == "out") {
+    for (int idx = 0; idx < nE; ++idx) {
+      int e = topo_order[idx] - 1;  // 0-indexed edge
+      int v = E(e, 0) - 1;          // tail vertex of e, 0-indexed
+      if (V_indegree[v] == 0) {
+        logG_tail[e] = 0.0;
+        signG_tail[e] = 1.0;
+      } else {
+        int f = in_edges_by_vertex[v][0];  // unique parent under indegree <= 1
+        double beta_ef = -in_by_edge[f] / out_by_edge[e];
+        logG_tail[e] = logG_head[f] + std::log(std::fabs(beta_ef));
+        double sign_beta_ef = (beta_ef > 0.0) - (beta_ef < 0.0);
+        signG_tail[e] = signG_head[f] * sign_beta_ef;
+      }
+      logG_head[e] = logG_tail[e] - kappa * edge_lengths[e];
+      signG_head[e] = signG_tail[e];
     }
-    logG_tail[e] = logG_head[e] - kappa * edge_lengths[e];
-    signG_tail[e] = signG_head[e];
+  } else {
+    for (int idx = nE - 1; idx >= 0; --idx) {
+      int e = topo_order[idx] - 1;  // 0-indexed edge
+      int v = E(e, 1) - 1;          // head vertex of e, 0-indexed
+      if (V_outdegree[v] == 0) {
+        logG_head[e] = 0.0;
+        signG_head[e] = 1.0;
+      } else {
+        int g = out_edges_by_vertex[v][0];  // first out-edge at v, 0-indexed
+        double beta_ge = -in_by_edge[e] / out_by_edge[g];
+        logG_head[e] = logG_tail[g] + std::log(std::fabs(beta_ge));
+        double sign_beta_ge = (beta_ge > 0.0) - (beta_ge < 0.0);
+        signG_head[e] = signG_tail[g] * sign_beta_ge;
+      }
+      logG_tail[e] = logG_head[e] - kappa * edge_lengths[e];
+      signG_tail[e] = signG_head[e];
+    }
   }
 
   return List::create(

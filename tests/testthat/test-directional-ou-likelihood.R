@@ -70,11 +70,12 @@ test_that("sparsity-aware and forced-dense GLS calculations agree", {
   expect_equal(routed, dense, tolerance = 1e-10)
 })
 
-test_that("covariance likelihood C++ request falls back off dendritic graphs", {
-  graph <- make_nondendritic_directional_graph(add_observations = TRUE)
+test_that("covariance likelihood C++ and R paths agree on out-trees", {
+  graph <- make_reversed_directional_test_graph(add_observations = TRUE)
   precomputed <- MetricGraph:::precompute_directional_ou_covariance(
     graph, data_name = "y"
   )
+  expect_identical(precomputed$structure$tree_orientation, "out")
   theta <- c(log(0.2), log(1.1), log(0.8))
   expect_equal(
     MetricGraph:::directional_ou_covariance_loglik_precompute(
@@ -87,7 +88,7 @@ test_that("covariance likelihood C++ request falls back off dendritic graphs", {
   )
 })
 
-test_that("small packaged Columbia covariance smoke test is finite", {
+test_that("small reversed Columbia covariance smoke test is finite", {
   skip_on_cran()
   helper <- system.file(
     "examples/directional/columbia_full_graph_helpers.R",
@@ -102,10 +103,14 @@ test_that("small packaged Columbia covariance smoke test is finite", {
     envir = environment()
   )
   graph <- helper_environment$columbia_make_graph(
-    columbia_main_component, reversed = FALSE
+    columbia_main_component, reversed = TRUE
   )
-  graph$setDirectionalWeightFunction(
-    f_in = helper_environment$.columbia_k2_weights
+  graph$setDirectionalWeightFunction()
+  structure <- MetricGraph:::directional_ou_setup_structure(graph)
+  expect_identical(structure$tree_orientation, "out")
+  expect_gt(
+    sum(structure$V_outdegree > 1L),
+    0L
   )
   set.seed(10)
   points <- cbind(sample.int(graph$nE, 12L), runif(12L, 0.1, 0.9))

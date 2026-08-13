@@ -45,9 +45,10 @@ vertex index (as character) or positional in the order
 \item{normalized}{If \code{TRUE} (default), \code{distance_on_edge} in \code{PtE}/\code{PtE2}
 is in \verb{[0, 1]}; if \code{FALSE}, distances are absolute.}
 
-\item{cpp}{If \code{TRUE} (default), use the C++ numeric setup and dendritic
-covariance fill. Non-dendritic graphs fall back to the R covariance fill.
-Set to \code{FALSE} to use the pure-R reference implementation.}
+\item{cpp}{If \code{TRUE} (default), use the C++ numeric setup and the C++
+covariance fill for in-trees. Out-trees use the mirrored fast R covariance
+fill; irregular trees use the generic R fallback. Set to \code{FALSE} to use
+the pure-R implementation throughout.}
 }
 \value{
 A dense \code{matrix} with \code{nrow(PtE)} rows and \code{nrow(PtE2)} columns.
