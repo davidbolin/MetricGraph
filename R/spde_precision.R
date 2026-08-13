@@ -50,13 +50,17 @@ Q_BM <- function(theta, graph, w, BC = 0, build = TRUE) {
 #' @param graph metric_graph object
 #' @param w numeric between 0 and 1; how to weight the top edge
 #' @param build (bool) if TRUE return the precision matrix otherwise return
-#' a list(i,j,x, nv)
+#' a list(i,j,x, dims)
 #' @param BC boundary conditions for degree=1 vertices. BC =0 gives Neumann
 #' boundary conditions and BC=1 ....
 #' @param stationary_points The indices of the endpoints (inward degree zero) to have stationary boundary conditions.
+#' @param cpp If `TRUE`, use the C++ triplet assembler. `FALSE` uses the R
+#' reference implementation.
 #' @return Precision matrix or list
 #' @noRd
-Qalpha1_edges <- function(theta, graph, w, BC = 0, stationary_points = "all", build = TRUE) {
+Qalpha1_edges <- function(theta, graph, w, BC = 0,
+                          stationary_points = "all", build = TRUE,
+                          cpp = TRUE) {
 
   if (inherits(graph, "graph_components")) {
     if (!build) {
@@ -64,92 +68,141 @@ Qalpha1_edges <- function(theta, graph, w, BC = 0, stationary_points = "all", bu
     }
     Qs <- lapply(graph$graphs, function(g) {
       Qalpha1_edges(theta, g, w = w, BC = BC,
-                    stationary_points = stationary_points, build = TRUE)
+                    stationary_points = stationary_points, build = TRUE,
+                    cpp = cpp)
+    })
+    return(Matrix::bdiag(Qs))
+  }
+
+  if (!cpp) {
+    return(Qalpha1_edges_R_reference(
+      theta, graph, w = w, BC = BC,
+      stationary_points = stationary_points, build = build
+    ))
+  }
+
+  stationary_edges <- directional_stationary_edges(
+    graph, stationary_points = stationary_points, BC = BC
+  )
+  triplets <- directional_edge_precision_triplets_cpp(
+    edge_lengths = graph$edge_lengths,
+    stationary_edges = stationary_edges,
+    tau = theta[1], kappa = theta[2], w = w
+  )
+
+  if (!build) {
+    return(triplets)
+  }
+
+  Matrix::sparseMatrix(
+    i = triplets$i, j = triplets$j, x = triplets$x,
+    dims = triplets$dims
+  )
+}
+
+# Resolve the stationary source vertices once in R. Both the C++ and R paths
+# consume the resulting edge indices, so validation and boundary semantics
+# cannot drift between implementations.
+#' @noRd
+directional_stationary_edges <- function(graph, stationary_points, BC = 0) {
+  source_vertices <- which(graph$get_degrees("indegree") == 0)
+
+  if (is.character(stationary_points)) {
+    if (length(stationary_points) != 1L ||
+        !(stationary_points %in% c("all", "none"))) {
+      stop("If stationary_points is a string, it must be either 'all' or ",
+           "'none'; otherwise it must be a numeric vector.")
+    }
+    if (identical(stationary_points, "none")) {
+      BC <- 0
+      stationary_vertices <- integer()
+    } else {
+      BC <- 1
+      stationary_vertices <- source_vertices
+    }
+  } else {
+    if (!is.numeric(stationary_points)) {
+      stop("stationary_points must be either numeric or a string.")
+    }
+    BC <- 1
+    stationary_vertices <- stationary_points
+  }
+
+  if (BC <= 0 || length(stationary_vertices) == 0L) {
+    return(integer())
+  }
+  if (any(!(stationary_vertices %in% source_vertices))) {
+    stop("stationary_points should only contain vertices with inward degree zero!")
+  }
+
+  as.integer(match(stationary_vertices, graph$E[, 1]))
+}
+
+# Pure-R reference for regression tests and numerical cross-checks.
+#' @noRd
+Qalpha1_edges_R_reference <- function(theta, graph, w, BC = 0,
+                                      stationary_points = "all",
+                                      build = TRUE) {
+  if (inherits(graph, "graph_components")) {
+    if (!build) {
+      stop("build = FALSE is not supported for 'graph_components'.")
+    }
+    Qs <- lapply(graph$graphs, function(g) {
+      Qalpha1_edges_R_reference(
+        theta, g, w = w, BC = BC,
+        stationary_points = stationary_points, build = TRUE
+      )
     })
     return(Matrix::bdiag(Qs))
   }
 
   kappa <- theta[2]
   tau <- theta[1]
-  i_ <- j_ <- x_ <- rep(0, graph$nE*4)
-  count <- 0
-  for(i in 1:graph$nE){
+  stationary_edges <- directional_stationary_edges(
+    graph, stationary_points = stationary_points, BC = BC
+  )
+  count <- 4L * graph$nE + length(stationary_edges)
+  i_ <- j_ <- integer(count)
+  x_ <- numeric(count)
+
+  offset <- 0L
+  for (i in seq_len(graph$nE)) {
     l_e <- graph$edge_lengths[i]
-    c1 <- exp(-kappa*l_e)
+    c1 <- exp(-kappa * l_e)
     c2 <- c1^2
-    one_m_c2 = 1-c2
-    c_1_upper = w + c2/one_m_c2
-    c_1_lower = (1-w) + c2/one_m_c2
-    c_2 = -c1/one_m_c2
+    one_m_c2 <- 1 - c2
+    upper <- w + c2 / one_m_c2
+    lower <- (1 - w) + c2 / one_m_c2
+    off_diagonal <- -c1 / one_m_c2
+    tail <- 2L * (i - 1L) + 1L
+    head <- tail + 1L
+    idx <- offset + seq_len(4L)
 
-       #u upper
-      i_[count + 1] <- 2 * ( i - 1) + 1
-      j_[count + 1] <- 2 * ( i - 1) + 1
-      x_[count + 1] <- c_1_upper
-
-      #u lower
-      i_[count + 2] <- 2 * ( i - 1) + 2
-      j_[count + 2] <- 2 * ( i - 1) + 2
-      x_[count + 2] <- c_1_lower
-
-
-      i_[count + 3] <- 2 * ( i - 1) + 1
-      j_[count + 3] <- 2 * ( i - 1) + 2
-      x_[count + 3] <- c_2
-
-      i_[count + 4] <- 2 * ( i - 1) + 2
-      j_[count + 4] <- 2 * ( i - 1) + 1
-      x_[count + 4] <- c_2
-      count <- count + 4
+    i_[idx] <- c(tail, head, tail, head)
+    j_[idx] <- c(tail, head, head, tail)
+    x_[idx] <- c(upper, lower, off_diagonal, off_diagonal)
+    offset <- offset + 4L
   }
 
-  if(is.character(stationary_points)){
-    stationary_points <- stationary_points[[1]]
-    if(!(stationary_points %in% c("all", "none"))){
-      stop("If stationary_points is a string, it must be either 'all' or 'none', otherwise it must be a numeric vector.")
-    }
-    stat_indices <- which(graph$get_degrees("indegree")==0)
-  } else{
-    stat_indices <- stationary_points
-    if(!is.numeric(stat_indices)){
-      stop("stationary_points must be either numeric or a string.")
-    }
+  for (edge in stationary_edges) {
+    offset <- offset + 1L
+    tail <- 2L * (edge - 1L) + 1L
+    i_[offset] <- tail
+    j_[offset] <- tail
+    x_[offset] <- 1 - w
   }
-  if(stationary_points == "none"){
-    BC <- 0
-  } else{
-    BC <- 1
+
+  triplets <- list(
+    i = i_, j = j_, x = (2 * kappa * tau^2) * x_,
+    dims = c(2L * graph$nE, 2L * graph$nE)
+  )
+  if (!build) {
+    return(triplets)
   }
-  if(BC> 0){
-    empty.in <- which(graph$get_degrees("indegree")==0)
-    if(any(!(stat_indices%in%empty.in))){
-      stop("stationary_points should only contain vertices with inward degree zero!")
-    }
-
-
-    for (v in stat_indices) {
-      edge <- which(graph$E[,1]==v)[1] #only put stationary of one of indices
-      ind <- 2 * ( edge - 1) + 1
-      i_ <- c(i_, ind)
-      j_ <- c(j_, ind)
-      x_ <- c(x_, 1-w)
-      count <- count + 1
-    }
-  }
-  if(build){
-    Q <- Matrix::sparseMatrix(i = i_[1:count],
-                              j = j_[1:count],
-                              x = (2 * kappa * tau^2) * x_[1:count],
-                              dims = c(2*graph$nE, 2*graph$nE))
-
-
-    return(Q)
-  } else {
-    return(list(i = i_[1:count],
-                j = j_[1:count],
-                x = (2 * kappa * tau^2) * x_[1:count],
-                dims = c(2*graph$nE, 2*graph$nE)))
-  }
+  Matrix::sparseMatrix(
+    i = triplets$i, j = triplets$j, x = triplets$x,
+    dims = triplets$dims
+  )
 }
 
 

@@ -319,7 +319,7 @@ profile_lik_core_alpha2 <- function(theta, precomputed_data, BC,
       S[d.index, d.index] <- -r_2(matrix(c(0, -edge_l[j], edge_l[j], 0), 2, 2),
                                   kappa = kappa, tau = 1 / reciprocal_tau,
                                   deriv = 2)
-      S[d.index, -d.index] <- -r_2(D[1:2, ], kappa = kappa,
+      S[d.index, -d.index] <- r_2(D[1:2, ], kappa = kappa,
                                    tau = 1 / reciprocal_tau, deriv = 1)
       S[-d.index, d.index] <- t(S[d.index, -d.index])
 
@@ -413,7 +413,8 @@ profile_lik_core_alpha2 <- function(theta, precomputed_data, BC,
 #' @return list(base, H, h, n_cov)
 #' @noRd
 profile_lik_core_alpha1_directional <- function(theta, precomputed_data,
-                                                parameterization) {
+                                                parameterization,
+                                                cpp = TRUE) {
   sigma_e <- exp(theta[1])
   reciprocal_tau <- exp(theta[2])
   if (parameterization == "matern") {
@@ -432,7 +433,8 @@ profile_lik_core_alpha1_directional <- function(theta, precomputed_data,
                           graph,
                           w = 0,
                           BC = 1,
-                          build = FALSE)
+                          build = FALSE,
+                          cpp = cpp)
 
   Q <- Matrix::sparseMatrix(i = Q.list$i,
                             j = Q.list$j,
@@ -698,7 +700,8 @@ likelihood_alpha1_directional_profile <- function(theta, graph,
                                                   manual_y = NULL,
                                                   X_cov = NULL, repl = NULL,
                                                   parameterization = "matern",
-                                                  reml = FALSE) {
+                                                  reml = FALSE,
+                                                  cpp = TRUE) {
   check_theta_profile(theta)
   if (!is.null(X_cov)) {
     X_cov <- as.matrix(X_cov)
@@ -709,7 +712,7 @@ likelihood_alpha1_directional_profile <- function(theta, graph,
                                                     X_cov = X_cov,
                                                     repl = repl)
   core <- profile_lik_core_alpha1_directional(theta, precomputed_data,
-                                              parameterization)
+                                              parameterization, cpp = cpp)
   return(profile_lik_finish(core, reml))
 }
 
@@ -727,10 +730,11 @@ likelihood_alpha1_directional_profile <- function(theta, graph,
 likelihood_alpha1_directional_profile_precompute <- function(theta,
                                                              precomputed_data,
                                                              parameterization = "matern",
-                                                             reml = FALSE) {
+                                                             reml = FALSE,
+                                                             cpp = TRUE) {
   check_theta_profile(theta)
   core <- profile_lik_core_alpha1_directional(theta, precomputed_data,
-                                              parameterization)
+                                              parameterization, cpp = cpp)
   return(profile_lik_finish(core, reml))
 }
 
@@ -767,7 +771,8 @@ profile_beta_estimate <- function(theta,
                                   graph = NULL, precomputed_data = NULL,
                                   data_name = NULL, manual_y = NULL,
                                   X_cov = NULL, repl = NULL, BC = 1,
-                                  parameterization = "matern") {
+                                  parameterization = "matern",
+                                  cpp = TRUE) {
   check_theta_profile(theta)
   model <- match.arg(model)
   if (!is.null(X_cov)) {
@@ -799,7 +804,7 @@ profile_beta_estimate <- function(theta,
                                                         repl = repl)
     }
     core <- profile_lik_core_alpha1_directional(theta, precomputed_data,
-                                                parameterization)
+                                                parameterization, cpp = cpp)
   }
 
   if (core$n_cov == 0) {

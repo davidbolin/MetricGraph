@@ -5281,33 +5281,43 @@ coordinates!"))
        temp_E <- apply(self$E, 2, as.integer)
        nE_int <- as.integer(self$nE)
 
-       # Pre-compute per-edge weight values in R, then delegate assembly to C++.
-       # w_out: one scalar per edge (applied to out-edge of a type-1 constraint row)
-       # w_in:  one scalar per edge (applied to in-edge of a type-1 constraint row)
-       f_out <- self$DirectionalWeightFunction_out  # local ref avoids repeated $ lookup
-       f_in  <- self$DirectionalWeightFunction_in
-       w_out_vec <- vapply(weight, f_out, numeric(1), USE.NAMES = FALSE)
-
-       # Group in-edges by vertex (once, O(nE)); apply f_in per type-1 vertex
-       # using lapply (C-loop) to avoid R for-loop overhead.
-       in_edges_list <- split(seq_len(self$nE), self$E[, 2])
-       type1_chars   <- as.character(which(V_indegree > 0 & V_outdegree > 0))
-       type1_in_list <- in_edges_list[type1_chars]
-
-       w_in_parts <- lapply(type1_in_list, function(ie) f_in(weight[ie]))
-
-       w_in_vec <- numeric(self$nE)
-       for (i in seq_along(type1_chars)) {
-         w_in_vec[type1_in_list[[i]]] <- w_in_parts[[i]]
-       }
+       weight_vectors <- directional_weight_vectors(
+         E = self$E, nE = self$nE, weight = weight,
+         DirectionalWeightFunction_out = self$DirectionalWeightFunction_out,
+         DirectionalWeightFunction_in = self$DirectionalWeightFunction_in
+       )
 
        self$C <- construct_directional_constraint_matrix_fast(
          temp_E, as.integer(self$nV), nE_int, as.integer(alpha),
          as.integer(V_indegree), as.integer(V_outdegree),
-         as.numeric(w_out_vec), as.numeric(w_in_vec))
+         as.numeric(weight_vectors$out_by_edge),
+         as.numeric(weight_vectors$in_by_edge))
        self$CoB <- c_basis2(self$C)
        self$CoB$T <- t(self$CoB$T)
        self$CoB$alpha <- 1
+     },
+
+
+     #' @description Closed-form covariance of the directional OU model at
+     #' observation locations or arbitrary points.
+     #' @param kappa Positive OU rate parameter.
+     #' @param tau White-noise scale; the stationary variance is
+     #' `1/(2*kappa*tau^2)`.
+     #' @param PtE Evaluation points `(edge_number, distance_on_edge)`.
+     #' @param PtE2 Optional second point set for cross-covariance.
+     #' @param sigma_source Optional source-vertex anchoring variances.
+     #' @param normalized Whether point distances are normalized to `[0, 1]`.
+     #' @param cpp Use the C++ dendritic fast path when available.
+     #' @return A dense covariance matrix.
+     compute_directional_covariance = function(kappa, tau, PtE = NULL,
+                                               PtE2 = NULL,
+                                               sigma_source = NULL,
+                                               normalized = TRUE,
+                                               cpp = TRUE) {
+       directional_ou_covariance(
+         self, kappa = kappa, tau = tau, PtE = PtE, PtE2 = PtE2,
+         sigma_source = sigma_source, normalized = normalized, cpp = cpp
+       )
      },
 
 

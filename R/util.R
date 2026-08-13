@@ -2421,6 +2421,27 @@ fill_na_average <- function(data, removed_merge, ref_idx, removed_indices) {
 }
 
 
+# Evaluate the user-supplied directional weight functions once and return one
+# output and input weight per edge. Covariance and constraint construction use
+# this same helper so their vertex conditions stay identical.
+#' @noRd
+directional_weight_vectors <- function(E, nE, weight,
+                                       DirectionalWeightFunction_out,
+                                       DirectionalWeightFunction_in) {
+  out_by_edge <- vapply(
+    seq_len(nE),
+    function(edge) DirectionalWeightFunction_out(weight[edge]),
+    numeric(1)
+  )
+
+  in_by_edge <- numeric(nE)
+  for (edges in split(seq_len(nE), E[, 2])) {
+    in_by_edge[edges] <- DirectionalWeightFunction_in(weight[edges])
+  }
+
+  list(out_by_edge = out_by_edge, in_by_edge = in_by_edge)
+}
+
 # Function to build constraint matrix
 #' @noRd
 construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree, V_outdegree, weight,

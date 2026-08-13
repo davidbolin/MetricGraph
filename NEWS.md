@@ -1,11 +1,20 @@
 # MetricGraph (development version)
 
+* Added C++-backed directional alpha-1 edge precision and closed-form
+  directional OU covariance calculations. The C++ paths are now the default,
+  with pure-R reference implementations retained for validation and fallback.
+* Added a packaged-data Mid-Columbia speed example covering K1, K2,
+  reversed-continuity and covariance likelihood evaluation.
 * Fixed a sign-convention inconsistency in the exact α = 2 codes. The 
   observation-/bridge-side covariance blocks treated the
   endpoint-derivative states as −u′, while the prior precision (`Q00` /
   `Qalpha2`) and the vertex constraints used +u′. Because both enter the same
   quadratic forms, α = 2 covariances, likelihoods, posteriors and exact samples
   were biased on graphs containing cycles. 
+* Fixed the same α = 2 sign-convention bug in the profiled-likelihood (v2)
+  code path (`profile_lik_core_alpha2` in `R/graph_likelihoods_v2.R`), which
+  had reimplemented the affected S-matrix construction independently and was
+  not covered by the fix above.
 * Added `simulate.metric_graph()` S3 method and `simulate_parallel()` for
   unconditional prior simulation of Whittle-Matérn fields: Method A (`method = "direct"`, 
   O(m³) per edge), Method B (`method = "kriging"`, O(m) per edge), and the extended method

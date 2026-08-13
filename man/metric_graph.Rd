@@ -124,6 +124,7 @@ graph. The weights are given by the edge lengths.}
     \item \href{#method-metric_graph-get_data}{\code{metric_graph$get_data()}}
     \item \href{#method-metric_graph-setDirectionalWeightFunction}{\code{metric_graph$setDirectionalWeightFunction()}}
     \item \href{#method-metric_graph-buildDirectionalConstraints}{\code{metric_graph$buildDirectionalConstraints()}}
+    \item \href{#method-metric_graph-compute_directional_covariance}{\code{metric_graph$compute_directional_covariance()}}
     \item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
     \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
     \item \href{#method-metric_graph-get_version}{\code{metric_graph$get_version()}}
@@ -1983,6 +1984,44 @@ in the same vertex)
   }
   \subsection{Returns}{
     No return value. Called for its side effects.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_directional_covariance"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_directional_covariance}{}}}
+\subsection{\code{metric_graph$compute_directional_covariance()}}{
+  Closed-form covariance of the directional OU model at
+observation locations or arbitrary points.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{metric_graph$compute_directional_covariance(
+  kappa,
+  tau,
+  PtE = NULL,
+  PtE2 = NULL,
+  sigma_source = NULL,
+  normalized = TRUE,
+  cpp = TRUE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{kappa}}{Positive OU rate parameter.}
+      \item{\code{tau}}{White-noise scale; the stationary variance is
+\code{1/(2*kappa*tau^2)}.}
+      \item{\code{PtE}}{Evaluation points \verb{(edge_number, distance_on_edge)}.}
+      \item{\code{PtE2}}{Optional second point set for cross-covariance.}
+      \item{\code{sigma_source}}{Optional source-vertex anchoring variances.}
+      \item{\code{normalized}}{Whether point distances are normalized to \verb{[0, 1]}.}
+      \item{\code{cpp}}{Use the C++ dendritic fast path when available.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A dense covariance matrix.
   }
 }
 

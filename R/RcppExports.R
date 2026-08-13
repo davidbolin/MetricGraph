@@ -150,6 +150,23 @@ PtE_to_mesh_cpp <- function(PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_
     .Call(`_MetricGraph_PtE_to_mesh_cpp`, PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_e, nV)
 }
 
+#' @noRd
+cv_loo_selinv_cpp <- function(precomputed_data, edge_endpoints, Q_list, sigma_e, reciprocal_tau, kappa) {
+    .Call(`_MetricGraph_cv_loo_selinv_cpp`, precomputed_data, edge_endpoints, Q_list, sigma_e, reciprocal_tau, kappa)
+}
+
+directional_edge_precision_triplets_cpp <- function(edge_lengths, stationary_edges, tau, kappa, w) {
+    .Call(`_MetricGraph_directional_edge_precision_triplets_cpp`, edge_lengths, stationary_edges, tau, kappa, w)
+}
+
+directional_ou_setup_numeric_cpp <- function(skeleton, kappa, tau, source_var_by_vertex) {
+    .Call(`_MetricGraph_directional_ou_setup_numeric_cpp`, skeleton, kappa, tau, source_var_by_vertex)
+}
+
+directional_ou_covariance_dendritic_cpp <- function(E, kappa, sigma_stationary, var_tail, logG_tail, signG_tail, enter, exit, PtE_abs, PtE2_abs, same_point_set) {
+    .Call(`_MetricGraph_directional_ou_covariance_dendritic_cpp`, E, kappa, sigma_stationary, var_tail, logG_tail, signG_tail, enter, exit, PtE_abs, PtE2_abs, same_point_set)
+}
+
 #' @name draw_edge_direct_cpp
 #' @title C++ direct bridge draw (Method A)
 #' @description

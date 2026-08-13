@@ -48,6 +48,17 @@ License: GPL version 2 or later
 R/snap_lines.R
 
 
+Data: data/columbia_main_component.rda
+Title: MidColumbia.zip - a large spatial stream network data set
+Creator: Jay Ver Hoef
+Source: https://doi.org/10.6084/m9.figshare.24132840.v1
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+License URL: https://creativecommons.org/licenses/by/4.0/
+Notes: The bundled object is the largest connected component derived from the
+source data. MetricGraph preserves the source attribution and records the
+transformation counts and content fingerprint in the object metadata.
+
+
 Licence
 =======
 
