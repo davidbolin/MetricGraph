@@ -1,5 +1,26 @@
 # MetricGraph (development version)
 
+* Graph construction no longer materializes dense point-by-edge matrices.
+  `metric_graph$new()` used to densify the `st_is_within_distance()` result
+  into an `nEdges x nVertices` logical matrix before snapping vertices to
+  nearby edges, and `snapPointsToLines()` (used by `add_observations()` with
+  `data_coords = "spatial"`, `coordinates()` and `which_component()`) built a
+  full `nPoints x nEdges` distance matrix. Both are now replaced by sparse
+  candidate sets and C++ kernels (`snap_points_to_edges_cpp()` and a
+  grid-indexed `nearest_edge_cpp()`), which return the same graphs and the same
+  snapped locations. 
+* The edge-edge intersection search (`tolerance$edge_edge > 0`) also keeps its
+  neighbour list sparse instead of building an `nEdges x nEdges` logical matrix.
+* Edge weights are no longer copied once per edge split. `add_vertices()` now
+  records which weight row each new edge inherits and materializes the weight
+  table once, instead of `rbind`-ing the whole table inside every
+  `split_edge()` call. `set_edge_weights()` builds the per-edge weight rows 
+  without a `[.data.frame` call per edge. The values are unchanged but row names 
+  of weight rows duplicated by a split are now e.g. `"990509915.1"` rather than 
+  `"9905099151"`.
+* Added `metric_graph$get_largest()`, which returns only the largest connected
+  component. It is equivalent to `get_components()[[1]]` but constructs just
+  that component.
 * Added a mirrored closed-form directional OU covariance fast path for
   out-trees, including direction-reversed K1 continuity graphs. Reversed
   river networks now use precomputed Euler labels, parent pointers, and

@@ -222,6 +222,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// snap_points_to_edges_cpp
+Rcpp::List snap_points_to_edges_cpp(Rcpp::List edges, const Rcpp::NumericMatrix& XY, const Rcpp::IntegerVector& edge_id, const Rcpp::IntegerVector& group_start, const Rcpp::IntegerVector& group_end, const Rcpp::IntegerVector& pt_idx, double tolerance);
+RcppExport SEXP _MetricGraph_snap_points_to_edges_cpp(SEXP edgesSEXP, SEXP XYSEXP, SEXP edge_idSEXP, SEXP group_startSEXP, SEXP group_endSEXP, SEXP pt_idxSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type edges(edgesSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type XY(XYSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type edge_id(edge_idSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type group_start(group_startSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type group_end(group_endSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type pt_idx(pt_idxSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(snap_points_to_edges_cpp(edges, XY, edge_id, group_start, group_end, pt_idx, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cv_loo_selinv_cpp
 List cv_loo_selinv_cpp(List precomputed_data, IntegerMatrix edge_endpoints, List Q_list, double sigma_e, double reciprocal_tau, double kappa);
 RcppExport SEXP _MetricGraph_cv_loo_selinv_cpp(SEXP precomputed_dataSEXP, SEXP edge_endpointsSEXP, SEXP Q_listSEXP, SEXP sigma_eSEXP, SEXP reciprocal_tauSEXP, SEXP kappaSEXP) {
@@ -401,6 +418,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// nearest_edge_cpp
+List nearest_edge_cpp(List edges, NumericMatrix XY);
+RcppExport SEXP _MetricGraph_nearest_edge_cpp(SEXP edgesSEXP, SEXP XYSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type edges(edgesSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type XY(XYSEXP);
+    rcpp_result_gen = Rcpp::wrap(nearest_edge_cpp(edges, XY));
+    return rcpp_result_gen;
+END_RCPP
+}
 // selected_inv_cpp
 Eigen::SparseMatrix<double> selected_inv_cpp(const Eigen::SparseMatrix<double>& Q);
 RcppExport SEXP _MetricGraph_selected_inv_cpp(SEXP QSEXP) {
@@ -429,6 +458,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_compute_length", (DL_FUNC) &_MetricGraph_compute_length, 1},
     {"_MetricGraph_generate_mesh", (DL_FUNC) &_MetricGraph_generate_mesh, 6},
     {"_MetricGraph_PtE_to_mesh_cpp", (DL_FUNC) &_MetricGraph_PtE_to_mesh_cpp, 8},
+    {"_MetricGraph_snap_points_to_edges_cpp", (DL_FUNC) &_MetricGraph_snap_points_to_edges_cpp, 7},
     {"_MetricGraph_cv_loo_selinv_cpp", (DL_FUNC) &_MetricGraph_cv_loo_selinv_cpp, 6},
     {"_MetricGraph_directional_edge_precision_triplets_cpp", (DL_FUNC) &_MetricGraph_directional_edge_precision_triplets_cpp, 5},
     {"_MetricGraph_directional_ou_setup_numeric_cpp", (DL_FUNC) &_MetricGraph_directional_ou_setup_numeric_cpp, 4},
@@ -441,6 +471,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_aeqd_project_cpp", (DL_FUNC) &_MetricGraph_aeqd_project_cpp, 3},
     {"_MetricGraph_split_one_edge_cpp", (DL_FUNC) &_MetricGraph_split_one_edge_cpp, 6},
     {"_MetricGraph_split_edges_batch_cpp", (DL_FUNC) &_MetricGraph_split_edges_batch_cpp, 7},
+    {"_MetricGraph_nearest_edge_cpp", (DL_FUNC) &_MetricGraph_nearest_edge_cpp, 2},
     {"_MetricGraph_selected_inv_cpp", (DL_FUNC) &_MetricGraph_selected_inv_cpp, 1},
     {NULL, NULL, 0}
 };
