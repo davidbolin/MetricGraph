@@ -18,6 +18,9 @@
   without a `[.data.frame` call per edge. The values are unchanged but row names 
   of weight rows duplicated by a split are now e.g. `"990509915.1"` rather than 
   `"9905099151"`.
+* `prune_vertices()` no longer pays a `[.data.frame` call per edge when
+  rebuilding the edge attributes, and the serial fallback for closed-loop
+  chains compacts the weight table once instead of once per removed vertex.
 * Added `metric_graph$get_largest()`, which returns only the largest connected
   component. It is equivalent to `get_components()[[1]]` but constructs just
   that component.

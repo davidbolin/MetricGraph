@@ -2936,9 +2936,13 @@ metric_graph <-  R6Class("metric_graph",
              problematic = prob_now,
              problematic_circles = rep(FALSE, length(deg_now))
            )
+           if (is.data.frame(private$edge_weights)) {
+             private$edge_weight_rows <- seq_len(self$nE)
+           }
            while (sum(res$degrees == 2 & !res$problematic & !res$problematic_circles) > 0) {
              res <- private$remove.first.deg2(res, check_circles = check_circles)
            }
+           private$materialize_edge_weights()
            if (verbose == 2 && !is.null(res$circles_avoided)) {
              message(paste(sum(res$problematic_circles),
                            "vertices were not pruned in order to avoid creating circles. Turn 'check_circles' to FALSE to prune these vertices."))
@@ -2973,13 +2977,17 @@ metric_graph <-  R6Class("metric_graph",
          edges_local     <- self$edges
          nE_now          <- self$nE
 
+         # One-row weight frames for every edge, built without an
+         # `[.data.frame` call per edge (see `split_weight_rows()`).
+         weight_rows <- if (ew_is_vec) NULL else split_weight_rows(ew_local)
+
          if (verbose == 2) {
            for (i in seq_len(nE_now)) {
              edge <- edges_local[[i]]
              if (ew_is_vec) {
                attr(edge, "weight") <- ew_local[i]
              } else {
-               attr(edge, "weight") <- ew_local[i, , drop = FALSE]
+               attr(edge, "weight") <- weight_rows[[i]]
              }
              attr(edge, "longlat")             <- longlat_local
              attr(edge, "crs")                 <- crs_local
@@ -2998,7 +3006,7 @@ metric_graph <-  R6Class("metric_graph",
              if (ew_is_vec) {
                attr(edge, "weight") <- ew_local[i]
              } else {
-               attr(edge, "weight") <- ew_local[i, , drop = FALSE]
+               attr(edge, "weight") <- weight_rows[[i]]
              }
              attr(edge, "longlat")             <- longlat_local
              attr(edge, "crs")                 <- crs_local
@@ -8484,12 +8492,25 @@ larger than 1")
                }
                private$edge_weights <- private$edge_weights[-e_rem[2]]
              } else{
-               if(compare_with_na(private$edge_weights[e_rem[2],,drop=FALSE],
-                                  private$edge_weights[e_rem[1],,drop=FALSE],
+               # `prune_vertices()` batches the weight compaction over the whole
+               # fallback loop: while `edge_weight_rows` is active the weight
+               # table is left untouched and only the row map shrinks, so a
+               # 280-column table is not copied once per removed vertex. The
+               # surviving rows, and their names, are exactly what repeated
+               # `[-i, ]` would leave behind.
+               wrows <- private$edge_weight_rows
+               row2 <- if (is.null(wrows)) e_rem[2] else wrows[e_rem[2]]
+               row1 <- if (is.null(wrows)) e_rem[1] else wrows[e_rem[1]]
+               if(compare_with_na(private$edge_weights[row2,,drop=FALSE],
+                                  private$edge_weights[row1,,drop=FALSE],
                                   is_matrix = TRUE)){
                  private$prune_warning <- TRUE
                }
-               private$edge_weights <- private$edge_weights[-e_rem[2],,drop=FALSE]
+               if (is.null(wrows)) {
+                 private$edge_weights <- private$edge_weights[-e_rem[2],,drop=FALSE]
+               } else {
+                 private$edge_weight_rows <- wrows[-e_rem[2]]
+               }
              }
            }
 

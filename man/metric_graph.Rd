@@ -130,6 +130,7 @@ graph. The weights are given by the edge lengths.}
     \item \href{#method-metric_graph-get_version}{\code{metric_graph$get_version()}}
     \item \href{#method-metric_graph-is_disconnected}{\code{metric_graph$is_disconnected()}}
     \item \href{#method-metric_graph-get_components}{\code{metric_graph$get_components()}}
+    \item \href{#method-metric_graph-get_largest}{\code{metric_graph$get_largest()}}
     \item \href{#method-metric_graph-which_component}{\code{metric_graph$which_component()}}
     \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
     \item \href{#method-metric_graph-compute_mesh_weights}{\code{metric_graph$compute_mesh_weights()}}
@@ -2162,6 +2163,35 @@ constructors (default \code{0}).}
   }
   \subsection{Returns}{
     A list of \code{metric_graph} objects.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_largest"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_largest}{}}}
+\subsection{\code{metric_graph$get_largest()}}{
+  Return only the largest connected component, as a
+\code{metric_graph} object. Equivalent to \code{get_components()[[1]]}, but it
+builds just that one component instead of all of them, which matters
+when a graph decomposes into many small pieces and only the main
+network is of interest. For a connected graph it returns the graph
+itself. Components are ranked by total edge length, so the result is
+the same graph \code{get_components()[[1]]} would return.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{metric_graph$get_largest(verbose = 0)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{verbose}}{Verbosity level passed to the component constructor
+(default \code{0}).}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A \code{metric_graph} object, or \code{NULL} if the graph has no edges.
   }
 }
 
