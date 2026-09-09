@@ -520,3 +520,80 @@ Eigen::MatrixXd PtE_to_mesh_cpp(const Eigen::MatrixXd& PtE,
     
     return PtE_update;
 }
+
+// Defined in metric_graph_helpers.cpp; kept in one place so that the vertex
+// snapping performed during construction and the observation snapping in
+// `snapPointsToLines()` agree bit for bit.
+void nearest_point_on_polyline(const double* x, const double* y,
+                               int n, double px, double py,
+                               double& bx, double& by, double& bd);
+
+//' @name snap_points_to_edges_cpp
+//' @title Snap candidate points to their nearest position on given edges
+//' @description Given a list of edges and, for each edge, a set of candidate
+//' point indices, computes the closest point on the edge (following the same
+//' algorithm as the R helpers `nearestPointOnLine`/`nearestPointOnSegment`),
+//' discards the candidates whose distance exceeds `tolerance`, and returns the
+//' relative position along the edge of the retained snapped points, computed
+//' with `proj_vec_line` (i.e. the same quantity as `projectVecLine`).
+//' @param edges List of two-column numeric matrices.
+//' @param XY `nx2 matrix` Coordinates of the candidate points.
+//' @param edge_id `k vector` 1-based edge indices, one per group.
+//' @param group_start `k vector` 0-based start offset of each group in `pt_idx`.
+//' @param group_end `k vector` 0-based end offset (exclusive) of each group.
+//' @param pt_idx `m vector` 1-based row indices into `XY`, grouped by edge.
+//' @param tolerance `double` Maximum snapping distance.
+//' @noRd
+//'
+// [[Rcpp::export]]
+Rcpp::List snap_points_to_edges_cpp(Rcpp::List edges,
+                                    const Rcpp::NumericMatrix& XY,
+                                    const Rcpp::IntegerVector& edge_id,
+                                    const Rcpp::IntegerVector& group_start,
+                                    const Rcpp::IntegerVector& group_end,
+                                    const Rcpp::IntegerVector& pt_idx,
+                                    double tolerance){
+  int nG = edge_id.size();
+  int np = XY.nrow();
+  std::vector<int> out_edge;
+  std::vector<double> out_pos;
+  out_edge.reserve(pt_idx.size());
+  out_pos.reserve(pt_idx.size());
+
+  const double* px_all = &XY[0];
+  const double* py_all = &XY[0] + np;
+
+  for(int g = 0; g < nG; g++){
+    Rcpp::NumericMatrix L = Rcpp::as<Rcpp::NumericMatrix>(edges[edge_id[g] - 1]);
+    int n = L.nrow();
+    if(n < 2){
+      continue;
+    }
+    // `proj_vec_line()` is the same routine `projectVecLine()` calls, so the
+    // returned positions match the previous two-step R implementation exactly.
+    Eigen::MatrixXd line = Rcpp::as<Eigen::MatrixXd>(edges[edge_id[g] - 1]);
+    for(int k = group_start[g]; k < group_end[g]; k++){
+      double px = px_all[pt_idx[k] - 1];
+      double py = py_all[pt_idx[k] - 1];
+
+      double bx, by, bd;
+      nearest_point_on_polyline(&L[0], &L[0] + n, n, px, py, bx, by, bd);
+      if(bd < 0.0){
+        continue;
+      }
+
+      if(bd <= tolerance){
+        Eigen::VectorXd snapped(2);
+        snapped(0) = bx;
+        snapped(1) = by;
+        out_edge.push_back(edge_id[g]);
+        out_pos.push_back(proj_vec_line(line, snapped, 1));
+      }
+    }
+  }
+
+  return Rcpp::List::create(
+    Rcpp::Named("edge") = Rcpp::wrap(out_edge),
+    Rcpp::Named("pos")  = Rcpp::wrap(out_pos)
+  );
+}

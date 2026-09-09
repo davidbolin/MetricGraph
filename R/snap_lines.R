@@ -39,23 +39,30 @@ snapPointsToLines <- function( points, lines, longlat, crs, idx = NULL) {
     if(!is.list(lines)){
       lines <- list(lines)
     }
-    # d = rgeos::gDistance(points, lines, byid=TRUE)
-    # d = distance2(points, lines, byid=TRUE, longlat, crs)
+    if(!is.null(points)){
+      class(points) <- setdiff(class(points), "metric_graph_edge")
+    }
+    points <- as.matrix(points)
+    storage.mode(points) <- "double"
+    points <- points[, 1:2, drop = FALSE]
 
-    # Not using longlat, since all the projections (to get the "closest" point on the graph) are considering the Euclidean distances.
-    d = distance2(points, lines, byid=TRUE, longlat = FALSE, crs)
+    # Not using longlat, since all the projections (to get the "closest" point
+    # on the graph) are considering the Euclidean distances.
+    #
+    # The dense point-by-line distance matrix that used to drive this function
+    # costs O(nPoints * nLines) time and memory, which is prohibitive for
+    # city-sized graphs. `nearest_edge_cpp()` indexes the lines in a uniform
+    # grid instead and returns the same nearest line, snapped coordinates and
+    # distance.
+    res <- nearest_edge_cpp(lines, points)
 
-
-    distToLine = apply(d, 2, min, na.rm = TRUE)
-
-    nearest_line_index = apply(d, 2, which.min) # Position of each nearest line in lines object
-
-    # Get coordinates of nearest points lying on nearest lines
-    mNewCoords = vapply(1:nrow(points),
-        function(x)
-            nearestPointOnLine(lines[[nearest_line_index[x]]],
-                points[x,]), FUN.VALUE=c(0,0))
-
+    nearest_line_index <- res[["index"]]
+    distToLine <- res[["dist"]]
+    mNewCoords <- res[["coords"]]
+    # The previous implementation built the coordinates with `vapply()` over
+    # `nearestPointOnLine()`, which named the rows; keep that for callers that
+    # index the result by name.
+    rownames(mNewCoords) <- c("X", "Y")
 
     if(!is.null(idx)){
       nearest_line_index <- idx
