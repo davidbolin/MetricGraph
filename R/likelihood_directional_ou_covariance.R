@@ -33,7 +33,7 @@
 #' log-likelihood with the raw response `y` (`base`), plus the profiled
 #' fixed-effect accumulators `H = X' Sigma^-1 X` and `h = X' Sigma^-1 y`, via
 #' a single Cholesky factor of `Sigma`. Output is consumable by
-#' [profile_lik_finish()] exactly like `profile_lik_core_alpha1()` /
+#' `profile_lik_finish()` exactly like `profile_lik_core_alpha1()` /
 #' `profile_lik_core_alpha2()` / `profile_lik_core_alpha1_directional()`.
 #'
 #' @param theta `(log sigma_e, log reciprocal_tau, log kappa)`; length 3,
@@ -66,7 +66,7 @@
 #'  modeling requirement, not a mere default.
 #' @param normalized Passed to [directional_ou_covariance()]; `TRUE`
 #'  (default) means `PtE`/observation `distance_on_edge` are in `[0, 1]`.
-#' @param force_dense Forwarded to [directional_ou_gls_core_from_sigma()];
+#' @param force_dense Forwarded to `directional_ou_gls_core_from_sigma()`;
 #'  `TRUE` forces the dense `base::chol()` route regardless of Sigma's
 #'  sparsity. A benchmarking/comparison knob, not a modeling choice --
 #'  see that function's docs.
@@ -116,7 +116,7 @@ directional_ou_covariance_loglik_core <- function(theta, graph, data_name = NULL
 # Below this fraction of nonzero entries, directional_ou_gls_core_from_sigma()
 # routes through a sparse Cholesky (Matrix::Cholesky()) instead of
 # base::chol(). The dendritic directional-OU covariance is structurally (not
-# just numerically) sparse: directional_ou_covariance_dendritic_cpp() sets
+# just numerically) sparse: directional_ou_covariance_oriented_tree_cpp() sets
 # Sigma(i,j) <- 0 exactly, for any pair of points with no last common
 # ancestor in the flow order (src/directional_ou_covariance.cpp, the
 # `Sigma(i, j) = 0.0;` branch) -- a graph-topology fact independent of
@@ -209,7 +209,7 @@ directional_ou_gls_core_from_sigma <- function(Sigma, y, X_cov, n_cov, force_den
 #' but the covariance is assembled directly via
 #' [directional_ou_covariance()] instead of the sparse edge/precision-matrix
 #' route. Intended as a slow, simple reference/cross-check on small graphs
-#' (see [directional_ou_covariance_loglik_core()] and
+#' (see `directional_ou_covariance_loglik_core()` and
 #' [directional_ou_covariance()]'s `DIRECTIONAL_OU_MAX_POINTS` guard), not a
 #' performance replacement for the sparse likelihood.
 #'
@@ -218,7 +218,7 @@ directional_ou_gls_core_from_sigma <- function(Sigma, y, X_cov, n_cov, force_den
 #'     support multiple replicates.
 #'   * No `profile_beta_estimate()`-style helper -- this v1 does not provide
 #'     a way to recover `beta_hat` after optimizing `theta`; use
-#'     [directional_ou_covariance_loglik_core()] directly and
+#'     `directional_ou_covariance_loglik_core()` directly and
 #'     `profile_beta_solve()` if you need it.
 #'
 #' @inheritParams directional_ou_covariance_loglik_core
@@ -244,15 +244,15 @@ directional_ou_covariance_loglik <- function(theta, graph, data_name = NULL,
 #' Precompute the graph-structural part of the dense directional-OU-covariance
 #' log-likelihood
 #'
-#' Caches everything [directional_ou_covariance_loglik_precompute()] needs
+#' Caches everything `directional_ou_covariance_loglik_precompute()` needs
 #' that does not depend on `theta`: the graph-structural (kappa/tau/
 #' sigma_source-independent) setup piece
-#' [directional_ou_setup_structure()], the resolved response `y`, the design
+#' `directional_ou_setup_structure()`, the resolved response `y`, the design
 #' matrix `X_cov`, the evaluation points `PtE`, and `n_cov`. Split out so the
 #' structural setup (topological edge order, beta_v inputs, Euler-tour
 #' ancestor labels) is computed once and reused across repeated `theta`
 #' evaluations (e.g. during likelihood optimization), mirroring
-#' [directional_ou_setup_structure()]'s own rationale.
+#' `directional_ou_setup_structure()`'s own rationale.
 #'
 #' @param graph A `metric_graph` object with directional edge weights and
 #'  vertex weight functions set, as required by
@@ -265,17 +265,17 @@ directional_ou_covariance_loglik <- function(theta, graph, data_name = NULL,
 #' @param X_cov Optional fixed-effect design matrix, `n x p`, in the same row
 #'  order as `y`. `NULL` (default) means zero covariates (`n_cov = 0`).
 #' @param PtE Evaluation points, forwarded unevaluated to
-#'  [directional_ou_covariance_from_setup()] at each
-#'  [directional_ou_covariance_loglik_precompute()] call. `NULL` (default)
+#'  `directional_ou_covariance_from_setup()` at each
+#'  `directional_ou_covariance_loglik_precompute()` call. `NULL` (default)
 #'  means "use `graph$get_PtE()` at evaluation time" -- the same convention
 #'  as [directional_ou_covariance()]'s own `PtE = NULL` default -- rather
 #'  than freezing a snapshot of `graph$get_PtE()` here. If `PtE` is
 #'  explicitly supplied, `manual_y` must be supplied too (there is no safe
 #'  way to subset a `graph`-attached data column to match an arbitrary
 #'  caller-supplied `PtE`), exactly as in
-#'  [directional_ou_covariance_loglik_core()].
+#'  `directional_ou_covariance_loglik_core()`.
 #' @return A list with components `structure` (from
-#'  [directional_ou_setup_structure()]), `y`, `X_cov`, `PtE` (as passed in,
+#'  `directional_ou_setup_structure()`), `y`, `X_cov`, `PtE` (as passed in,
 #'  possibly `NULL`), and `n_cov`.
 #' @noRd
 precompute_directional_ou_covariance <- function(graph, data_name = NULL,
@@ -309,42 +309,42 @@ precompute_directional_ou_covariance <- function(graph, data_name = NULL,
 #' profiled log-likelihood
 #'
 #' The precomputed counterpart of
-#' [directional_ou_covariance_loglik_core()]: given the output of
-#' [precompute_directional_ou_covariance()], recomputes only the
+#' `directional_ou_covariance_loglik_core()`: given the output of
+#' `precompute_directional_ou_covariance()`, recomputes only the
 #' `kappa`/`tau`/`sigma_source`-dependent piece of the setup
-#' ([directional_ou_setup_numeric()]), builds `Sigma` via
-#' [directional_ou_covariance_from_setup()] instead of rebuilding the
+#' (`directional_ou_setup_numeric()`), builds `Sigma` via
+#' `directional_ou_covariance_from_setup()` instead of rebuilding the
 #' graph-structural setup from scratch, then does the same Cholesky-based
-#' profiled GLS as [directional_ou_covariance_loglik_core()] (factored into
-#' the shared [directional_ou_gls_core_from_sigma()] helper). Output is
-#' consumable by [profile_lik_finish()], same as
-#' [directional_ou_covariance_loglik_core()].
+#' profiled GLS as `directional_ou_covariance_loglik_core()` (factored into
+#' the shared `directional_ou_gls_core_from_sigma()` helper). Output is
+#' consumable by `profile_lik_finish()`, same as
+#' `directional_ou_covariance_loglik_core()`.
 #'
 #' @param theta `(log sigma_e, log reciprocal_tau, log kappa)`; length 3,
 #'  beta is profiled out and must not be part of `theta`. Note
 #'  `reciprocal_tau <- exp(theta[2])`, `tau <- 1 / reciprocal_tau` -- this
 #'  `tau` (not `exp(theta[2])`) is what is passed to
-#'  [directional_ou_setup_numeric()].
-#' @param precomputed Output of [precompute_directional_ou_covariance()].
+#'  `directional_ou_setup_numeric()`.
+#' @param precomputed Output of `precompute_directional_ou_covariance()`.
 #' @param sigma_source Anchoring variance at source vertices, forwarded to
-#'  [directional_ou_setup_numeric()]. **Must be left at its default `NULL`**
-#'  for the same reason as in [directional_ou_covariance_loglik_core()]: a
+#'  `directional_ou_setup_numeric()`. **Must be left at its default `NULL`**
+#'  for the same reason as in `directional_ou_covariance_loglik_core()`: a
 #'  silently different `sigma_source` here would make any comparison with
 #'  the sparse likelihood meaningless without erroring.
-#' @param normalized Passed to [directional_ou_covariance_from_setup()];
+#' @param normalized Passed to `directional_ou_covariance_from_setup()`;
 #'  `TRUE` (default) means `precomputed$PtE`/observation
 #'  `distance_on_edge` are in `[0, 1]`.
 #' @param reml If `TRUE`, return the restricted (REML) log-likelihood
 #'  instead of the profile log-likelihood.
-#' @param cpp If `TRUE`, use [directional_ou_covariance_from_setup_cpp()]
-#'  (the C++ in-tree covariance fill, with the mirrored fast R fill for
-#'  out-trees and the generic R fallback for irregular trees) instead of
-#'  [directional_ou_covariance_from_setup()] to build `Sigma`; `FALSE` always
+#' @param cpp If `TRUE`, use `directional_ou_covariance_from_setup_cpp()`
+#'  (the shared C++ in-tree/out-tree covariance fill, with the generic R
+#'  fallback for irregular trees) instead of
+#'  `directional_ou_covariance_from_setup()` to build `Sigma`; `FALSE` always
 #'  uses the pure-R path. Same
 #'  spirit as `likelihood_alpha1_directional_profile_precompute()`'s own
 #'  `cpp` argument (R/graph_likelihoods_v2.R), though that one is tri-state
 #'  (`NULL`/not-`NULL`) while this one is a plain logical.
-#' @param force_dense Forwarded to [directional_ou_gls_core_from_sigma()];
+#' @param force_dense Forwarded to `directional_ou_gls_core_from_sigma()`;
 #'  `TRUE` forces the dense `base::chol()` route regardless of Sigma's
 #'  sparsity. A benchmarking/comparison knob, not a modeling choice --
 #'  see that function's docs. Does not affect how `Sigma` itself is built

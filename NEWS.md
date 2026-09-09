@@ -1,10 +1,10 @@
 # MetricGraph (development version)
 
-* Added a mirrored closed-form directional OU covariance fast path for
+* Added a compiled closed-form directional OU covariance fast path for
   out-trees, including direction-reversed K1 continuity graphs. Reversed
-  river networks now use precomputed Euler labels, parent pointers, and
-  source-normalized transfers instead of repeating generic graph walks for
-  every covariance pair.
+  river networks now share the K1/K2 C++ pairwise kernel, using a cached
+  Euler/RMQ LCA index and source-normalized transfers instead of allocating
+  R objects or walking parent chains for every covariance pair.
 * Added C++-backed directional alpha-1 edge precision and closed-form
   directional OU covariance calculations. The C++ paths are now the default,
   with pure-R reference implementations retained for validation and fallback.

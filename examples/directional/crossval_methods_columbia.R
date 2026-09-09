@@ -76,6 +76,7 @@ valid_objective_ceiling <- 1e50
 methods <- list(
   K1 = list(
     label = "K1 directional",
+    latex_label = "Tail-up, linear ($K_1$)",
     model = "directional",
     reversed = FALSE,
     directional_rule = "K1",
@@ -83,6 +84,7 @@ methods <- list(
   ),
   K2 = list(
     label = "K2 directional",
+    latex_label = "Tail-up, square-root ($K_2$)",
     model = "directional",
     reversed = FALSE,
     directional_rule = "K2",
@@ -90,6 +92,7 @@ methods <- list(
   ),
   WM1_BC1 = list(
     label = "Symmetric WM1, stationary endpoints (BC=1)",
+    latex_label = "Symmetric WM ($\\alpha=1$)",
     model = "wm1",
     reversed = FALSE,
     directional_rule = NA_character_,
@@ -97,6 +100,7 @@ methods <- list(
   ),
   K1_REVERSED_CONTINUITY = list(
     label = "Reversed-direction K1 continuity",
+    latex_label = "Tail-down, continuity",
     model = "directional",
     reversed = TRUE,
     directional_rule = "K1",
@@ -138,6 +142,11 @@ graph_timing <- system.time({
     reversed = TRUE,
     weights_name = weights_name
   )
+
+  # Remove compatible degree-2 vertices before fitting. The default
+  # check_weights = TRUE preserves directional-weight boundaries.
+  graph_original$prune_vertices(verbose = 1)
+  graph_reversed$prune_vertices(verbose = 1)
 })
 graph_data <- graph_original$get_data(format = "tibble", drop_na = FALSE)
 y_full <- graph_data[[response_name]]
@@ -813,6 +822,69 @@ for (method_id in names(results)) {
   )
 }
 
+format_latex_comparison_table <- function(
+    score_table, parameter_table, timing_table, methods) {
+  method_ids <- score_table$method
+  parameter_rows <- match(method_ids, parameter_table$method)
+  timing_rows <- match(method_ids, timing_table$method)
+  if (anyNA(parameter_rows) || anyNA(timing_rows)) {
+    stop("LaTeX table inputs do not contain the same methods.")
+  }
+
+  latex_labels <- vapply(
+    methods[method_ids], `[[`, character(1), "latex_label"
+  )
+  bold_best <- function(values, digits, higher_is_better = FALSE) {
+    formatted <- sprintf(paste0("%.", digits, "f"), values)
+    finite <- is.finite(values)
+    if (any(finite)) {
+      best <- if (higher_is_better) {
+        max(values[finite])
+      } else {
+        min(values[finite])
+      }
+      is_best <- finite & values == best
+      formatted[is_best] <- paste0("\\textbf{", formatted[is_best], "}")
+    }
+    formatted
+  }
+
+  formatted_columns <- list(
+    bold_best(score_table$logscore, 4L),
+    bold_best(score_table$crps, 4L),
+    bold_best(score_table$scrps, 4L),
+    bold_best(score_table$mae, 4L),
+    bold_best(score_table$rmse, 4L),
+    bold_best(
+      parameter_table$log_likelihood[parameter_rows],
+      2L,
+      higher_is_better = TRUE
+    ),
+    # Optimization speed is descriptive, not a model-quality criterion.
+    sprintf("%.2f", timing_table$parameter_optimization[timing_rows])
+  )
+
+  body <- vapply(seq_along(method_ids), function(index) {
+    row <- c(
+      latex_labels[[index]],
+      vapply(formatted_columns, `[[`, character(1), index)
+    )
+    paste0(paste(row, collapse = " & "), " \\\\")
+  }, character(1))
+
+  c(
+    "\\begin{tabular}{@{}lrrrrrrr@{}}",
+    "\\toprule",
+    "& \\multicolumn{5}{c}{Plug-in LOO score} & \\multicolumn{2}{c}{Fit} \\\\",
+    "\\cmidrule(lr){2-6}\\cmidrule(l){7-8}",
+    "Model & LS & CRPS & SCRPS & MAE & RMSE & Log lik. & Opt. (s) \\\\",
+    "\\midrule",
+    body,
+    "\\bottomrule",
+    "\\end{tabular}"
+  )
+}
+
 cat("\nFitted parameters and log-likelihoods (higher is better)\n")
 print(parameter_table, digits = 6, row.names = FALSE)
 cat("\nPlug-in LOO scores (lower is better)\n")
@@ -826,6 +898,13 @@ cat(
   unname(design_timing[["elapsed"]]),
   "\n"
 )
+cat("\nLaTeX comparison table (bold marks model quality, never speed)\n")
+cat(paste(
+  format_latex_comparison_table(
+    score_table, parameter_table, timing_table, methods
+  ),
+  collapse = "\n"
+), "\n")
 cat("\nCompleted:", paste(names(results), collapse = ", "), "\n")
 
 if (save_result) {

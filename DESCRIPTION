@@ -23,4 +23,4 @@ Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
 NeedsCompilation: yes
 LinkingTo: Rcpp, RcppEigen
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.0

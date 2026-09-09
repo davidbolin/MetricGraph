@@ -267,13 +267,27 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// directional_ou_covariance_dendritic_cpp
-NumericMatrix directional_ou_covariance_dendritic_cpp(NumericMatrix E, double kappa, double sigma_stationary, NumericVector var_tail, NumericVector logG_tail, NumericVector signG_tail, IntegerVector enter, IntegerVector exit, NumericMatrix PtE_abs, NumericMatrix PtE2_abs, bool same_point_set);
-RcppExport SEXP _MetricGraph_directional_ou_covariance_dendritic_cpp(SEXP ESEXP, SEXP kappaSEXP, SEXP sigma_stationarySEXP, SEXP var_tailSEXP, SEXP logG_tailSEXP, SEXP signG_tailSEXP, SEXP enterSEXP, SEXP exitSEXP, SEXP PtE_absSEXP, SEXP PtE2_absSEXP, SEXP same_point_setSEXP) {
+// directional_ou_out_tree_lca_index_cpp
+List directional_ou_out_tree_lca_index_cpp(IntegerVector parent_edge, IntegerVector depth);
+RcppExport SEXP _MetricGraph_directional_ou_out_tree_lca_index_cpp(SEXP parent_edgeSEXP, SEXP depthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type parent_edge(parent_edgeSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type depth(depthSEXP);
+    rcpp_result_gen = Rcpp::wrap(directional_ou_out_tree_lca_index_cpp(parent_edge, depth));
+    return rcpp_result_gen;
+END_RCPP
+}
+// directional_ou_covariance_oriented_tree_cpp
+NumericMatrix directional_ou_covariance_oriented_tree_cpp(NumericMatrix E, NumericVector edge_lengths, std::string tree_orientation, double kappa, double sigma_stationary, NumericVector var_tail, NumericVector logG_tail, NumericVector signG_tail, IntegerVector enter, IntegerVector exit, IntegerVector depth, List out_tree_lca_index, NumericMatrix PtE_abs, NumericMatrix PtE2_abs, bool same_point_set);
+RcppExport SEXP _MetricGraph_directional_ou_covariance_oriented_tree_cpp(SEXP ESEXP, SEXP edge_lengthsSEXP, SEXP tree_orientationSEXP, SEXP kappaSEXP, SEXP sigma_stationarySEXP, SEXP var_tailSEXP, SEXP logG_tailSEXP, SEXP signG_tailSEXP, SEXP enterSEXP, SEXP exitSEXP, SEXP depthSEXP, SEXP out_tree_lca_indexSEXP, SEXP PtE_absSEXP, SEXP PtE2_absSEXP, SEXP same_point_setSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericMatrix >::type E(ESEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type edge_lengths(edge_lengthsSEXP);
+    Rcpp::traits::input_parameter< std::string >::type tree_orientation(tree_orientationSEXP);
     Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
     Rcpp::traits::input_parameter< double >::type sigma_stationary(sigma_stationarySEXP);
     Rcpp::traits::input_parameter< NumericVector >::type var_tail(var_tailSEXP);
@@ -281,10 +295,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type signG_tail(signG_tailSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type enter(enterSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type exit(exitSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type depth(depthSEXP);
+    Rcpp::traits::input_parameter< List >::type out_tree_lca_index(out_tree_lca_indexSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type PtE_abs(PtE_absSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type PtE2_abs(PtE2_absSEXP);
     Rcpp::traits::input_parameter< bool >::type same_point_set(same_point_setSEXP);
-    rcpp_result_gen = Rcpp::wrap(directional_ou_covariance_dendritic_cpp(E, kappa, sigma_stationary, var_tail, logG_tail, signG_tail, enter, exit, PtE_abs, PtE2_abs, same_point_set));
+    rcpp_result_gen = Rcpp::wrap(directional_ou_covariance_oriented_tree_cpp(E, edge_lengths, tree_orientation, kappa, sigma_stationary, var_tail, logG_tail, signG_tail, enter, exit, depth, out_tree_lca_index, PtE_abs, PtE2_abs, same_point_set));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -432,7 +448,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_cv_loo_selinv_cpp", (DL_FUNC) &_MetricGraph_cv_loo_selinv_cpp, 6},
     {"_MetricGraph_directional_edge_precision_triplets_cpp", (DL_FUNC) &_MetricGraph_directional_edge_precision_triplets_cpp, 5},
     {"_MetricGraph_directional_ou_setup_numeric_cpp", (DL_FUNC) &_MetricGraph_directional_ou_setup_numeric_cpp, 4},
-    {"_MetricGraph_directional_ou_covariance_dendritic_cpp", (DL_FUNC) &_MetricGraph_directional_ou_covariance_dendritic_cpp, 11},
+    {"_MetricGraph_directional_ou_out_tree_lca_index_cpp", (DL_FUNC) &_MetricGraph_directional_ou_out_tree_lca_index_cpp, 2},
+    {"_MetricGraph_directional_ou_covariance_oriented_tree_cpp", (DL_FUNC) &_MetricGraph_directional_ou_covariance_oriented_tree_cpp, 15},
     {"_MetricGraph_draw_edge_direct_cpp", (DL_FUNC) &_MetricGraph_draw_edge_direct_cpp, 6},
     {"_MetricGraph_draw_edge_kriging_cpp", (DL_FUNC) &_MetricGraph_draw_edge_kriging_cpp, 6},
     {"_MetricGraph_compute_PtE_edges_cpp", (DL_FUNC) &_MetricGraph_compute_PtE_edges_cpp, 2},

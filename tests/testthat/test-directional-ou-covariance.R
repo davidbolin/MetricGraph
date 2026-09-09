@@ -170,6 +170,62 @@ test_that("reversed K1 selects the out-tree fast path", {
   expect_false(setup$is_dendritic)
   expect_length(setup$depth, graph$nE)
   expect_length(setup$parent_edge, graph$nE)
+  expect_named(
+    setup$out_tree_lca_index,
+    c("first", "root_edge", "log2_floor", "rmq")
+  )
+})
+
+test_that("out-tree parent edges match their incoming vertex edges", {
+  E <- rbind(
+    c(1L, 2L),
+    c(2L, 3L),
+    c(2L, 4L),
+    c(4L, 5L),
+    c(6L, 7L)
+  )
+  n_edges <- nrow(E)
+  indegree <- tabulate(E[, 2], nbins = 7L)
+  outdegree <- tabulate(E[, 1], nbins = 7L)
+  labels <- MetricGraph:::directional_ou_ancestor_labels(
+    E,
+    indegree,
+    outdegree,
+    split(seq_len(n_edges), E[, 2]),
+    split(seq_len(n_edges), E[, 1]),
+    "out"
+  )
+
+  expect_identical(
+    labels$parent_edge,
+    c(NA_integer_, 1L, 1L, 3L, NA_integer_)
+  )
+})
+
+test_that("out-tree C++ covariance bypasses the R pairwise fallback", {
+  graph <- make_reversed_directional_test_graph()
+  graph$setDirectionalWeightFunction()
+  setup <- MetricGraph:::directional_ou_setup(
+    graph, 0.6, 1.4, NULL, cpp = TRUE
+  )
+  points <- rbind(
+    c(2, 0.2), c(1, 0.6), c(3, 0.4), c(4, 0.3), c(7, 0.8)
+  )
+  expected <- MetricGraph:::directional_ou_covariance_from_setup(
+    setup, points
+  )
+
+  testthat::local_mocked_bindings(
+    directional_ou_covariance_from_setup = function(...) {
+      stop("unexpected R covariance fallback")
+    },
+    .package = "MetricGraph"
+  )
+  expect_equal(
+    MetricGraph:::directional_ou_covariance_from_setup_cpp(setup, points),
+    expected,
+    tolerance = 1e-11
+  )
 })
 
 test_that("reversed K1 retains stationary variance", {
@@ -478,6 +534,10 @@ test_that("ancestor labeling handles deep in-trees and out-trees iteratively", {
 })
 
 test_that("C++ dense covariance enforces its point-count guard", {
+  old_limit <- getOption("DIRECTIONAL_OU_MAX_POINTS")
+  on.exit(options(DIRECTIONAL_OU_MAX_POINTS = old_limit), add = TRUE)
+  options(DIRECTIONAL_OU_MAX_POINTS = 10000L)
+
   graph <- make_directional_test_graph()
   setup <- MetricGraph:::directional_ou_setup(graph, 1, 1, NULL)
   too_many_points <- cbind(rep(1L, 10001L), rep(0.5, 10001L))
@@ -487,4 +547,27 @@ test_that("C++ dense covariance enforces its point-count guard", {
     ),
     "must be <= 10000"
   )
+})
+
+test_that("dense covariance point-count guard honors its R option", {
+  old_limit <- getOption("DIRECTIONAL_OU_MAX_POINTS")
+  on.exit(options(DIRECTIONAL_OU_MAX_POINTS = old_limit), add = TRUE)
+
+  graph <- make_directional_test_graph()
+  setup <- MetricGraph:::directional_ou_setup(graph, 1, 1, NULL)
+  points <- cbind(rep(1L, 3L), c(0.2, 0.5, 0.8))
+
+  options(DIRECTIONAL_OU_MAX_POINTS = 2L)
+  expect_error(
+    MetricGraph:::directional_ou_covariance_from_setup_cpp(setup, points),
+    "must be <= 2"
+  )
+
+  options(DIRECTIONAL_OU_MAX_POINTS = 3L)
+  expect_no_error({
+    covariance <- MetricGraph:::directional_ou_covariance_from_setup_cpp(
+      setup, points
+    )
+  })
+  expect_identical(dim(covariance), c(3L, 3L))
 })

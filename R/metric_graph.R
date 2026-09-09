@@ -2750,12 +2750,30 @@ metric_graph <-  R6Class("metric_graph",
              if (!a_chain) { start_v <- a; other <- b } else { start_v <- b; other <- a }
              if (!is_chain_v[other]) { edge_consumed[k] <- TRUE; next }
              walk <- walk_chain(start_v, k)
+
+             # `start_v` is whichever non-chain endpoint is encountered first
+             # in edge order. If that endpoint is the downstream end, the walk
+             # runs against the compatible directed chain. Normalize every
+             # chain to its original edge direction before merging; otherwise
+             # pruning can turn an oriented in-tree/out-tree into an irregular
+             # directed tree.
+             if (!walk$o[1L]) {
+               anchor_a <- walk$anchor_b
+               anchor_b <- start_v
+               walk$e <- rev(walk$e)
+               walk$o <- !rev(walk$o)
+               walk$iv <- rev(walk$iv)
+             } else {
+               anchor_a <- start_v
+               anchor_b <- walk$anchor_b
+             }
+
              chains_n <- chains_n + 1L
              if (chains_n > length(chains)) length(chains) <- 2L * length(chains)
              chains[[chains_n]] <- list(
-               anchor_a = start_v, anchor_b = walk$anchor_b,
+               anchor_a = anchor_a, anchor_b = anchor_b,
                e = walk$e, o = walk$o, iv = walk$iv,
-               is_cycle = (start_v == walk$anchor_b)
+               is_cycle = (anchor_a == anchor_b)
              )
            }
 
@@ -5307,8 +5325,8 @@ coordinates!"))
      #' @param PtE2 Optional second point set for cross-covariance.
      #' @param sigma_source Optional source-vertex anchoring variances.
      #' @param normalized Whether point distances are normalized to `[0, 1]`.
-     #' @param cpp Use C++ numeric setup and the C++ in-tree covariance fill
-     #'  when available; out-trees use the mirrored fast R fill.
+     #' @param cpp Use C++ numeric setup and the shared C++ covariance fill
+     #'  when available for oriented in-trees and out-trees.
      #' @return A dense covariance matrix.
      compute_directional_covariance = function(kappa, tau, PtE = NULL,
                                                PtE2 = NULL,

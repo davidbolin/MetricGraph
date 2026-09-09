@@ -163,8 +163,12 @@ directional_ou_setup_numeric_cpp <- function(skeleton, kappa, tau, source_var_by
     .Call(`_MetricGraph_directional_ou_setup_numeric_cpp`, skeleton, kappa, tau, source_var_by_vertex)
 }
 
-directional_ou_covariance_dendritic_cpp <- function(E, kappa, sigma_stationary, var_tail, logG_tail, signG_tail, enter, exit, PtE_abs, PtE2_abs, same_point_set) {
-    .Call(`_MetricGraph_directional_ou_covariance_dendritic_cpp`, E, kappa, sigma_stationary, var_tail, logG_tail, signG_tail, enter, exit, PtE_abs, PtE2_abs, same_point_set)
+directional_ou_out_tree_lca_index_cpp <- function(parent_edge, depth) {
+    .Call(`_MetricGraph_directional_ou_out_tree_lca_index_cpp`, parent_edge, depth)
+}
+
+directional_ou_covariance_oriented_tree_cpp <- function(E, edge_lengths, tree_orientation, kappa, sigma_stationary, var_tail, logG_tail, signG_tail, enter, exit, depth, out_tree_lca_index, PtE_abs, PtE2_abs, same_point_set) {
+    .Call(`_MetricGraph_directional_ou_covariance_oriented_tree_cpp`, E, edge_lengths, tree_orientation, kappa, sigma_stationary, var_tail, logG_tail, signG_tail, enter, exit, depth, out_tree_lca_index, PtE_abs, PtE2_abs, same_point_set)
 }
 
 #' @name draw_edge_direct_cpp

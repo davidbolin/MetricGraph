@@ -18,7 +18,9 @@
 // on use below, but topo_order's *iteration order* is used as-is.
 
 #include <Rcpp.h>
+#include <algorithm>
 #include <cmath>
+#include <string>
 #include <vector>
 
 using namespace Rcpp;
@@ -126,29 +128,148 @@ List directional_ou_setup_numeric_cpp(List skeleton, double kappa, double tau,
       Named("signG_tail") = signG_tail);
 }
 
-// directional_ou_covariance_dendritic_cpp(): C++ port of the O(n^2) pairwise
-// dense-covariance fill, restricted to the dendritic case (setup$is_dendritic
-// == TRUE) -- direct 1:1 translation of directional_ou_pair_covariance() /
-// directional_lca() / directional_point_variance() / directional_log_transfer()
-// (R/covariance_directional_ou.R), specialised to their dendritic fast paths
-// only (case 3 of directional_lca() never fires when dendritic; the
-// non-dendritic BFS fallbacks are not ported here -- see
-// directional_ou_covariance_from_setup_cpp()'s R dispatch for the
-// non-dendritic fallback to the pure-R path).
+// Build a graph-only O(1)-query LCA index for an out-tree (or forest). The
+// Euler tour and sparse-table RMQ are cached by
+// directional_ou_setup_structure(), alongside enter/exit/depth/parent_edge,
+// so repeated covariance evaluations at new parameter values do not rebuild
+// them. Edge identifiers stored in the returned R object are 1-indexed.
+// [[Rcpp::export]]
+List directional_ou_out_tree_lca_index_cpp(IntegerVector parent_edge,
+                                            IntegerVector depth) {
+  int nE = parent_edge.size();
+  if (depth.size() != nE) {
+    stop("parent_edge and depth must have the same length");
+  }
+
+  std::vector<std::vector<int>> children(nE);
+  std::vector<int> roots;
+  for (int e = 0; e < nE; ++e) {
+    if (IntegerVector::is_na(parent_edge[e])) {
+      roots.push_back(e);
+    } else {
+      int parent = parent_edge[e] - 1;
+      if (parent < 0 || parent >= nE) {
+        stop("parent_edge contains an invalid edge number");
+      }
+      children[parent].push_back(e);
+    }
+  }
+
+  IntegerVector first(nE, NA_INTEGER);
+  IntegerVector root_edge(nE, NA_INTEGER);
+  std::vector<int> euler;
+  std::vector<int> euler_depth;
+  if (nE > 0) {
+    euler.reserve(2 * nE - roots.size());
+    euler_depth.reserve(2 * nE - roots.size());
+  }
+
+  for (std::size_t root_idx = 0; root_idx < roots.size(); ++root_idx) {
+    int root = roots[root_idx];
+    first[root] = euler.size() + 1;
+    root_edge[root] = root + 1;
+    euler.push_back(root);
+    euler_depth.push_back(depth[root]);
+
+    std::vector<int> edge_stack(1, root);
+    std::vector<std::size_t> next_child(1, 0);
+    while (!edge_stack.empty()) {
+      int edge = edge_stack.back();
+      std::size_t &child_idx = next_child.back();
+      if (child_idx < children[edge].size()) {
+        int child = children[edge][child_idx++];
+        first[child] = euler.size() + 1;
+        root_edge[child] = root + 1;
+        euler.push_back(child);
+        euler_depth.push_back(depth[child]);
+        edge_stack.push_back(child);
+        next_child.push_back(0);
+      } else {
+        edge_stack.pop_back();
+        next_child.pop_back();
+        if (!edge_stack.empty()) {
+          int parent = edge_stack.back();
+          euler.push_back(parent);
+          euler_depth.push_back(depth[parent]);
+        }
+      }
+    }
+  }
+
+  for (int e = 0; e < nE; ++e) {
+    if (IntegerVector::is_na(first[e])) {
+      stop("parent_edge does not describe an acyclic rooted forest");
+    }
+  }
+
+  int tour_size = euler.size();
+  IntegerVector log2_floor(tour_size + 1);
+  for (int i = 2; i <= tour_size; ++i) {
+    log2_floor[i] = log2_floor[i / 2] + 1;
+  }
+  int n_levels = tour_size == 0 ? 0 : log2_floor[tour_size] + 1;
+  IntegerMatrix rmq(n_levels, tour_size);
+  for (int i = 0; i < tour_size; ++i) {
+    rmq(0, i) = euler[i] + 1;
+  }
+  for (int level = 1; level < n_levels; ++level) {
+    int half_span = 1 << (level - 1);
+    int span = half_span << 1;
+    for (int i = 0; i + span <= tour_size; ++i) {
+      int left = rmq(level - 1, i) - 1;
+      int right = rmq(level - 1, i + half_span) - 1;
+      rmq(level, i) = depth[left] <= depth[right] ? left + 1 : right + 1;
+    }
+  }
+
+  return List::create(
+      Named("first") = first,
+      Named("root_edge") = root_edge,
+      Named("log2_floor") = log2_floor,
+      Named("rmq") = rmq);
+}
+
+// C++ O(n^2) pairwise covariance fill shared by both oriented-tree cases:
+//   * converging in-trees (the K1/K2 Columbia paths), where two incomparable
+//     edges have no common ancestor and hence zero covariance;
+//   * diverging out-trees (the reversed-continuity path), where incomparable
+//     edges use the cached Euler/RMQ index above to find their LCA in O(1).
+//
+// This is the compiled counterpart of directional_ou_pair_covariance() /
+// directional_lca() / directional_point_variance() /
+// directional_log_transfer(). Irregularly oriented trees remain on the R
+// fallback in directional_ou_covariance_from_setup_cpp().
 //
 // E's edge-number columns (E, PtE_abs/PtE2_abs col 1) and enter/exit are
 // 1-indexed (R convention); converted to 0-indexed C++ array access
 // consistently below.
 // [[Rcpp::export]]
-NumericMatrix directional_ou_covariance_dendritic_cpp(
-    NumericMatrix E, double kappa, double sigma_stationary,
+NumericMatrix directional_ou_covariance_oriented_tree_cpp(
+    NumericMatrix E, NumericVector edge_lengths,
+    std::string tree_orientation, double kappa, double sigma_stationary,
     NumericVector var_tail, NumericVector logG_tail, NumericVector signG_tail,
-    IntegerVector enter, IntegerVector exit,
+    IntegerVector enter, IntegerVector exit, IntegerVector depth,
+    List out_tree_lca_index,
     NumericMatrix PtE_abs, NumericMatrix PtE2_abs, bool same_point_set) {
 
   int n1 = PtE_abs.nrow();
   int n2 = PtE2_abs.nrow();
   NumericMatrix Sigma(n1, n2);
+  bool is_out_tree = tree_orientation == "out";
+  if (!is_out_tree && tree_orientation != "in") {
+    stop("tree_orientation must be 'in' or 'out'");
+  }
+
+  IntegerVector first;
+  IntegerVector root_edge;
+  IntegerVector log2_floor;
+  IntegerMatrix rmq;
+  if (is_out_tree) {
+    first = as<IntegerVector>(out_tree_lca_index["first"]);
+    root_edge = as<IntegerVector>(out_tree_lca_index["root_edge"]);
+    log2_floor = as<IntegerVector>(out_tree_lca_index["log2_floor"]);
+    rmq = as<IntegerMatrix>(out_tree_lca_index["rmq"]);
+  }
 
   // point_variance(e, t): e is a 0-indexed edge number here (caller passes
   // the already-decremented edge index).
@@ -160,11 +281,31 @@ NumericMatrix directional_ou_covariance_dendritic_cpp(
   // is_downstream(from_e0, to_e0): is to_e0 reachable forward from from_e0
   // (i.e. from_e0 is upstream of or equal to to_e0)? 0-indexed edges.
   auto is_downstream = [&](int from_e0, int to_e0) -> bool {
+    if (is_out_tree) {
+      return enter[from_e0] <= enter[to_e0] &&
+             exit[to_e0] <= exit[from_e0];
+    }
     return enter[to_e0] <= enter[from_e0] && exit[from_e0] <= exit[to_e0];
   };
 
   auto logG_at = [&](int e0, double t) -> double {
-    return logG_tail[e0] + kappa * t;
+    return is_out_tree ? logG_tail[e0] - kappa * t
+                       : logG_tail[e0] + kappa * t;
+  };
+
+  auto out_tree_lca = [&](int edge_a0, int edge_b0) -> int {
+    int left = first[edge_a0] - 1;
+    int right = first[edge_b0] - 1;
+    if (left > right) {
+      std::swap(left, right);
+    }
+    int interval_length = right - left + 1;
+    int level = log2_floor[interval_length];
+    int block_length = 1 << level;
+    int candidate_a0 = rmq(level, left) - 1;
+    int candidate_b0 = rmq(level, right - block_length + 1) - 1;
+    return depth[candidate_a0] <= depth[candidate_b0]
+        ? candidate_a0 : candidate_b0;
   };
 
   for (int i = 0; i < n1; ++i) {
@@ -176,7 +317,7 @@ NumericMatrix directional_ou_covariance_dendritic_cpp(
       int e_t0 = static_cast<int>(PtE2_abs(j, 0)) - 1;
       double t_t = PtE2_abs(j, 1);
 
-      // LCA search (dendritic-only reduction of directional_lca()).
+      // LCA search specialised to the two oriented-tree cases.
       int lca_e0;
       double lca_t;
       if (e_s0 == e_t0) {
@@ -190,6 +331,19 @@ NumericMatrix directional_ou_covariance_dendritic_cpp(
       } else if (is_downstream(e_t0, e_s0)) {
         lca_e0 = e_t0;
         lca_t = t_t;
+      } else if (is_out_tree) {
+        int root_s0 = root_edge[e_s0] - 1;
+        int root_t0 = root_edge[e_t0] - 1;
+        if (root_s0 != root_t0) {
+          if (E(root_s0, 0) == E(root_t0, 0)) {
+            stop("directional_lca(): LCA at a branching source vertex (indegree 0, outdegree > 1) is not yet supported -- vertex %d",
+                 static_cast<int>(E(root_s0, 0)));
+          }
+          Sigma(i, j) = 0.0;
+          continue;
+        }
+        lca_e0 = out_tree_lca(e_s0, e_t0);
+        lca_t = edge_lengths[lca_e0];
       } else {
         // Case 4: no common ancestor -- covariance 0.
         Sigma(i, j) = 0.0;
@@ -198,12 +352,18 @@ NumericMatrix directional_ou_covariance_dendritic_cpp(
 
       double r_aa = point_variance(lca_e0, lca_t);
 
-      // transfer(lca, point_s)
-      double log_abs_s = logG_at(lca_e0, lca_t) - logG_at(e_s0, t_s);
+      double logG_lca = logG_at(lca_e0, lca_t);
+      // transfer(lca, point_s): out-trees are source-normalised and therefore
+      // use the opposite subtraction order from outlet-normalised in-trees.
+      double log_abs_s = is_out_tree
+          ? logG_at(e_s0, t_s) - logG_lca
+          : logG_lca - logG_at(e_s0, t_s);
       double sign_s = signG_tail[lca_e0] * signG_tail[e_s0];
 
       // transfer(lca, point_t)
-      double log_abs_t = logG_at(lca_e0, lca_t) - logG_at(e_t0, t_t);
+      double log_abs_t = is_out_tree
+          ? logG_at(e_t0, t_t) - logG_lca
+          : logG_lca - logG_at(e_t0, t_t);
       double sign_t = signG_tail[lca_e0] * signG_tail[e_t0];
 
       Sigma(i, j) = r_aa * sign_s * sign_t * std::exp(log_abs_s + log_abs_t);

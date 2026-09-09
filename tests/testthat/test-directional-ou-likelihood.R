@@ -88,7 +88,7 @@ test_that("covariance likelihood C++ and R paths agree on out-trees", {
   )
 })
 
-test_that("small reversed Columbia covariance smoke test is finite", {
+test_that("small reversed Columbia C++ covariance agrees with R", {
   skip_on_cran()
   helper <- system.file(
     "examples/directional/columbia_full_graph_helpers.R",
@@ -117,6 +117,10 @@ test_that("small reversed Columbia covariance smoke test is finite", {
   covariance <- directional_ou_covariance(
     graph, kappa = 0.7, tau = 1, PtE = points, cpp = TRUE
   )
+  covariance_r <- directional_ou_covariance(
+    graph, kappa = 0.7, tau = 1, PtE = points, cpp = FALSE
+  )
   expect_true(all(is.finite(covariance)))
   expect_equal(covariance, t(covariance), tolerance = 1e-10)
+  expect_equal(covariance, covariance_r, tolerance = 1e-10)
 })

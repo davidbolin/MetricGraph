@@ -4,17 +4,19 @@
 # Run from the package root: Rscript examples/directional/sim_speed_columbia.R
 # Inputs: none; edit the Settings block below to change the run.
 # Outputs: a timing table on stdout, and if output_file is set below, an .rds
-# of the results plus "<stem>_precompute.png"/"<stem>_evaluate.png".
-
+# of the results plus "<stem>_precompute.pdf"/"<stem>_evaluate.pdf".
 
 ## Settings ------------------------------------------------------------------
 
 # Arbitrary round-number defaults spanning two orders of magnitude; no
 # benchmarking backs this specific grid.
-n_obs_values <- c(100L, 500L, 1000L, 5000L)
+n_obs_values <- c(
+  100L, 500L, 1000L, 2000L, 4000L,
+  8000L, 10000L, 12000L, 15000L, 20000L
+)
 # Balances timing stability (more repetitions) against wall time.
 n_repetitions <- 5L
-available_cores <- max(1L, parallel::detectCores(logical = FALSE))
+available_cores <- max(1L, min(n_repetitions,parallel::detectCores(logical = FALSE)))
 # No point using more cores than repetitions; leave one core free for the OS.
 n_cores <- min(n_repetitions, max(1L, available_cores - 1L))
 # mclapply forks; forking is unavailable on Windows, so run serially.
@@ -28,12 +30,19 @@ output_file <- "examples/directional/results/sim_speed.rds"
 # (log sigma_e, log reciprocal_tau, log kappa); mid-range values used only to
 # fix a representative evaluation point for timing, not fitted.
 theta_test <- c(log(0.5), log(1), log(0.5))
-# Matches DIRECTIONAL_OU_MAX_POINTS in R/covariance_directional_ou.R -- keep
-# in sync; dense n x n covariance is not viable beyond this.
-maximum_covariance_n <- 10000L
+# Per-method dense-covariance caps. Continuity uses a lower benchmark cap
+# because its covariance evaluation requires more working memory.
+maximum_covariance_n <- c(K1 = 12000L, K2 = 12000L, continuity = 8000L)
+# Raise the package's default covariance guard to the largest configured cap;
+# forked workers inherit the option. Per-method caps below still skip
+# continuity above its lower limit.
+options(DIRECTIONAL_OU_MAX_POINTS = max(maximum_covariance_n))
 seed <- 1L
 # Keep observations off edge endpoints (0/1 coincide with vertices).
 edge_margin <- 0.01
+# Show the crowded low-observation timings in an inset whenever the main plot
+# also contains observation counts above this threshold.
+inset_max_n <- 1000L
 
 
 ## Load the code under test --------------------------------------------------
@@ -48,6 +57,11 @@ component <- MetricGraph::columbia_main_component
 graph_original <- columbia_make_graph(component, reversed = FALSE)
 graph_reversed <- columbia_make_graph(component, reversed = TRUE)
 
+# Remove compatible degree-2 vertices before any benchmark timings. The
+# default check_weights = TRUE preserves directional-weight boundaries.
+graph_original$prune_vertices(verbose = 1)
+graph_reversed$prune_vertices(verbose = 1)
+
 
 ## Methods under test --------------------------------------------------------
 
@@ -56,7 +70,8 @@ graph_reversed <- columbia_make_graph(component, reversed = TRUE)
 # reversed graph, i.e. timing the reversed-direction continuity condition.
 # Each family also gets a _covariance counterpart built from the same
 # (graph, weights) pair, timing direct dense-covariance evaluation instead of
-# the profile likelihood, capped at maximum_covariance_n observations.
+# the profile likelihood, with its observation cap taken from
+# maximum_covariance_n.
 base_configs <- list(
   K1         = list(graph = "original", weights = "K1"),
   K2         = list(graph = "original", weights = "K2"),
@@ -67,25 +82,52 @@ methods <- c(
     c(config, use_dense_covariance = FALSE, maximum_n = Inf)
   }),
   stats::setNames(
-    lapply(base_configs, function(config) {
-      c(config, use_dense_covariance = TRUE, maximum_n = maximum_covariance_n)
+    lapply(names(base_configs), function(method_name) {
+      config <- base_configs[[method_name]]
+      c(
+        config,
+        use_dense_covariance = TRUE,
+        maximum_n = maximum_covariance_n[[method_name]]
+      )
     }),
     paste0(names(base_configs), "_covariance")
   )
 )
-# Plot color per method, derived from `methods` so a renamed or added method
-# can't silently drop off the plots in plot_stage() below.
-method_palette <- c(
-  "black", "steelblue", "darkgreen", "orange", "purple", "deeppink"
+# Plotmath labels give K1/K2 proper subscripts and shorten the dense-
+# covariance method suffix to "cov" in the legend.
+method_labels <- c(
+  K1 = expression(K[1]),
+  K1_covariance = expression(K[1] ~ plain(cov)),
+  K2 = expression(K[2]),
+  K2_covariance = expression(K[2] ~ plain(cov)),
+  continuity = expression(plain(continuity)),
+  continuity_covariance = expression(plain(continuity) ~ plain(cov))
 )
-if (length(method_palette) < length(methods)) {
-  stop(
-    "method_palette needs at least as many colors as methods; got ",
-    length(method_palette), " colors for ", length(methods), " methods"
-  )
+if (!setequal(names(method_labels), names(methods))) {
+  stop("method_labels must contain exactly one label for every method")
+}
+
+# Use one color for each method family. Dashed lines and open points distinguish
+# the dense-covariance variants from their corresponding profile methods.
+method_palette <- c(
+  K1 = "black",
+  K2 = "#0072B2",
+  continuity = "#009E73"
+)
+method_families <- sub("_covariance$", "", names(method_labels))
+unknown_families <- setdiff(unique(method_families), names(method_palette))
+if (length(unknown_families) > 0L) {
+  stop("method_palette is missing: ", paste(unknown_families, collapse = ", "))
 }
 method_colors <- stats::setNames(
-  method_palette[seq_along(methods)], names(methods)
+  method_palette[method_families], names(method_labels)
+)
+covariance_methods <- grepl("_covariance$", names(method_labels))
+method_linetypes <- stats::setNames(
+  ifelse(covariance_methods, "dashed", "solid"), names(method_labels)
+)
+method_shapes <- stats::setNames(
+  ifelse(covariance_methods, 1, 16), names(method_labels)
 )
 
 
@@ -180,9 +222,9 @@ time_method <- function(graph, method, inputs) {
   )
 }
 
-# Also reads method_colors (built in the Methods-under-test section above)
-# and timing_results (built later, in the Timing sweep section below) --
-# both are in scope by the time this function is actually called, in Output.
+# Also reads the method plotting controls above and timing_results (built later,
+# in the Timing sweep section below). All are in scope when this function is
+# called in Output.
 plot_stage <- function(stage, file) {
   # A log-scale axis can't show a zero elapsed time.
   log_scale_floor <- .Machine$double.eps
@@ -192,16 +234,107 @@ plot_stage <- function(stage, file) {
 
   plot <- ggplot2::ggplot(
     stage_results,
-    ggplot2::aes(n_obs, elapsed_seconds, color = method)
+    ggplot2::aes(
+      n_obs, elapsed_seconds,
+      color = method, linetype = method, shape = method
+    )
   ) +
-    ggplot2::geom_line() +
-    ggplot2::geom_point() +
-    ggplot2::scale_x_log10() +
-    ggplot2::scale_y_log10() +
-    ggplot2::scale_color_manual(values = method_colors) +
-    ggplot2::labs(x = "observations", y = "median elapsed seconds")
+    ggplot2::geom_line(linewidth = 0.7) +
+    ggplot2::geom_point(size = 2.2, stroke = 0.8) +
+    ggplot2::scale_x_continuous(
+      labels = function(x) format(x, big.mark = ",", scientific = FALSE,
+                                  trim = TRUE)
+    ) +
+    ggplot2::scale_y_log10(
+      labels = function(x) format(x, scientific = FALSE, trim = TRUE)
+    ) +
+    ggplot2::scale_color_manual(
+      values = method_colors,
+      breaks = names(method_labels),
+      labels = method_labels
+    ) +
+    ggplot2::scale_linetype_manual(
+      values = method_linetypes,
+      breaks = names(method_labels),
+      labels = method_labels
+    ) +
+    ggplot2::scale_shape_manual(
+      values = method_shapes,
+      breaks = names(method_labels),
+      labels = method_labels
+    ) +
+    ggplot2::labs(
+      x = "# observations",
+      y = "Median elapsed time (seconds)",
+      color = "Method",
+      linetype = "Method",
+      shape = "Method"
+    ) +
+    ggplot2::theme_bw(base_size = 12) +
+    ggplot2::theme(panel.grid.minor = ggplot2::element_blank())
 
-  ggplot2::ggsave(file, plot, width = 800, height = 550, units = "px", dpi = 96)
+  low_n <- stage_results$n_obs <= inset_max_n
+  add_inset <- any(stage_results$n_obs > inset_max_n) &&
+    length(unique(stage_results$n_obs[low_n])) >= 2L
+  if (add_inset) {
+    inset_results <- stage_results[low_n, ]
+    inset_plot <- ggplot2::ggplot(
+      inset_results,
+      ggplot2::aes(
+        n_obs, elapsed_seconds,
+        color = method, linetype = method, shape = method
+      )
+    ) +
+      ggplot2::geom_line(linewidth = 0.55) +
+      ggplot2::geom_point(size = 1.7, stroke = 0.7) +
+      ggplot2::scale_x_continuous(
+        limits = c(0, inset_max_n),
+        breaks = c(0, inset_max_n / 2, inset_max_n),
+        labels = function(x) format(x, big.mark = ",", scientific = FALSE,
+                                    trim = TRUE)
+      ) +
+      ggplot2::scale_y_log10(
+        labels = function(x) format(x, scientific = FALSE, trim = TRUE)
+      ) +
+      ggplot2::scale_color_manual(values = method_colors) +
+      ggplot2::scale_linetype_manual(values = method_linetypes) +
+      ggplot2::scale_shape_manual(values = method_shapes) +
+      ggplot2::labs(
+        title = paste0(
+          "# observations: 0-",
+          format(inset_max_n, big.mark = ",", scientific = FALSE)
+        ),
+        x = NULL,
+        y = NULL
+      ) +
+      ggplot2::theme_bw(base_size = 8) +
+      ggplot2::theme(
+        legend.position = "none",
+        panel.grid.minor = ggplot2::element_blank(),
+        plot.title = ggplot2::element_text(size = 8, hjust = 0.5),
+        plot.margin = ggplot2::margin(2, 3, 2, 2)
+      )
+
+    x_limits <- range(stage_results$n_obs, finite = TRUE)
+    log_y_limits <- range(log10(stage_results$elapsed_seconds), finite = TRUE)
+    x_span <- diff(x_limits)
+    log_y_span <- diff(log_y_limits)
+    if (x_span > 0 && log_y_span > 0) {
+      plot <- plot + ggplot2::annotation_custom(
+        grob = ggplot2::ggplotGrob(inset_plot),
+        xmin = x_limits[1L] + 0.55 * x_span,
+        xmax = x_limits[1L] + 0.98 * x_span,
+        ymin = 10^(log_y_limits[1L] + 0.05 * log_y_span),
+        ymax = 10^(log_y_limits[1L] + 0.43 * log_y_span)
+      )
+    }
+  }
+
+  ggplot2::ggsave(
+    file, plot,
+    width = 8, height = 5.5, units = "in",
+    device = grDevices::cairo_pdf
+  )
 }
 
 
@@ -271,12 +404,13 @@ if (nzchar(output_file)) {
 
   attr(timing_results, "run_config") <- list(
     n_obs_values = n_obs_values, n_repetitions = n_repetitions,
-    n_cores = n_cores, seed = seed, theta_test = theta_test
+    n_cores = n_cores, seed = seed, theta_test = theta_test,
+    DIRECTIONAL_OU_MAX_POINTS = getOption("DIRECTIONAL_OU_MAX_POINTS")
   )
   attr(timing_results, "package_version") <-
     as.character(utils::packageVersion("MetricGraph"))
   saveRDS(timing_results, output_file)
   figure_stem <- tools::file_path_sans_ext(output_file)
-  plot_stage("precompute", paste0(figure_stem, "_precompute.png"))
-  plot_stage("evaluate", paste0(figure_stem, "_evaluate.png"))
+  plot_stage("precompute", paste0(figure_stem, "_precompute.pdf"))
+  plot_stage("evaluate", paste0(figure_stem, "_evaluate.pdf"))
 }

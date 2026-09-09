@@ -93,10 +93,10 @@
 #'  `which(graph$get_degrees("indegree") == 0)`.
 #' @param normalized If `TRUE` (default), `distance_on_edge` in `PtE`/`PtE2`
 #'  is in `[0, 1]`; if `FALSE`, distances are absolute.
-#' @param cpp If `TRUE` (default), use the C++ numeric setup and the C++
-#'  covariance fill for in-trees. Out-trees use the mirrored fast R covariance
-#'  fill; irregular trees use the generic R fallback. Set to `FALSE` to use
-#'  the pure-R implementation throughout.
+#' @param cpp If `TRUE` (default), use the C++ numeric setup and the shared C++
+#'  covariance fill for oriented in-trees and out-trees. Irregular trees use
+#'  the generic R fallback. Set to `FALSE` to use the pure-R implementation
+#'  throughout.
 #'
 #' @return A dense `matrix` with `nrow(PtE)` rows and `nrow(PtE2)` columns.
 #' @seealso [directional_ou_variance()] for the diagonal only.
@@ -133,11 +133,21 @@ directional_ou_covariance <- function(graph, kappa, tau,
 # Resolve PtE/PtE2 defaults, convert to absolute distance, and apply the
 # DIRECTIONAL_OU_MAX_POINTS dense-matrix size guard -- the boundary logic
 # shared by directional_ou_covariance_from_setup() (R pairwise fill) and
-# directional_ou_covariance_from_setup_cpp() (C++ dendritic fill dispatch).
+# directional_ou_covariance_from_setup_cpp() (C++ oriented-tree fill dispatch).
 # Extracted so the size guard (correctness-relevant: a dense n1 x n2 matrix
 # beyond this is not viable) can't silently drift between the two paths.
+#'
+#' @param DIRECTIONAL_OU_MAX_POINTS Maximum number of points allowed in either
+#'   `PtE` or `PtE2`. Defaults to the `DIRECTIONAL_OU_MAX_POINTS` option, or
+#'   `10000L` when that option is unset. Larger inputs are rejected because the
+#'   covariance calculation constructs a dense matrix.
 #' @noRd
-directional_ou_resolve_PtE_pair <- function(setup, PtE, PtE2, normalized) {
+directional_ou_resolve_PtE_pair <- function(setup, PtE, PtE2, normalized,
+                                            DIRECTIONAL_OU_MAX_POINTS =
+                                              getOption(
+                                                "DIRECTIONAL_OU_MAX_POINTS",
+                                                10000L
+                                              )) {
   graph <- setup$graph
   if (is.null(PtE)) {
     PtE <- graph$get_PtE()
@@ -155,7 +165,12 @@ directional_ou_resolve_PtE_pair <- function(setup, PtE, PtE2, normalized) {
 
   n1 <- nrow(PtE_abs)
   n2 <- nrow(PtE2_abs)
-  DIRECTIONAL_OU_MAX_POINTS <- 10000L  # dense n x n is not viable beyond this
+  if (length(DIRECTIONAL_OU_MAX_POINTS) != 1L ||
+      !is.numeric(DIRECTIONAL_OU_MAX_POINTS) ||
+      !is.finite(DIRECTIONAL_OU_MAX_POINTS) ||
+      DIRECTIONAL_OU_MAX_POINTS < 1) {
+    stop("option DIRECTIONAL_OU_MAX_POINTS must be one positive finite number")
+  }
   if (n1 > DIRECTIONAL_OU_MAX_POINTS || n2 > DIRECTIONAL_OU_MAX_POINTS) {
     stop(sprintf(
       "directional_ou_covariance() builds a dense n1 x n2 matrix; got n1=%d, n2=%d, both must be <= %d. Supply a smaller PtE/PtE2.",
@@ -199,17 +214,16 @@ directional_ou_covariance_from_setup <- function(setup, PtE, PtE2 = NULL,
   Sigma
 }
 
-# Dispatch wrapper for the pairwise-fill covariance: routes dendritic graphs
-# (setup$is_dendritic == TRUE -- including converging K1/K2 river graphs)
-# through the O(n^2) C++ kernel
-# (directional_ou_covariance_dendritic_cpp(), src/directional_ou_covariance.cpp),
-# and falls back to the plain-R directional_ou_covariance_from_setup() for
-# non-dendritic graphs. Out-trees still use their Euler/parent-pointer fast
-# path inside the R fill; only irregular trees reach the generic graph walks.
+# Dispatch wrapper for the pairwise-fill covariance: routes both supported
+# oriented-tree shapes through one O(n^2) C++ kernel -- converging in-trees
+# (including the K1/K2 river graphs) use Euler ancestor containment, while
+# diverging out-trees (including reversed continuity) use their cached
+# Euler/RMQ LCA index. Only irregularly oriented trees retain the generic R
+# graph-walk fallback.
 #' @noRd
 directional_ou_covariance_from_setup_cpp <- function(setup, PtE, PtE2 = NULL,
                                                        normalized = TRUE) {
-  if (!setup$is_dendritic) {
+  if (!(setup$tree_orientation %in% c("in", "out"))) {
     return(directional_ou_covariance_from_setup(setup, PtE, PtE2, normalized))
   }
 
@@ -217,8 +231,10 @@ directional_ou_covariance_from_setup_cpp <- function(setup, PtE, PtE2 = NULL,
   PtE_abs <- resolved$PtE_abs
   PtE2_abs <- resolved$PtE2_abs
 
-  directional_ou_covariance_dendritic_cpp(
+  directional_ou_covariance_oriented_tree_cpp(
     E = setup$graph$E,
+    edge_lengths = setup$graph$edge_lengths,
+    tree_orientation = setup$tree_orientation,
     kappa = setup$kappa,
     sigma_stationary = setup$sigma_stationary,
     var_tail = setup$var_tail,
@@ -226,6 +242,8 @@ directional_ou_covariance_from_setup_cpp <- function(setup, PtE, PtE2 = NULL,
     signG_tail = setup$signG_tail,
     enter = setup$enter,
     exit = setup$exit,
+    depth = setup$depth,
+    out_tree_lca_index = setup$out_tree_lca_index,
     PtE_abs = PtE_abs,
     PtE2_abs = PtE2_abs,
     same_point_set = identical(PtE_abs, PtE2_abs)
@@ -380,7 +398,7 @@ count_undirected_components <- function(E, nE, nV) {
 #' Validates that `graph` is a valid input for Theorem thm:cov-lca
 #' (directional weight function set, acyclic, a tree), then computes a
 #' topological edge order and the beta_v inputs (`out_by_edge`/`in_by_edge`).
-#' This is the part of [directional_ou_setup()] that depends only on `graph`,
+#' This is the part of `directional_ou_setup()` that depends only on `graph`,
 #' not on `kappa`/`tau`/`sigma_source` -- split out so it can be computed once
 #' and reused across multiple `(kappa, tau, sigma_source)` calls (e.g. during
 #' likelihood optimization).
@@ -391,8 +409,8 @@ count_undirected_components <- function(E, nE, nV) {
 #'  `V_outdegree`, `topo_order`, `out_by_edge`, `in_by_edge`, `is_dendritic`,
 #'  `tree_orientation` (`"in"`/`"out"`/`"irregular"`),
 #'  `in_edges_by_vertex`, `out_edges_by_vertex`, `enter`, `exit`, and `depth`
-#'  (the last three `NULL` for irregular trees), plus `parent_edge` (`NULL`
-#'  unless `tree_orientation == "out"`).
+#'  (the last three `NULL` for irregular trees), plus `parent_edge` and
+#'  `out_tree_lca_index` (`NULL` unless `tree_orientation == "out"`).
 #' @noRd
 directional_ou_setup_structure <- function(graph) {
   if (is.null(graph$DirectionalWeightFunction_in)) {
@@ -451,6 +469,13 @@ directional_ou_setup_structure <- function(graph) {
     E, V_indegree, V_outdegree, in_edges_by_vertex,
     out_edges_by_vertex, tree_orientation
   )
+  out_tree_lca_index <- if (identical(tree_orientation, "out")) {
+    directional_ou_out_tree_lca_index_cpp(
+      ancestor_labels$parent_edge, ancestor_labels$depth
+    )
+  } else {
+    NULL
+  }
 
   list(
     graph = graph,
@@ -469,7 +494,8 @@ directional_ou_setup_structure <- function(graph) {
     enter = ancestor_labels$enter,
     exit = ancestor_labels$exit,
     depth = ancestor_labels$depth,
-    parent_edge = ancestor_labels$parent_edge
+    parent_edge = ancestor_labels$parent_edge,
+    out_tree_lca_index = out_tree_lca_index
   )
 }
 
@@ -477,7 +503,7 @@ directional_ou_setup_structure <- function(graph) {
 #'
 #' In-trees are rooted at outlets and walked upstream; out-trees are rooted
 #' at sources and walked downstream. The resulting interval-containment test
-#' is used by [directional_edge_downstream_of()]. Irregularly oriented trees
+#' is used by `directional_edge_downstream_of()`. Irregularly oriented trees
 #' return `NULL` labels and retain the generic graph-walk fallback.
 #'
 #' @param E The graph's edge matrix (columns `(tail, head)`).
@@ -563,11 +589,12 @@ directional_ou_ancestor_labels <- function(E, V_indegree, V_outdegree,
 
   parent_edge <- NULL
   if (tree_orientation == "out") {
-    parent_edge <- rep(NA_integer_, nE)
-    for (edge in seq_len(nE)) {
-      parent <- in_edges_by_vertex[[as.character(E[edge, 1])]]
-      if (!is.null(parent)) parent_edge[edge] <- parent[1]
-    }
+    # In an out-tree every vertex has at most one incoming edge. Map each
+    # vertex to that edge once, then index by edge tail to obtain all parent
+    # edges without per-edge character conversion and named-list lookup.
+    incoming_edge_by_vertex <- rep(NA_integer_, length(V_indegree))
+    incoming_edge_by_vertex[E[, 2]] <- seq_len(nE)
+    parent_edge <- incoming_edge_by_vertex[E[, 1]]
   }
 
   list(
@@ -582,13 +609,13 @@ directional_ou_ancestor_labels <- function(E, V_indegree, V_outdegree,
 #' vertex (indegree 0) at `sigma_stationary`; otherwise `sigma_source` is
 #' matched either by name (character vertex index) or positionally, in the
 #' order `which(V_indegree == 0)`. Extracted out of
-#' [directional_ou_setup_numeric()] so the C++ port
+#' `directional_ou_setup_numeric()` so the C++ port
 #' (`directional_ou_setup_numeric_cpp()`) has a single R-side place to
 #' resolve this from -- R closures/named-vector semantics don't cross the
 #' C++ boundary, so this is evaluated once, up front, in R, exactly like
-#' [directional_weight_vectors()] is for the constraint-matrix builder.
+#' `directional_weight_vectors()` is for the constraint-matrix builder.
 #'
-#' @param structure Output of [directional_ou_setup_structure()].
+#' @param structure Output of `directional_ou_setup_structure()`.
 #' @param sigma_source `NULL` or a numeric vector, as documented on
 #'  [directional_ou_covariance()].
 #' @param sigma_stationary The stationary variance `1/(2*kappa*tau^2)`.
@@ -633,13 +660,13 @@ directional_ou_resolve_source_var <- function(structure, sigma_source, sigma_sta
 #' Precompute the kappa/tau/sigma_source-dependent part of the directional OU
 #' setup
 #'
-#' Given the graph-structural part from [directional_ou_setup_structure()],
+#' Given the graph-structural part from `directional_ou_setup_structure()`,
 #' computes the vertex variance recursion (`var_tail`/`var_head`) and the
 #' root-normalised log-transfer accumulators (`logG_*`/`signG_*`) -- the
 #' quantities that change whenever `kappa`, `tau`, or `sigma_source` change,
 #' even if `graph` doesn't.
 #'
-#' @param structure Output of [directional_ou_setup_structure()].
+#' @param structure Output of `directional_ou_setup_structure()`.
 #' @inheritParams directional_ou_covariance
 #' @return A list with components `kappa`, `tau`, `sigma_stationary`,
 #'  `var_tail`, `var_head`, `logG_head`, `logG_tail`, `signG_head`,
@@ -745,8 +772,8 @@ directional_ou_setup_numeric <- function(structure, kappa, tau, sigma_source) {
 #' then computes a topological edge order, the beta_v inputs, the vertex
 #' variance recursion, and root-normalised log-transfer accumulators.
 #'
-#' A thin composer of [directional_ou_setup_structure()] (the
-#' `graph`-only part) and [directional_ou_setup_numeric()] (the
+#' A thin composer of `directional_ou_setup_structure()` (the
+#' `graph`-only part) and `directional_ou_setup_numeric()` (the
 #' `kappa`/`tau`/`sigma_source`-dependent part) -- kept split so the
 #' structural part can be reused across repeated calls with different
 #' `kappa`/`tau`/`sigma_source` (e.g. likelihood optimization).
@@ -784,6 +811,7 @@ directional_ou_compose_setup <- function(structure, numeric_part) {
     exit = structure$exit,
     depth = structure$depth,
     parent_edge = structure$parent_edge,
+    out_tree_lca_index = structure$out_tree_lca_index,
     in_edges_by_vertex = structure$in_edges_by_vertex,
     out_edges_by_vertex = structure$out_edges_by_vertex
   )
@@ -858,7 +886,7 @@ directional_ou_setup <- function(graph, kappa, tau, sigma_source,
 #' Finds the unique maximal element of `Lambda-up(point_s) \cap
 #' Lambda-up(point_t)` (the ancestor sets, i.e. points reachable by walking
 #' upstream against edge direction), needed by
-#' [directional_ou_pair_covariance()] to anchor `r(s,t) = r(a,a) * A(a,s) *
+#' `directional_ou_pair_covariance()` to anchor `r(s,t) = r(a,a) * A(a,s) *
 #' A(a,t)`. Four cases, tried in order:
 #'   1. Same edge: the LCA is the upstream one of the two (smaller distance).
 #'   2. One point's edge is (weakly) downstream of the other's: the LCA is
@@ -871,9 +899,9 @@ directional_ou_setup <- function(graph, kappa, tau, sigma_source,
 #'      that's case 4, not case 3. Best-effort / untested here: no
 #'      non-dendritic fixture exists yet.
 #'   4. No common ancestor: returns `NULL` (the caller,
-#'      [directional_ou_pair_covariance()], treats this as covariance 0).
+#'      `directional_ou_pair_covariance()`, treats this as covariance 0).
 #'
-#' @param setup A setup list from [directional_ou_setup()].
+#' @param setup A setup list from `directional_ou_setup()`.
 #' @param point_s,point_t Length-2 `c(edge_number, absolute_distance)`
 #'  vectors.
 #' @return `list(point = c(edge_number, absolute_distance))` giving the LCA,
@@ -1044,7 +1072,7 @@ directional_lca_edge_nondendritic <- function(setup, edge_s, edge_t) {
 #' edge being an ancestor of the other, so a match is the third edge above a
 #' genuine diffluence.
 #'
-#' @param setup A setup list from [directional_ou_setup()] with
+#' @param setup A setup list from `directional_ou_setup()` with
 #'  `tree_orientation == "out"`.
 #' @param edge_s,edge_t Edge numbers.
 #' @return `list(edge, root)` for an edge-anchorable LCA, or `NULL` for
@@ -1083,12 +1111,12 @@ directional_lca_edge_out_tree <- function(setup, edge_s, edge_t) {
 #' Marginal variance at arbitrary points (vectorized)
 #'
 #' `r(x,x)` at each row of `PtE_abs`, via the same intra-edge variance
-#' recursion used to build `var_head` in [directional_ou_setup()]
+#' recursion used to build `var_head` in `directional_ou_setup()`
 #' (`r(head) = exp(-2*kappa*h)*v0 + (1-exp(-2*kappa*h))*sigma_stationary`),
 #' evaluated at the point's own distance along the edge rather than only at
 #' the edge head.
 #'
-#' @param setup A setup list from [directional_ou_setup()].
+#' @param setup A setup list from `directional_ou_setup()`.
 #' @param PtE_abs A matrix with columns `(edge_number, absolute_distance)`,
 #'  one row per point (may be a single row).
 #' @return A numeric vector of length `nrow(PtE_abs)`.
@@ -1104,7 +1132,7 @@ directional_point_variance <- function(setup, PtE_abs) {
 #' Transfer factor A(from, to) by explicit forward path walk
 #'
 #' Fallback for the non-dendritic case (and a cross-check for the fast
-#' dendritic path in [directional_log_transfer()]): finds the unique forward
+#' dendritic path in `directional_log_transfer()`): finds the unique forward
 #' edge path from `from`'s edge to `to`'s edge by BFS through the directed
 #' tree, then accumulates the `-kappa * length` legs and the `beta_v`
 #' crossings edge by edge. `from` must be upstream of (or equal to) `to` on
@@ -1112,7 +1140,7 @@ directional_point_variance <- function(setup, PtE_abs) {
 #' here). O(depth) per call -- this is an explicit fallback, not the fast
 #' path, and is not meant to be optimized further.
 #'
-#' @param setup A setup list from [directional_ou_setup()].
+#' @param setup A setup list from `directional_ou_setup()`.
 #' @param from,to Length-2 `c(edge_number, absolute_distance)` vectors.
 #' @return `list(sign, log_abs)` with `sign * exp(log_abs) == A(from, to)`.
 #' @noRd
@@ -1174,11 +1202,11 @@ directional_transfer_walk <- function(setup, from, to) {
 #' Log-transfer factor A(from, to) -- fast oriented-tree path or explicit walk
 #'
 #' Dispatches to the O(1) root-normalised accumulators (`logG_tail`/
-#' `signG_tail` from [directional_ou_setup()]) for in/out trees. In-trees
+#' `signG_tail` from `directional_ou_setup()`) for in/out trees. In-trees
 #' use outlet-normalised ratios; out-trees use source-normalised ratios in
 #' the opposite subtraction order. Irregular trees retain the explicit walk.
 #'
-#' @param setup A setup list from [directional_ou_setup()].
+#' @param setup A setup list from `directional_ou_setup()`.
 #' @param from,to Length-2 `c(edge_number, absolute_distance)` vectors, with
 #'  `from` upstream of (or equal to) `to` on the unique directed tree path
 #'  (caller's responsibility, not re-verified here).

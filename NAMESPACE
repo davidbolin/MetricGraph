@@ -84,70 +84,86 @@ import(Matrix)
 importFrom(R6,R6Class)
 importFrom(RANN,nn2)
 importFrom(Rcpp,evalCpp)
-importFrom(broom,augment)
-importFrom(broom,glance)
+importFrom(broom,
+  augment,
+  glance
+)
 importFrom(doParallel,registerDoParallel)
-importFrom(dplyr,arrange)
-importFrom(dplyr,filter)
-importFrom(dplyr,group_by)
-importFrom(dplyr,if_else)
-importFrom(dplyr,mutate)
-importFrom(dplyr,select)
-importFrom(dplyr,summarise)
-importFrom(dplyr,ungroup)
+importFrom(dplyr,
+  arrange,
+  filter,
+  group_by,
+  if_else,
+  mutate,
+  select,
+  summarise,
+  ungroup
+)
 importFrom(foreach,`%dopar%`)
 importFrom(ggnewscale,new_scale_color)
-importFrom(ggplot2,aes)
-importFrom(ggplot2,coord_fixed)
-importFrom(ggplot2,geom_path)
-importFrom(ggplot2,geom_point)
-importFrom(ggplot2,ggplot)
-importFrom(ggplot2,guide_legend)
-importFrom(ggplot2,labs)
-importFrom(ggplot2,scale_colour_discrete)
-importFrom(ggplot2,scale_colour_gradientn)
+importFrom(ggplot2,
+  aes,
+  coord_fixed,
+  geom_path,
+  geom_point,
+  ggplot,
+  guide_legend,
+  labs,
+  scale_colour_discrete,
+  scale_colour_gradientn
+)
 importFrom(graphics,layout)
-importFrom(igraph,"E<-")
-importFrom(igraph,E)
-importFrom(igraph,distances)
-importFrom(igraph,is_tree)
-importFrom(igraph,make_graph)
+importFrom(igraph,
+  "E<-",
+  E,
+  distances,
+  is_tree,
+  make_graph
+)
 importFrom(lifecycle,deprecated)
 importFrom(magrittr,"%>%")
-importFrom(methods,as)
-importFrom(methods,is)
-importFrom(methods,new)
-importFrom(methods,slot)
-importFrom(rSPDE,create_train_test_indices)
-importFrom(rSPDE,gg_df)
-importFrom(rSPDE,matern.covariance)
+importFrom(methods,
+  as,
+  is,
+  new,
+  slot
+)
+importFrom(rSPDE,
+  create_train_test_indices,
+  gg_df,
+  matern.covariance
+)
 importFrom(rlang,.data)
-importFrom(spatstat.geom,owin)
-importFrom(spatstat.geom,psp)
-importFrom(stats,approx)
-importFrom(stats,as.formula)
-importFrom(stats,delete.response)
-importFrom(stats,deviance)
-importFrom(stats,dist)
-importFrom(stats,dnorm)
-importFrom(stats,lm)
-importFrom(stats,logLik)
-importFrom(stats,model.matrix)
-importFrom(stats,na.omit)
-importFrom(stats,nobs)
-importFrom(stats,optim)
-importFrom(stats,pnorm)
-importFrom(stats,predict)
-importFrom(stats,profile)
-importFrom(stats,qchisq)
-importFrom(stats,rnorm)
-importFrom(stats,rpois)
-importFrom(stats,runif)
-importFrom(stats,sd)
-importFrom(stats,simulate)
-importFrom(stats,spline)
-importFrom(stats,terms)
-importFrom(stats,var)
+importFrom(spatstat.geom,
+  owin,
+  psp
+)
+importFrom(stats,
+  approx,
+  as.formula,
+  delete.response,
+  deviance,
+  dist,
+  dnorm,
+  lm,
+  logLik,
+  model.matrix,
+  na.omit,
+  nobs,
+  optim,
+  pnorm,
+  predict,
+  profile,
+  qchisq,
+  rnorm,
+  rpois,
+  runif,
+  sd,
+  simulate,
+  spline,
+  terms,
+  var
+)
 importFrom(tidyr,drop_na)
 importFrom(zoo,na.approx)
 useDynLib(MetricGraph, .registration = TRUE)
