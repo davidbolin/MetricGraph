@@ -562,16 +562,16 @@ posterior_mean_alpha1_directional <- function(theta, graph, resp,
 
 
 
-  n_const <- length(graph$CoB$S)
-  ind.const <- c(1:n_const)
-  Tc <- graph$CoB$T[-ind.const,]
   Q.list <- Qalpha1_edges(c(tau,kappa),
                           graph,
                           w = 0,
                           BC=1, build=FALSE)
   n_const <- length(graph$CoB$S)
-  ind.const <- c(1:n_const)
-  Tc <- graph$CoB$T[-ind.const, ]
+  if (n_const > 0) {
+    Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+  } else {
+    Tc <- graph$CoB$T
+  }
 
   #build BSIGMAB
   if(is.null(PtE_resp)){
@@ -669,8 +669,11 @@ posterior_mean_alpha2 <- function(theta, graph, resp,
   PtE <- PtE_resp
 
   n_const <- length(graph$CoB$S)
-  ind.const <- c(1:n_const)
-  Tc <- graph$CoB$T[-ind.const,]
+  if (n_const > 0) {
+    Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+  } else {
+    Tc <- graph$CoB$T
+  }
 
   Q <- spde_precision(kappa = theta[3], tau = theta[2],
                       alpha = 2, graph = graph)
@@ -724,84 +727,79 @@ posterior_mean_alpha2 <- function(theta, graph, resp,
                                                upper.tri = TRUE)
     BtSinvB <- Bt %*% Sigma_iB
 
-    E <- graph$E[e,]
-    if (E[1] == E[2]) {
-      stop("circle not implemented")
-    } else {
-      BtSinvB <- BtSinvB[c(3, 1, 4, 2), c(3, 1, 4, 2)]
-      Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4*(e-1)+1:4] +
-        (t(Sigma_iB)%*%y_i)[c(3, 1, 4, 2)]
+    BtSinvB <- BtSinvB[c(3, 1, 4, 2), c(3, 1, 4, 2)]
+    Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4*(e-1)+1:4] +
+      (t(Sigma_iB)%*%y_i)[c(3, 1, 4, 2)]
 
-      #lower edge precision u
-      i_[count + 1] <- 4 * (e - 1) + 1
-      j_[count + 1] <- 4 * (e - 1) + 1
-      x_[count + 1] <- BtSinvB[1, 1]
+    #lower edge precision u
+    i_[count + 1] <- 4 * (e - 1) + 1
+    j_[count + 1] <- 4 * (e - 1) + 1
+    x_[count + 1] <- BtSinvB[1, 1]
 
-      #lower edge  u'
-      i_[count + 2] <- 4 * (e - 1) + 2
-      j_[count + 2] <- 4 * (e - 1) + 2
-      x_[count + 2] <- BtSinvB[2, 2]
+    #lower edge  u'
+    i_[count + 2] <- 4 * (e - 1) + 2
+    j_[count + 2] <- 4 * (e - 1) + 2
+    x_[count + 2] <- BtSinvB[2, 2]
 
-      #upper edge  u
-      i_[count + 3] <- 4 * (e - 1) + 3
-      j_[count + 3] <- 4 * (e - 1) + 3
-      x_[count + 3] <- BtSinvB[3, 3]
+    #upper edge  u
+    i_[count + 3] <- 4 * (e - 1) + 3
+    j_[count + 3] <- 4 * (e - 1) + 3
+    x_[count + 3] <- BtSinvB[3, 3]
 
-      #upper edge  u'
-      i_[count + 4] <- 4 * (e - 1) + 4
-      j_[count + 4] <- 4 * (e - 1) + 4
-      x_[count + 4] <- BtSinvB[4, 4]
+    #upper edge  u'
+    i_[count + 4] <- 4 * (e - 1) + 4
+    j_[count + 4] <- 4 * (e - 1) + 4
+    x_[count + 4] <- BtSinvB[4, 4]
 
-      #lower edge  u, u'
-      i_[count + 5] <- 4 * (e - 1) + 1
-      j_[count + 5] <- 4 * (e - 1) + 2
-      x_[count + 5] <- BtSinvB[1, 2]
-      i_[count + 6] <- 4 * (e - 1) + 2
-      j_[count + 6] <- 4 * (e - 1) + 1
-      x_[count + 6] <- BtSinvB[1, 2]
+    #lower edge  u, u'
+    i_[count + 5] <- 4 * (e - 1) + 1
+    j_[count + 5] <- 4 * (e - 1) + 2
+    x_[count + 5] <- BtSinvB[1, 2]
+    i_[count + 6] <- 4 * (e - 1) + 2
+    j_[count + 6] <- 4 * (e - 1) + 1
+    x_[count + 6] <- BtSinvB[1, 2]
 
-      #upper edge  u, u'
-      i_[count + 7] <- 4 * (e - 1) + 3
-      j_[count + 7] <- 4 * (e - 1) + 4
-      x_[count + 7] <- BtSinvB[3, 4]
-      i_[count + 8] <- 4 * (e - 1) + 4
-      j_[count + 8] <- 4 * (e - 1) + 3
-      x_[count + 8] <- BtSinvB[3, 4]
+    #upper edge  u, u'
+    i_[count + 7] <- 4 * (e - 1) + 3
+    j_[count + 7] <- 4 * (e - 1) + 4
+    x_[count + 7] <- BtSinvB[3, 4]
+    i_[count + 8] <- 4 * (e - 1) + 4
+    j_[count + 8] <- 4 * (e - 1) + 3
+    x_[count + 8] <- BtSinvB[3, 4]
 
-      #lower edge  u, upper edge  u,
-      i_[count + 9]  <- 4 * (e - 1) + 1
-      j_[count + 9]  <- 4 * (e - 1) + 3
-      x_[count + 9]  <- BtSinvB[1, 3]
-      i_[count + 10] <- 4 * (e - 1) + 3
-      j_[count + 10] <- 4 * (e - 1) + 1
-      x_[count + 10] <- BtSinvB[1, 3]
+    #lower edge  u, upper edge  u,
+    i_[count + 9]  <- 4 * (e - 1) + 1
+    j_[count + 9]  <- 4 * (e - 1) + 3
+    x_[count + 9]  <- BtSinvB[1, 3]
+    i_[count + 10] <- 4 * (e - 1) + 3
+    j_[count + 10] <- 4 * (e - 1) + 1
+    x_[count + 10] <- BtSinvB[1, 3]
 
-      #lower edge  u, upper edge  u',
-      i_[count + 11] <- 4 * (e - 1) + 1
-      j_[count + 11] <- 4 * (e - 1) + 4
-      x_[count + 11] <- BtSinvB[1, 4]
-      i_[count + 12] <- 4 * (e - 1) + 4
-      j_[count + 12] <- 4 * (e - 1) + 1
-      x_[count + 12] <- BtSinvB[1, 4]
+    #lower edge  u, upper edge  u',
+    i_[count + 11] <- 4 * (e - 1) + 1
+    j_[count + 11] <- 4 * (e - 1) + 4
+    x_[count + 11] <- BtSinvB[1, 4]
+    i_[count + 12] <- 4 * (e - 1) + 4
+    j_[count + 12] <- 4 * (e - 1) + 1
+    x_[count + 12] <- BtSinvB[1, 4]
 
-      #lower edge  u', upper edge  u,
-      i_[count + 13] <- 4 * (e - 1) + 2
-      j_[count + 13] <- 4 * (e - 1) + 3
-      x_[count + 13] <- BtSinvB[2, 3]
-      i_[count + 14] <- 4 * (e - 1) + 3
-      j_[count + 14] <- 4 * (e - 1) + 2
-      x_[count + 14] <- BtSinvB[2, 3]
+    #lower edge  u', upper edge  u,
+    i_[count + 13] <- 4 * (e - 1) + 2
+    j_[count + 13] <- 4 * (e - 1) + 3
+    x_[count + 13] <- BtSinvB[2, 3]
+    i_[count + 14] <- 4 * (e - 1) + 3
+    j_[count + 14] <- 4 * (e - 1) + 2
+    x_[count + 14] <- BtSinvB[2, 3]
 
-      #lower edge  u', upper edge  u',
-      i_[count + 15] <- 4 * (e - 1) + 2
-      j_[count + 15] <- 4 * (e - 1) + 4
-      x_[count + 15] <- BtSinvB[2, 4]
-      i_[count + 16] <- 4 * (e - 1) + 4
-      j_[count + 16] <- 4 * (e - 1) + 2
-      x_[count + 16] <- BtSinvB[2, 4]
+    #lower edge  u', upper edge  u',
+    i_[count + 15] <- 4 * (e - 1) + 2
+    j_[count + 15] <- 4 * (e - 1) + 4
+    x_[count + 15] <- BtSinvB[2, 4]
+    i_[count + 16] <- 4 * (e - 1) + 4
+    j_[count + 16] <- 4 * (e - 1) + 2
+    x_[count + 16] <- BtSinvB[2, 4]
 
-      count <- count + 16
-    }
+    count <- count + 16
   }
   i_ <- i_[1:count]
   j_ <- j_[1:count]

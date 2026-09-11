@@ -112,8 +112,11 @@ likelihood_alpha1_directional <- function(theta,
                            w = 0,
                            BC=1, build=FALSE)
   n_const <- length(graph$CoB$S)
-  ind.const <- c(1:n_const)
-  Tc <- graph$CoB$T[-ind.const, , drop = FALSE]
+  if (n_const > 0) {
+    Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+  } else {
+    Tc <- graph$CoB$T
+  }
   Q <- Matrix::sparseMatrix(i = Q.list$i,
                             j = Q.list$j,
                             x = Q.list$x,
@@ -306,8 +309,11 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
   # Precalculate constants
   n_const <- length(graph$CoB$S)
-  ind.const <- c(1:n_const)
-  Tc <- graph$CoB$T[-ind.const, ]
+  if (n_const > 0) {
+    Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+  } else {
+    Tc <- graph$CoB$T
+  }
 
   # Build Q matrix once
   Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau,
@@ -433,10 +439,6 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
 
         BtSinvB <- Bt %*% Sigma_iB
 
-        E <- graph$E[e, ]
-        if (E[1] == E[2]) {
-          warning("Circle not implemented")
-        }
           BtSinvB <- BtSinvB[c(3,1,4,2), c(3,1,4,2)]
           Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4 * (e - 1) + 1:4] +
             (t(Sigma_iB) %*% y_i)[c(3, 1, 4, 2)]
@@ -594,8 +596,12 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
 
   # Precalculate constants
   n_const <- length(graph$CoB$S)
-  ind.const <- c(1:n_const)
-  Tc <- graph$CoB$T[-ind.const, ]
+  ind.const <- seq_len(n_const)
+  if (n_const > 0) {
+    Tc <- graph$CoB$T[-ind.const, , drop = FALSE]
+  } else {
+    Tc <- graph$CoB$T
+  }
 
   # Cache edge lengths
   edge_lengths <- graph$edge_lengths
@@ -802,11 +808,6 @@ likelihood_alpha2_precompute <- function(theta, precomputed_data, BC = 1, parame
       Sigma_iB <- backsolve(R_i, forwardsolve(t(R_i), t(Bt)))
 
       BtSinvB <- Bt %*% Sigma_iB
-
-      E <- edge_E[j, ]
-      if (E[1] == E[2]) {
-        warning("Circle not implemented")
-      }
 
       BtSinvB <- BtSinvB[c(3,1,4,2), c(3,1,4,2)]
       Qpmu[4 * (e - 1) + 1:4] <- Qpmu[4 * (e - 1) + 1:4] +
@@ -1819,24 +1820,25 @@ likelihood_graph_covariance <- function(graph,
       },
       WM2 = {
         PtE <- graph$get_PtE()
-        n.c <- 1:length(graph$CoB$S)
+        n_const <- length(graph$CoB$S)
 
         # Build precision matrix
         Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau, alpha = 2,
                           graph = graph, BC = 1)
 
-        # Cache matrix products
-        TC <- graph$CoB$T
-        TCt <- t(TC)
-        Qtilde <- TC %*% Q %*% TCt
-        Qtilde <- Qtilde[-n.c,-n.c]
+        # Remove the constraint rows (there are none for e.g. a single edge)
+        if (n_const > 0) {
+          TC_nc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+        } else {
+          TC_nc <- graph$CoB$T
+        }
+        Qtilde <- TC_nc %*% Q %*% t(TC_nc)
 
         # Use Cholesky for solving when possible
         QChol <- Matrix::Cholesky(Qtilde, LDL = FALSE)
-        TC_nc <- TC[-n.c,]
 
         # Compute using intermediate matrices
-        Sigma.overdetermined <- TCt[, -n.c] %*% Matrix::solve(QChol, TC_nc, system = "A")
+        Sigma.overdetermined <- t(TC_nc) %*% Matrix::solve(QChol, TC_nc, system = "A")
 
         # More efficient indexing
         index.obs <- 4 * (PtE[,1] - 1) +
@@ -2028,7 +2030,7 @@ precompute_graph_covariance <- function(graph,
     precomputed$PtV <- graph$PtV
     if(model == "WM2") {
       precomputed$PtE <- graph$get_PtE()
-      precomputed$n_constraints <- 1:length(graph$CoB$S)
+      precomputed$n_constraints <- seq_len(length(graph$CoB$S))
     }
   }
 
@@ -2135,18 +2137,19 @@ likelihood_graph_covariance_precompute <- function(theta,
       Q <- spde_precision(kappa = kappa, tau = 1/reciprocal_tau, alpha = 2,
                         graph = precomputed_data$graph, BC = 1)
 
-      # Cache matrix products
-      TC <- precomputed_data$graph$CoB$T
-      TCt <- t(TC)
-      Qtilde <- TC %*% Q %*% TCt
-      Qtilde <- Qtilde[-n.c,-n.c]
+      # Remove the constraint rows (there are none for e.g. a single edge)
+      if (length(n.c) > 0) {
+        TC_nc <- precomputed_data$graph$CoB$T[-n.c, , drop = FALSE]
+      } else {
+        TC_nc <- precomputed_data$graph$CoB$T
+      }
+      Qtilde <- TC_nc %*% Q %*% t(TC_nc)
 
       # Use Cholesky for solving when possible
       QChol <- Matrix::Cholesky(Qtilde, LDL = FALSE)
-      TC_nc <- TC[-n.c,]
 
       # Compute using intermediate matrices
-      Sigma.overdetermined <- TCt[, -n.c] %*% Matrix::solve(QChol, TC_nc, system = "A")
+      Sigma.overdetermined <- t(TC_nc) %*% Matrix::solve(QChol, TC_nc, system = "A")
 
       # More efficient indexing
       index.obs <- 4 * (PtE[,1] - 1) +
@@ -2450,8 +2453,12 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
 
   # Precalculate constants
   n_const <- length(graph$CoB$S)
-  ind.const <- c(1:n_const)
-  Tc <- graph$CoB$T[-ind.const, , drop = FALSE]
+  ind.const <- seq_len(n_const)
+  if (n_const > 0) {
+    Tc <- graph$CoB$T[-ind.const, , drop = FALSE]
+  } else {
+    Tc <- graph$CoB$T
+  }
 
   precomputed$n_const <- n_const
   precomputed$ind.const <- ind.const

@@ -83,8 +83,11 @@ spde_variance <- function( kappa,
         graph$buildDirectionalConstraints(alpha = 1)
       }
       n_const <- length(graph$CoB$S)
-      ind.const <- c(1:n_const)
-      Tc <- graph$CoB$T[-ind.const,]
+      if (n_const > 0) {
+        Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+      } else {
+        Tc <- graph$CoB$T
+      }
       Q <- Tc %*% Q %*% t(Tc)
       Sigma = t(Tc) %*% Matrix::solve(Q,Tc,sparse=F)
     }
@@ -236,8 +239,11 @@ spde_covariance <- function(P,
         graph$buildDirectionalConstraints(alpha = 1)
       }
       n_const <- length(graph$CoB$S)
-      ind.const <- c(1:n_const)
-      Tc <- graph$CoB$T[-ind.const,]
+      if (n_const > 0) {
+        Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+      } else {
+        Tc <- graph$CoB$T
+      }
       Q <- Tc %*% Q %*% t(Tc)
       R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
       Z <- matrix(0, nrow = 2*dim(graph$E)[1], ncol = 2)
@@ -325,8 +331,11 @@ spde_covariance <- function(P,
     graph$buildC(2, FALSE)
 
   n_const <- length(graph$CoB$S)
-  ind.const <- c(1:n_const)
-  Tc <- graph$CoB$T[-ind.const, ]
+  if (n_const > 0) {
+    Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+  } else {
+    Tc <- graph$CoB$T
+  }
   Q_mod <- Tc %*% Q %*% t(Tc)
   R <- Cholesky(Q_mod, LDL = FALSE, perm = TRUE)
   Vs <- graph$E[P[1], ]

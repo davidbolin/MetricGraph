@@ -334,11 +334,6 @@ profile_lik_core_alpha2 <- function(theta, precomputed_data, BC,
       Sigma_iB <- backsolve(R_i, forwardsolve(t(R_i), t(Bt)))
       BtSinvB <- Bt %*% Sigma_iB
 
-      E <- edge_E[j, ]
-      if (E[1] == E[2]) {
-        warning("Circle not implemented")
-      }
-
       # reorder endpoint dofs to (u(0), u'(0), u(l), u'(l))
       BtSinvB <- BtSinvB[c(3, 1, 4, 2), c(3, 1, 4, 2)]
       idx4 <- 4 * (e - 1) + 1:4

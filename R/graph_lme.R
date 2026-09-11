@@ -2390,8 +2390,11 @@ predict.graph_lme <- function(object,
               }            
               Q_edges <- Qalpha1_edges(c(tau,kappa), graph_bkp, w = 0,BC=BC, build=TRUE)
               n_const <- length(graph_bkp$CoB$S)
-              ind.const <- c(1:n_const)
-              Tc <- graph_bkp$CoB$T[-ind.const, ]
+              if (n_const > 0) {
+                Tc <- graph_bkp$CoB$T[-seq_len(n_const), , drop = FALSE]
+              } else {
+                Tc <- graph_bkp$CoB$T
+              }
               Q_T <- Matrix::forceSymmetric(Tc%*%Q_edges%*%t(Tc))
               Sigma.overdetermined <- as.matrix(t(Tc)%*%solve(Q_T, Tc))
               PtE = graph_bkp$get_PtE()
@@ -2403,12 +2406,16 @@ predict.graph_lme <- function(object,
             graph_bkp$buildC(2)
           }
           PtE <- graph_bkp$get_PtE()
-          n.c <- 1:length(graph_bkp$CoB$S)
+          n_const <- length(graph_bkp$CoB$S)
+          if (n_const > 0) {
+            Tc <- graph_bkp$CoB$T[-seq_len(n_const), , drop = FALSE]
+          } else {
+            Tc <- graph_bkp$CoB$T
+          }
           Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
                               graph = graph_bkp, BC = BC)
-          Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
-          Qtilde <- Qtilde[-n.c, -n.c, drop=FALSE]
-          Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c, , drop=FALSE]) %*% solve(Qtilde, graph_bkp$CoB$T[-n.c, , drop=FALSE])
+          Qtilde <- Tc %*% Q %*% t(Tc)
+          Sigma.overdetermined  = t(Tc) %*% solve(Qtilde, Tc)
           index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
             3.0 * (abs(PtE[, 2]) > 1e-14)
           Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs, drop=FALSE])
@@ -2873,13 +2880,16 @@ get_covariance_precision <- function(object){
         }
         BC = object$BC
         PtE <- graph_bkp$get_PtE()
-        n.c <- 1:length(graph_bkp$CoB$S)
+        n_const <- length(graph_bkp$CoB$S)
+        if (n_const > 0) {
+          Tc <- graph_bkp$CoB$T[-seq_len(n_const), , drop = FALSE]
+        } else {
+          Tc <- graph_bkp$CoB$T
+        }
         Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
                             graph = graph_bkp, BC = BC)
-        Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
-        Qtilde <- Qtilde[-n.c,-n.c]
-        Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
-          (graph_bkp$CoB$T[-n.c,])
+        Qtilde <- Tc %*% Q %*% t(Tc)
+        Sigma.overdetermined  = t(Tc) %*% solve(Qtilde) %*% Tc
         index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
           3.0 * (abs(PtE[, 2]) > 1e-14)
         Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])

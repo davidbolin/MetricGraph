@@ -5311,7 +5311,8 @@ coordinates!"))
        V_indegree = self$get_degrees("indegree")
        V_outdegree = self$get_degrees("outdegree")
 
-       temp_E <- apply(self$E, 2, as.integer)
+       # apply() would return a plain vector for a single-edge graph
+       temp_E <- matrix(as.integer(self$E), ncol = 2)
        nE_int <- as.integer(self$nE)
 
        weight_vectors <- directional_weight_vectors(
@@ -5358,8 +5359,8 @@ coordinates!"))
      #' @description Build Kirchoff constraint matrix from edges.
      #' @param alpha the type of constraint (currently only supports 2)
      #' @param edge_constraint if TRUE, add constraints on vertices of degree 1
-     #' @details Currently not implemented for circles (edges that start and end
-     #' in the same vertex)
+     #' @details Circular edges (edges that start and end in the same vertex)
+     #' are supported: both ends of the edge are constrained at that vertex.
      #' @return No return value. Called for its side effects.
      buildC = function(alpha = 2, edge_constraint = FALSE) {
 

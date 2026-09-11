@@ -249,8 +249,11 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
         graph$buildDirectionalConstraints(alpha = 1)
       }
       n_const <- length(graph$CoB$S)
-      ind.const <- c(1:n_const)
-      Tc <- graph$CoB$T[-ind.const,]
+      if (n_const > 0) {
+        Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+      } else {
+        Tc <- graph$CoB$T
+      }
       Q <- Tc %*% Q %*% t(Tc)
       R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
       V0 <- as.vector(solve(R,
@@ -306,7 +309,14 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
       }
 
       Qmod <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
-      Qtilde <- Qmod[-c(1:dim(graph$CoB$U)[1]),-c(1:dim(graph$CoB$U)[1])]
+      # Guard against zero constraints (e.g. a single edge): -c(1:0) would
+      # wrongly drop the first row/column.
+      n_const <- dim(graph$CoB$U)[1]
+      if (n_const > 0) {
+        Qtilde <- Qmod[-seq_len(n_const), -seq_len(n_const)]
+      } else {
+        Qtilde <- Qmod
+      }
       R <- Cholesky(forceSymmetric(Qtilde),LDL = FALSE, perm = TRUE)
       V0 <- as.vector(solve(R, solve(R,rnorm(4*graph$nE - dim(graph$CoB$U)[1]),
                                      system = 'Lt'), system = 'Pt'))
@@ -358,13 +368,18 @@ sample_spde <- function(kappa, tau, range, sigma, sigma_e = 0, alpha = 1,
   }
   return(u)
   } else if ((nsim%%1 == 0) && nsim>1 && method != "Q"){
+    # kappa and tau are always defined here (supplied, or computed from
+    # range/sigma above), so only forward those.
     u_rep <- unlist(lapply(1:nsim, function(i){
-      sample_spde(kappa=kappa, tau=tau, range=range, sigma=sigma, sigma_e = sigma_e,
-      alpha = alpha, graph = graph,
-                        PtE = PtE,
-                        type = type,
-                        posterior = posterior,
-                        nsim = 1)
+      sample_spde(kappa = kappa, tau = tau, sigma_e = sigma_e,
+                  alpha = alpha, directional = directional,
+                  graph = graph,
+                  PtE = PtE,
+                  type = type,
+                  posterior = posterior,
+                  nsim = 1,
+                  method = method,
+                  BC = BC)
     }))
     return(matrix(u_rep, ncol = nsim))
   } else{

@@ -424,13 +424,10 @@ Qalpha2 <- function(theta, graph, w = 0.5, BC = 1, build = TRUE, stationary_poin
     #R_node[3:4, 1:2] <- t(R_01)
 
     #Q_adj <- solve(R_node) + Ajd
+    # Circular edges (E[i, 1] == E[i, 2]) need no special treatment: the two
+    # endpoints keep separate states and are identified by the Kirchhoff
+    # constraints u(0) = u(l), u'(0) = u'(l) built in buildC().
     Q_adj <- Q00(l_e,kappa,tau)
-
-
-
-    if (graph$E[i, 1] == graph$E[i, 2]) {
-      warning("Circular edges are not implemented")
-    }
 
       #lower edge precision u
       i_[count + 1] <- 4 * (i - 1) + 1

@@ -2046,8 +2046,8 @@ when available for oriented in-trees and out-trees.}
     \if{html}{\out{</div>}}
   }
   \subsection{Details}{
-    Currently not implemented for circles (edges that start and end
-in the same vertex)
+    Circular edges (edges that start and end in the same vertex)
+are supported: both ends of the edge are constrained at that vertex.
   }
   \subsection{Returns}{
     No return value. Called for its side effects.
