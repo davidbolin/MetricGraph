@@ -32,6 +32,7 @@ jobs:
           dependencies: '"all"'
           extra-packages: |
              pkgdown
+             github::davidbolin/rSPDE@devel
       - name: Session info
         run: |
           options(width = 100)

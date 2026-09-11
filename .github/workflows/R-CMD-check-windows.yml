@@ -51,6 +51,7 @@ jobs:
           dependencies: '"all"'
           extra-packages: |
              rcmdcheck
+             github::davidbolin/rSPDE@devel
       - name: Session info
         run: |
           options(width = 100)
