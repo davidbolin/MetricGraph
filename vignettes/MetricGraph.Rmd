@@ -74,10 +74,20 @@ that builds the graph in one call. It also sidesteps a server-status
 check in `osmdata` that is often rate-limited and tends to hang vignette
 builds.
 
-```{r, fig.show='hold', fig.align = "center", echo=TRUE, message=FALSE}
+```{r, eval=FALSE}
 graph <- metric_graph_from_osm(bbox  = c(39.0884, 22.33, 39.115, 22.3056),
                                value = c("motorway", "primary", "secondary",
                                          "tertiary", "residential"))
+graph$plot(vertex_size = 0.5)
+```
+
+```{r, fig.show='hold', fig.align = "center", echo=FALSE, message=FALSE}
+# Same call as above, but reading a saved Overpass response so that building
+# the vignette does not depend on the Overpass API being available.
+graph <- metric_graph_from_osm(bbox  = c(39.0884, 22.33, 39.115, 22.3056),
+                               value = c("motorway", "primary", "secondary",
+                                         "tertiary", "residential"),
+                               cache_path = "osm_data/kaust.osm")
 graph$plot(vertex_size = 0.5)
 ```
 

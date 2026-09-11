@@ -15,6 +15,7 @@ S3method(mutate,metric_graph_data)
 S3method(nobs,graph_lme)
 S3method(plot,graph_bru_pred)
 S3method(plot,graph_bru_proc_pred)
+S3method(posterior_crossvalidation,graph_lme)
 S3method(predict,graph_lme)
 S3method(predict,inla_metric_graph_spde)
 S3method(predict,rspde_metric_graph)
@@ -131,7 +132,8 @@ importFrom(methods,
 importFrom(rSPDE,
   create_train_test_indices,
   gg_df,
-  matern.covariance
+  matern.covariance,
+  posterior_crossvalidation
 )
 importFrom(rlang,.data)
 importFrom(spatstat.geom,

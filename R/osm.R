@@ -23,8 +23,9 @@
 #'   filter and fetch everything in the bbox.
 #' @param value Optional character vector of values for `key`, e.g.
 #'   `c("motorway", "motorway_link")`.
-#' @param endpoint Overpass endpoint URL. Defaults to the main
-#'   `overpass-api.de` endpoint. Mirror URLs (e.g.
+#' @param endpoint Overpass endpoint URL, or a character vector of URLs
+#'   that are tried in order. Defaults to the main `overpass-api.de`
+#'   endpoint. Mirror URLs (e.g.
 #'   `https://overpass.kumi.systems/api/interpreter`) work too.
 #' @param timeout Server-side query timeout in seconds. Forwarded to
 #'   both [osmdata::opq()] and the HTTP request.
@@ -33,6 +34,9 @@
 #'   exists, the download is skipped and the cached response is parsed
 #'   instead. If provided and the file does not exist, the response is
 #'   saved there for re-use.
+#' @param retries Number of times a request to each endpoint is retried
+#'   after a transient failure (HTTP 429 or 5xx, or a connection error),
+#'   with exponential backoff between attempts.
 #' @param ... Forwarded to [osmdata::add_osm_feature()].
 #'
 #' @return An `osmdata` list with elements `$osm_points`,
@@ -62,6 +66,7 @@ fetch_osm <- function(bbox,
                       timeout    = 180,
                       user_agent = "MetricGraph-R-package",
                       cache_path = NULL,
+                      retries    = 2,
                       ...) {
   if (!requireNamespace("osmdata", quietly = TRUE)) {
     stop("Package 'osmdata' is required for fetch_osm(). ",
@@ -81,19 +86,46 @@ fetch_osm <- function(bbox,
     if (!is.null(cache_path)) {
       dir.create(dirname(cache_path), showWarnings = FALSE, recursive = TRUE)
     }
-    h <- curl::new_handle()
-    curl::handle_setopt(h,
-                        customrequest = "POST",
-                        postfields    = osmdata::opq_string(query),
-                        useragent     = user_agent,
-                        timeout       = timeout)
-    resp <- curl::curl_fetch_disk(endpoint, out_path, handle = h)
-    if (resp$status_code != 200L) {
-      head_lines <- tryCatch(
-        paste(readLines(out_path, n = 5, warn = FALSE), collapse = "\n"),
-        error = function(e) "")
-      stop(sprintf("Overpass returned HTTP %d. Response head:\n%s",
-                   resp$status_code, substr(head_lines, 1, 500)),
+    body <- osmdata::opq_string(query)
+    ## Overpass signals overload with 429 / 5xx; these are worth retrying.
+    transient_status <- c(429L, 500L, 502L, 503L, 504L)
+    failures <- character(0)
+    success <- FALSE
+    for (url in endpoint) {
+      for (attempt in seq_len(retries + 1L)) {
+        h <- curl::new_handle()
+        curl::handle_setopt(h,
+                            customrequest = "POST",
+                            postfields    = body,
+                            useragent     = user_agent,
+                            timeout       = timeout)
+        resp <- tryCatch(curl::curl_fetch_disk(url, out_path, handle = h),
+                         error = function(e) e)
+        if (!inherits(resp, "error") && resp$status_code == 200L) {
+          success <- TRUE
+          break
+        }
+        if (inherits(resp, "error")) {
+          msg <- conditionMessage(resp)
+          transient <- TRUE
+        } else {
+          head_lines <- tryCatch(
+            paste(readLines(out_path, n = 5, warn = FALSE), collapse = "\n"),
+            error = function(e) "")
+          msg <- sprintf("HTTP %d. Response head:\n%s",
+                         resp$status_code, substr(head_lines, 1, 500))
+          transient <- resp$status_code %in% transient_status
+        }
+        failures <- c(failures, sprintf("%s (attempt %d): %s", url, attempt, msg))
+        if (!transient) break
+        if (attempt <= retries) Sys.sleep(min(60, 5 * 2^(attempt - 1)))
+      }
+      if (success) break
+    }
+    if (!success) {
+      ## Do not leave an error page behind where a cached response is expected.
+      unlink(out_path)
+      stop("Overpass request failed:\n", paste(failures, collapse = "\n"),
            call. = FALSE)
     }
   }
@@ -142,6 +174,7 @@ metric_graph_from_osm <- function(bbox,
                                   timeout    = 180,
                                   user_agent = "MetricGraph-R-package",
                                   cache_path = NULL,
+                                  retries    = 2,
                                   ...) {
   osm <- fetch_osm(bbox       = bbox,
                    key        = key,
@@ -149,7 +182,8 @@ metric_graph_from_osm <- function(bbox,
                    endpoint   = endpoint,
                    timeout    = timeout,
                    user_agent = user_agent,
-                   cache_path = cache_path)
+                   cache_path = cache_path,
+                   retries    = retries)
 
   if (is.null(osm$osm_lines) || nrow(osm$osm_lines) == 0L) {
     stop("OSM query returned no linestrings.", call. = FALSE)

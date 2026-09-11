@@ -101,7 +101,7 @@ reference:
     - predict.graph_lme
     - simulate.graph_lme
     - summary.graph_lme
-    - posterior_crossvalidation
+    - posterior_crossvalidation.graph_lme
     - posterior_crossvalidation_loo
     - graph_starting_values
     - glance.graph_lme

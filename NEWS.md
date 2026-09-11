@@ -1,5 +1,14 @@
 # MetricGraph (development version)
 
+* `fetch_osm()` and `metric_graph_from_osm()` retry transient Overpass failures
+  (HTTP 429/5xx and connection errors) with exponential backoff, controlled by
+  the new `retries` argument, and `endpoint` may now be a vector of mirrors
+  tried in order. A failed download no longer leaves the error page behind at
+  `cache_path`.
+* `posterior_crossvalidation()` is now the S3 generic from rSPDE, re-exported by
+  MetricGraph, which provides the `graph_lme` method. Loading rSPDE after
+  MetricGraph therefore no longer masks MetricGraph's version, and a list of
+  models may mix `graph_lme` and `rspde_lme` fits. Requires rSPDE >= 2.6.0.9001.
 * Graph construction no longer materializes dense point-by-edge matrices.
   `metric_graph$new()` used to densify the `st_is_within_distance()` result
   into an `nEdges x nVertices` logical matrix before snapping vertices to

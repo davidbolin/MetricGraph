@@ -67,11 +67,16 @@ jobs:
           pkgs <- installed.packages()[, "Package"]
           sessioninfo::session_info(pkgs, include_base = TRUE)
         shell: Rscript {0}
-      - name: Installing rSPDE and MatrixModels
+      - name: Installing rSPDE
+        env:
+          RSPDE_COMPILE: 1
         run: |
           install.packages(c("remotes", "rmarkdown"),dependencies=TRUE)
-          remotes::install_github("davidbolin/rspde", ref = "devel-src")
-        shell: Rscript {0}        
+          remotes::install_github("davidbolin/rSPDE", ref = "devel")
+          if (!nzchar(system.file("shared", "rspde_cgeneric_models.so", package = "rSPDE"))) {
+            stop("rSPDE was installed without its compiled cgeneric library")
+          }
+        shell: Rscript {0}
       - uses: r-lib/actions/check-r-package@v2
         env:
           _R_CHECK_CRAN_INCOMING_REMOTE_: false

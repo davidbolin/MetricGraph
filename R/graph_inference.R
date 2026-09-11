@@ -277,7 +277,10 @@ posterior_crossvalidation_manual <- function(theta,
 #' using either the posterior distribution from a fitted model (pseudo-CV) or by
 #' refitting the model for each fold (true CV).
 #'
-#' @param object A fitted model using the `graph_lme()` function or a named list of fitted objects using the `graph_lme()` function.
+#' @param object A fitted model using the `graph_lme()` function. Lists of
+#' fitted models are handled by the list method of the generic
+#' [rSPDE::posterior_crossvalidation()], which can also mix `graph_lme` and
+#' `rspde_lme` fits.
 #' @param scores A vector of scores to compute. The options are "logscore", "crps", "scrps", "mae", and "rmse". By default, all scores are computed.
 #' @param mode Cross-validation mode. Options are "k-fold", "loo" (leave-one-out), or "lpo" (leave-percentage-out). Default is "k-fold".
 #' @param k Number of folds for k-fold cross-validation. Default is 10.
@@ -294,21 +297,20 @@ posterior_crossvalidation_manual <- function(theta,
 #' @param seed Random seed for reproducibility in fold creation. Default is NULL.
 #' @param return_indices Logical indicating whether to return the train/test indices used. Default is FALSE.
 #' @param use_precomputed Logical indicating whether to use precomputation for faster CV. Default is TRUE.
+#' @param ... Currently not used.
 #' @return Vector with the posterior expectations and variances as well as
 #' mean absolute error (MAE), root mean squared errors (RMSE), and three
 #' negatively oriented proper scoring rules: log-score, CRPS, and scaled
 #' CRPS.
+#' @aliases posterior_crossvalidation
+#' @method posterior_crossvalidation graph_lme
 #' @export
-posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "scrps", "mae", "rmse"), mode = "k-fold", k = 10, percentage = 20, number_folds = 10,
-                                     train_test_indices = NULL, true_CV = FALSE, factor = 1, tibble = TRUE, 
-                                     parallel_folds = FALSE, parallel_fitting = FALSE, n_cores = parallel::detectCores() - 1, 
-                                     print = FALSE, seed = NULL, return_indices = FALSE, use_precomputed = TRUE)
+posterior_crossvalidation.graph_lme <- function(object, scores = c("logscore", "crps", "scrps", "mae", "rmse"), mode = "k-fold", k = 10, percentage = 20, number_folds = 10,
+                                     train_test_indices = NULL, true_CV = FALSE, factor = 1, tibble = TRUE,
+                                     parallel_folds = FALSE, parallel_fitting = FALSE, n_cores = parallel::detectCores() - 1,
+                                     print = FALSE, seed = NULL, return_indices = FALSE, use_precomputed = TRUE, ...)
 {
-  
-  if(!inherits(object,"graph_lme") && !is.list(object)){
-    stop("object should be of class graph_lme or a list of objects of class graph_lme.")
-  }
-  
+
   # Convert scores to lowercase for robustness
   scores <- tolower(scores)
   
@@ -360,39 +362,6 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
 
   if(parallel_folds && parallel_fitting){
     stop("parallel_folds and parallel_fitting cannot both be TRUE.")
-  }
-
-  if(!inherits(object,"graph_lme")){
-    if(is.null(names(object))){
-      warning("The list with fitted models does not contain names for the models, thus the results will not be properly named.")
-    }
-    results_list <- lapply(object, function(obj){
-      posterior_crossvalidation(obj, k = k, mode = mode, percentage = percentage, 
-                               number_folds = number_folds,
-                               train_test_indices = train_test_indices, 
-                               true_CV = true_CV, factor = factor, 
-                               tibble = FALSE, parallel_folds = parallel_folds, 
-                               parallel_fitting = parallel_fitting,
-                               n_cores = n_cores, print = print, 
-                               seed = seed, return_indices = return_indices,
-                               scores = scores)
-    })
-    res <- list()
-    res[["mu"]] <- lapply(results_list, function(dat){dat[["mu"]]})
-    res[["var"]] <- lapply(results_list, function(dat){dat[["var"]]})
-    res[["scores"]] <- lapply(results_list, function(dat){dat[["scores"]]})
-    scores <- do.call(rbind, res[["scores"]])
-    row.names(scores) <- names(res[["scores"]])
-    if(tibble){
-      scores[["Model"]] <- row.names(scores)
-      scores <- tidyr::as_tibble(scores)
-      scores <- scores[, c("Model", "logscore", "crps", "scrps", "mae", "rmse")]
-    }
-    res[["scores"]] <- scores
-    if(return_indices && !is.null(results_list[[1]][["indices"]])) {
-      res[["indices"]] <- results_list[[1]][["indices"]]
-    }
-    return(res)
   }
 
   # Create or use provided train/test indices

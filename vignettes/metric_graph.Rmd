@@ -406,12 +406,24 @@ To illustrate the useage of `metric_graph` on some real data, we
 download OSM data with the `fetch_osm()` helper.
 In the following code we extract highways for a part of the city of
 Copenhagen:
-```{r, fig.show='hold',fig.align = "center",fig.height = 7, echo=TRUE, message=FALSE}
+```{r, eval=FALSE}
 bbox <- c(12.5900, 55.6000, 12.6850, 55.6450)
 data_sf <- fetch_osm(bbox = bbox,
                      value = c("motorway", "primary",
                                "secondary", "tertiary"))
+```
 
+```{r, include=FALSE}
+# Same call as above, but reading a saved Overpass response so that building
+# the vignette does not depend on the Overpass API being available.
+bbox <- c(12.5900, 55.6000, 12.6850, 55.6450)
+data_sf <- fetch_osm(bbox = bbox,
+                     value = c("motorway", "primary",
+                               "secondary", "tertiary"),
+                     cache_path = "osm_data/copenhagen.osm")
+```
+
+```{r, fig.show='hold',fig.align = "center",fig.height = 7, echo=TRUE, message=FALSE}
 graph5 <- metric_graph$new(lapply(data_sf$osm_lines$geometry,
   function(dat){sf::st_coordinates(dat)[,1:2]}))
 graph5$plot(vertex_size = 0)

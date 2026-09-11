@@ -12,6 +12,7 @@ fetch_osm(
   timeout = 180,
   user_agent = "MetricGraph-R-package",
   cache_path = NULL,
+  retries = 2,
   ...
 )
 }
@@ -27,8 +28,9 @@ filter and fetch everything in the bbox.}
 \item{value}{Optional character vector of values for \code{key}, e.g.
 \code{c("motorway", "motorway_link")}.}
 
-\item{endpoint}{Overpass endpoint URL. Defaults to the main
-\code{overpass-api.de} endpoint. Mirror URLs (e.g.
+\item{endpoint}{Overpass endpoint URL, or a character vector of URLs
+that are tried in order. Defaults to the main \code{overpass-api.de}
+endpoint. Mirror URLs (e.g.
 \verb{https://overpass.kumi.systems/api/interpreter}) work too.}
 
 \item{timeout}{Server-side query timeout in seconds. Forwarded to
@@ -40,6 +42,10 @@ both \code{\link[osmdata:opq]{osmdata::opq()}} and the HTTP request.}
 exists, the download is skipped and the cached response is parsed
 instead. If provided and the file does not exist, the response is
 saved there for re-use.}
+
+\item{retries}{Number of times a request to each endpoint is retried
+after a transient failure (HTTP 429 or 5xx, or a connection error),
+with exponential backoff between attempts.}
 
 \item{...}{Forwarded to \code{\link[osmdata:add_osm_feature]{osmdata::add_osm_feature()}}.}
 }
