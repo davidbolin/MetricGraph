@@ -367,7 +367,7 @@ graph$add_observations(data = df_data, normalized = TRUE)
 Let us create the model object:
 ```{r, message=FALSE}
   library(INLA)
-  rspde_model <- rspde.metric_graph(graph, shared_lib = "rSPDE")
+  rspde_model <- rspde.metric_graph(graph)
 ```
 
 By default, the order of the rational approximation is 2.

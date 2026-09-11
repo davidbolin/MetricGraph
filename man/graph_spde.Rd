@@ -115,10 +115,11 @@ distribution for the tau parameter. Default is 1.}
 \item{type_start_range_bbox}{Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.}
 
 \item{shared_lib}{Which shared lib to use for the cgeneric implementation?
-If "detect", it will check if the shared lib exists locally, in which case it will
-use it. Otherwise it will use 'INLA's shared library.
-If 'INLA', it will use the shared lib from 'INLA's installation. If 'rSPDE', then
-it will use the local installation of the rSPDE package (does not work if your installation is from CRAN).
+If "detect", the default, it will use the compiled rSPDE library if one is
+available locally, and otherwise the models built into the 'INLA' binary.
+If 'INLA', it will use the models built into the 'INLA' binary. If 'rSPDE',
+it will use the local installation of the rSPDE package, which requires
+rSPDE to have been installed from source with its cgeneric library compiled.
 Otherwise, you can directly supply the path of the .so (or .dll) file.}
 
 \item{debug}{Should debug be displayed?}
