@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/Roboto_Slab-0.4.10/font.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/Roboto_Slab-0.4.10/font.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Spatio-temporal Models on Compact Metric Graphs">
@@ -83,7 +83,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-10-23. Last
-modified: 2026-05-14.</h4>
+modified: 2026-09-11.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/spacetime.Rmd" class="external-link"><code>vignettes/spacetime.Rmd</code></a></small>
       <div class="d-none name"><code>spacetime.Rmd</code></div>
@@ -263,8 +263,8 @@ evaluation, simulation, and kriging on metric graphs.</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 70</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = L-BFGS-B</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  4.35386 mins </span></span>
-<span><span class="co">#&gt;   set up the parallelization = 9.70637 secs</span></span>
+<span><span class="co">#&gt; Time used to:     fit the model =  4.43042 mins </span></span>
+<span><span class="co">#&gt;   set up the parallelization = 9.50825 secs</span></span>
 <span></span>
 <span><span class="co"># Compare estimated results with true values</span></span>
 <span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>kappa <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">kappa</span>, <span class="va">res</span><span class="op">$</span><span class="va">coeff</span><span class="op">$</span><span class="va">random_effects</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span>, </span>
@@ -325,9 +325,9 @@ locations (<code>cbind(.edge_number, .distance_on_edge)</code>), and
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span>
-<span><span class="co">#&gt;            kappa    sigma   gamma       rho    sigma.e  intercept</span></span>
-<span><span class="co">#&gt; True     5.00000 10.00000 0.10000 0.3000000 0.01000000 0.00000000</span></span>
-<span><span class="co">#&gt; Estimate 5.09311 10.55948 0.10626 0.1239843 0.01009543 0.01261086</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa    sigma     gamma       rho   sigma.e  intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.3000000 0.0100000 0.00000000</span></span>
+<span><span class="co">#&gt; Estimate 5.097325 10.57207 0.1069257 0.1260439 0.0104253 0.01260829</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="fitting-model-with-replicates-in-inlabru">Fitting Model with Replicates in inlabru<a class="anchor" aria-label="anchor" href="#fitting-model-with-replicates-in-inlabru"></a>
@@ -401,9 +401,9 @@ returned by <code><a href="https://davidbolin.github.io/rSPDE/reference/graph_da
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results_repl</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             kappa    sigma      gamma       rho     sigma.e   intercept</span></span>
-<span><span class="co">#&gt; True     5.000000 10.00000 0.10000000 0.3000000 0.010000000 0.000000000</span></span>
-<span><span class="co">#&gt; Estimate 5.122746 10.40218 0.09955472 0.3437447 0.008413024 0.002147987</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa     sigma      gamma       rho     sigma.e  intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.000000 0.10000000 0.3000000 0.010000000 0.00000000</span></span>
+<span><span class="co">#&gt; Estimate 5.060969  9.974465 0.09879074 0.3257687 0.005259032 0.01108632</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example-setting-bounded_rho-false">Example: Setting <code>bounded_rho = FALSE</code><a class="anchor" aria-label="anchor" href="#example-setting-bounded_rho-false"></a>
@@ -515,9 +515,9 @@ spatio-temporal operator and prepare data for <code>inlabru</code>:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results_unbounded</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             kappa    sigma     gamma       rho    sigma.e  intercept</span></span>
-<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.3000000 0.01000000 0.00000000</span></span>
-<span><span class="co">#&gt; Estimate 5.147775 10.79808 0.1082289 0.1928093 0.01024063 0.01274721</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa    sigma     gamma      rho    sigma.e  intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.00000 0.1000000 0.300000 0.01000000 0.00000000</span></span>
+<span><span class="co">#&gt; Estimate 5.152798 10.74653 0.1080981 0.194208 0.01030457 0.01275623</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -580,9 +580,9 @@ will now create the stack using these components:</p>
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             kappa   sigma     gamma       rho    sigma.e  intercept</span></span>
-<span><span class="co">#&gt; True     5.000000 10.0000 0.1000000 0.3000000 0.01000000 0.00000000</span></span>
-<span><span class="co">#&gt; Estimate 5.131916 10.7256 0.1078986 0.1618705 0.01021509 0.01265779</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa   sigma     gamma      rho    sigma.e  intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.0000 0.1000000 0.300000 0.01000000 0.00000000</span></span>
+<span><span class="co">#&gt; Estimate 5.169932 11.0784 0.1115865 0.113168 0.01057404 0.01264107</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="fitting-model-with-replicates-in-inla">Fitting Model with Replicates in INLA<a class="anchor" aria-label="anchor" href="#fitting-model-with-replicates-in-inla"></a>
@@ -633,9 +633,9 @@ object:</p>
 <span>                      row.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"True"</span>, <span class="st">"Estimate"</span><span class="op">)</span><span class="op">)</span></span>
 <span>                      </span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results_inla_repl</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             kappa    sigma      gamma       rho     sigma.e    intercept</span></span>
-<span><span class="co">#&gt; True     5.000000 10.00000 0.10000000 0.3000000 0.010000000  0.000000000</span></span>
-<span><span class="co">#&gt; Estimate 5.199801 10.51014 0.09864272 0.2240463 0.007002379 -0.004553443</span></span></code></pre></div>
+<span><span class="co">#&gt;             kappa     sigma      gamma       rho     sigma.e  intercept</span></span>
+<span><span class="co">#&gt; True     5.000000 10.000000 0.10000000 0.3000000 0.010000000 0.00000000</span></span>
+<span><span class="co">#&gt; Estimate 5.046862  9.782636 0.09717941 0.2041102 0.006620939 0.01315047</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2 unnumbered">
@@ -661,7 +661,7 @@ Research Transactions</em> 48 (1): 3–66.
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

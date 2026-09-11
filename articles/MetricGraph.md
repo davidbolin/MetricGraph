@@ -65,30 +65,43 @@ ways. The first is to specify the vertex matrix `V` and the edge matrix
 second, more flexible, option is to specify the object from a
 `SpatialLines` object using the `sp` package (Bivand et al. 2013).
 
-To illustrate this, we use the `osmdata` package to download data from
-OpenStreetMap. In the following code, we extract the streets on the
-campus of King Abdullah University of Science and Technology (KAUST) as
-a `SpatialLines` object:
+To illustrate this, we extract the streets on the campus of King
+Abdullah University of Science and Technology (KAUST) from
+OpenStreetMap. Traditionally one would do this via the `osmdata` package
+as follows:
 
 ``` r
 
 call <- opq(bbox = c(39.0884, 22.33, 39.115, 22.3056))
-call <- add_osm_feature(call, key = "highway",value=c("motorway",
-                                                      "primary","secondary",
-                                                      "tertiary",
-                                                      "residential"))
+call <- add_osm_feature(call, key = "highway", value = c("motorway",
+                                                         "primary","secondary",
+                                                         "tertiary",
+                                                         "residential"))
 data <- osmdata_sf(call)
 ```
 
-We can now create the metric graph as follows.
+and then construct the metric graph from the resulting `osmdata` object:
 
 ``` r
 
 graph <- metric_graph$new(data)
+```
+
+`MetricGraph` provides a convenience wrapper
+[`metric_graph_from_osm()`](https://davidbolin.github.io/MetricGraph/reference/metric_graph_from_osm.md)
+that builds the graph in one call. It also sidesteps a server-status
+check in `osmdata` that is often rate-limited and tends to hang vignette
+builds.
+
+``` r
+
+graph <- metric_graph_from_osm(bbox  = c(39.0884, 22.33, 39.115, 22.3056),
+                               value = c("motorway", "primary", "secondary",
+                                         "tertiary", "residential"))
 graph$plot(vertex_size = 0.5)
 ```
 
-![](MetricGraph_files/figure-html/unnamed-chunk-2-1.png)
+![](MetricGraph_files/figure-html/unnamed-chunk-4-1.png)
 
 Let us also build an interactive plot with the underlying map:
 
@@ -105,7 +118,7 @@ the edge data as edge weights:
 graph$get_edge_weights()
 ```
 
-    ## # A tibble: 368 × 22
+    ## # A tibble: 379 × 23
     ##    osm_id   name   bridge `cycleway:left` `cycleway:right` highway lane_markings
     ##    <chr>    <chr>  <chr>  <chr>           <chr>            <chr>   <chr>        
     ##  1 38085402 Disco… NA     NA              NA               reside… NA           
@@ -118,11 +131,12 @@ graph$get_edge_weights()
     ##  8 39426595 Najel… NA     NA              NA               reside… NA           
     ##  9 39478848 Disco… NA     NA              NA               reside… NA           
     ## 10 39478849 Explo… NA     NA              NA               reside… NA           
-    ## # ℹ 358 more rows
-    ## # ℹ 15 more variables: lanes <chr>, layer <chr>, lit <chr>, maxaxleload <chr>,
+    ## # ℹ 369 more rows
+    ## # ℹ 16 more variables: lanes <chr>, layer <chr>, lit <chr>, maxaxleload <chr>,
     ## #   maxspeed <chr>, `maxspeed:type` <chr>, maxweight <chr>, oneway <chr>,
-    ## #   `sidewalk:both` <chr>, `sidewalk:left` <chr>, `sidewalk:right` <chr>,
-    ## #   smoothness <chr>, `source:maxspeed` <chr>, surface <chr>, .weights <dbl>
+    ## #   service <chr>, `sidewalk:both` <chr>, `sidewalk:left` <chr>,
+    ## #   `sidewalk:right` <chr>, smoothness <chr>, `source:maxspeed` <chr>,
+    ## #   surface <chr>, .weights <dbl>
 
 Now, note that when creating the graph there was a warning saying that
 the graph is not connected. The `metric_graph` class handles
@@ -136,7 +150,7 @@ graph <- graph$get_components()[[1]]
 graph$plot(vertex_size = 0)
 ```
 
-![](MetricGraph_files/figure-html/unnamed-chunk-5-1.png)
+![](MetricGraph_files/figure-html/unnamed-chunk-7-1.png)
 
 Here is the interactive plot:
 
@@ -166,7 +180,7 @@ Observe that it also contains the corresponding edge weights:
 graph$get_edge_weights()
 ```
 
-    ## # A tibble: 317 × 22
+    ## # A tibble: 317 × 23
     ##    osm_id   name   bridge `cycleway:left` `cycleway:right` highway lane_markings
     ##    <chr>    <chr>  <chr>  <chr>           <chr>            <chr>   <chr>        
     ##  1 38085402 Disco… NA     NA              NA               reside… NA           
@@ -180,10 +194,11 @@ graph$get_edge_weights()
     ##  9 39478849 Explo… NA     NA              NA               reside… NA           
     ## 10 39478852 Trans… NA     NA              NA               reside… NA           
     ## # ℹ 307 more rows
-    ## # ℹ 15 more variables: lanes <chr>, layer <chr>, lit <chr>, maxaxleload <chr>,
+    ## # ℹ 16 more variables: lanes <chr>, layer <chr>, lit <chr>, maxaxleload <chr>,
     ## #   maxspeed <chr>, `maxspeed:type` <chr>, maxweight <chr>, oneway <chr>,
-    ## #   `sidewalk:both` <chr>, `sidewalk:left` <chr>, `sidewalk:right` <chr>,
-    ## #   smoothness <chr>, `source:maxspeed` <chr>, surface <chr>, .weights <dbl>
+    ## #   service <chr>, `sidewalk:both` <chr>, `sidewalk:left` <chr>,
+    ## #   `sidewalk:right` <chr>, smoothness <chr>, `source:maxspeed` <chr>,
+    ## #   surface <chr>, .weights <dbl>
 
 We will also remove the vertices of degree 2 by using the
 `prune_vertices()` method:
@@ -194,7 +209,7 @@ graph$prune_vertices()
 graph$plot()
 ```
 
-![](MetricGraph_files/figure-html/unnamed-chunk-9-1.png)
+![](MetricGraph_files/figure-html/unnamed-chunk-11-1.png)
 
 Observe that no vertex of degree 2 was pruned. This means that the edge
 weights are different. If one wants to prune regardless of losing
@@ -207,7 +222,7 @@ graph$prune_vertices(check_weights=FALSE)
 graph$plot()
 ```
 
-![](MetricGraph_files/figure-html/unnamed-chunk-10-1.png)
+![](MetricGraph_files/figure-html/unnamed-chunk-12-1.png)
 
 However, note that a warning was given due to incompatible edge weights.
 
@@ -565,9 +580,9 @@ summary(res_lm)
     ## 
     ## Fixed effects:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) -0.94947    0.08479  -11.20   <2e-16 ***
-    ## lon          0.99434    0.08841   11.25   <2e-16 ***
-    ## lat          1.97165    0.08841   22.30   <2e-16 ***
+    ## (Intercept) -0.95646    0.08511  -11.24   <2e-16 ***
+    ## lon          1.01464    0.08867   11.44   <2e-16 ***
+    ## lat          1.97075    0.08867   22.23   <2e-16 ***
 
     ## 
     ## No random effects.
@@ -575,11 +590,11 @@ summary(res_lm)
     ## 
     ## Measurement error:
     ## std. dev 
-    ## 1.895938 
+    ## 1.903074 
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -1027.822
+    ## Log-Likelihood:  -1029.7
 
 Let us now fit the linear mixed-effects model with a Whittle-Mat'ern
 latent model with $`\alpha=1`$. To this end, we can either specify the
@@ -609,31 +624,31 @@ summary(res)
     ## 
     ## Fixed effects:
     ##             Estimate Std.error z-value Pr(>|z|)    
-    ## (Intercept)  -0.9787    0.1349  -7.256 3.98e-13 ***
-    ## lon           0.9543    0.1342   7.110 1.16e-12 ***
-    ## lat           1.9669    0.1387  14.183  < 2e-16 ***
+    ## (Intercept)  -0.9917    0.1369  -7.245 4.31e-13 ***
+    ## lon           0.9870    0.1358   7.267 3.69e-13 ***
+    ## lat           1.9661    0.1403  14.011  < 2e-16 ***
     ## 
     ## Random effects:
     ##       Estimate Std.error z-value
-    ## tau    0.10173   0.00445  22.861
-    ## kappa 11.51396   1.53384   7.507
+    ## tau    0.10246   0.00446  22.975
+    ## kappa 11.18521   1.49577   7.478
     ## 
     ## Random effects (Matern parameterization):
     ##       Estimate Std.error z-value
-    ## sigma  2.04841   0.09869  20.756
-    ## range  0.17370   0.02312   7.514
+    ## sigma  2.06344   0.10032  20.569
+    ## range  0.17881   0.02389   7.484
     ## 
     ## Measurement error:
-    ##           Estimate Std.error z-value
-    ## std. dev 0.0001542 0.0746645   0.002
+    ##          Estimate Std.error z-value
+    ## std. dev 0.000306  0.078773   0.004
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -872.7168 
-    ## Number of function calls by 'optim' = 45
+    ## Log-Likelihood:  -872.7697 
+    ## Number of function calls by 'optim' = 44
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  22.55473 secs
+    ## Time used to:     fit the model =  22.80893 secs
 
 We can obtain additional information by using
 [`glance()`](https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.md):
@@ -646,7 +661,7 @@ glance(res)
     ## # A tibble: 1 × 9
     ##    nobs    sigma logLik   AIC   BIC deviance df.residual model         alpha
     ##   <int>    <dbl>  <dbl> <dbl> <dbl>    <dbl>       <dbl> <chr>         <dbl>
-    ## 1   500 0.000154  -873. 1757. 1783.    1745.         494 WhittleMatern     1
+    ## 1   500 0.000306  -873. 1758. 1783.    1746.         494 WhittleMatern     1
 
 We will now compare with the true values of the random effects:
 
@@ -662,9 +677,9 @@ results <- data.frame(sigma_e = c(sigma_e, sigma_e_est),
 print(results)
 ```
 
-    ##               sigma_e   sigma     range
-    ## Truth    0.1000000000 2.00000 0.2000000
-    ## Estimate 0.0001541647 2.04841 0.1737022
+    ##               sigma_e    sigma     range
+    ## Truth    0.1000000000 2.000000 0.2000000
+    ## Estimate 0.0003060189 2.063444 0.1788075
 
 Given these estimated parameters, we can now do kriging to estimate the
 field at locations in the graph. As an example, we now obtain
@@ -831,13 +846,13 @@ graph
     ## 
     ## Vertices:
     ##   Degree 1: 37;  Degree 2: 2;  Degree 3: 83;  Degree 4: 57;  Degree 5: 4; 
-    ##   With incompatible directions:  7 
+    ##   With incompatible directions:  2 
     ## 
     ## Edges: 
     ##   Lengths: 
     ##       Min: 0.009342043  ; Max: 1.680324  ; Total: 57.22887 
     ##   Weights: 
-    ##       Columns: osm_id name bridge cycleway:left cycleway:right highway lane_markings lanes layer lit maxaxleload maxspeed maxspeed:type maxweight oneway sidewalk:both sidewalk:left sidewalk:right smoothness source:maxspeed surface .weights 
+    ##       Columns: osm_id name bridge cycleway:left cycleway:right highway lane_markings lanes layer lit maxaxleload maxspeed maxspeed:type maxweight oneway service sidewalk:both sidewalk:left sidewalk:right smoothness source:maxspeed surface .weights 
     ##   That are circles:  0 
     ## 
     ## Graph units: 
@@ -889,26 +904,26 @@ summary(res_exp)
     ## 
     ## Fixed effects:
     ##             Estimate Std.error z-value Pr(>|z|)    
-    ## (Intercept)  -1.0838    0.1743  -6.217 5.07e-10 ***
-    ## lon           0.8833    0.1404   6.290 3.17e-10 ***
-    ## lat           1.8429    0.1533  12.020  < 2e-16 ***
+    ## (Intercept)  -1.1095    0.1786  -6.211 5.25e-10 ***
+    ## lon           0.9191    0.1423   6.461 1.04e-10 ***
+    ## lat           1.8377    0.1560  11.783  < 2e-16 ***
     ## 
     ## Random effects:
     ##       Estimate Std.error z-value
-    ## tau    1.85291   0.08206  22.581
-    ## kappa 15.36611   1.92978   7.963
+    ## tau    1.86516   0.08361  22.307
+    ## kappa 14.95548   1.89735   7.882
     ## 
     ## Measurement error:
     ##           Estimate Std.error z-value
-    ## std. dev 0.0004633 0.0653197   0.007
+    ## std. dev 0.0003456 0.0664006   0.005
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -871.8516 
-    ## Number of function calls by 'optim' = 47
+    ## Log-Likelihood:  -872.1646 
+    ## Number of function calls by 'optim' = 57
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  6.79201 secs
+    ## Time used to:     fit the model =  17.11218 secs
 
 We can also have a glance at the fitted model:
 
@@ -920,7 +935,7 @@ glance(res_exp)
     ## # A tibble: 1 × 9
     ##    nobs    sigma logLik   AIC   BIC deviance df.residual model  cov_function  
     ##   <int>    <dbl>  <dbl> <dbl> <dbl>    <dbl>       <dbl> <chr>  <chr>         
-    ## 1   500 0.000463  -872. 1756. 1781.    1744.         494 isoCov exp_covariance
+    ## 1   500 0.000346  -872. 1756. 1782.    1744.         494 isoCov exp_covariance
 
 Let us now compute the posterior mean for the field at the observation
 locations and plot the residuals between the field and the posterior
@@ -996,31 +1011,31 @@ summary(res_gl)
     ## 
     ## Fixed effects:
     ##             Estimate Std.error z-value Pr(>|z|)    
-    ## (Intercept)  -0.9585    0.1530  -6.265 3.74e-10 ***
-    ## lon           1.0223    0.1642   6.224 4.84e-10 ***
-    ## lat           1.9855    0.1621  12.250  < 2e-16 ***
+    ## (Intercept)  -0.8396    0.1601  -5.244 1.57e-07 ***
+    ## lon           0.9142    0.1716   5.327 9.99e-08 ***
+    ## lat           2.1179    0.1694  12.502  < 2e-16 ***
     ## 
     ## Random effects:
     ##       Estimate Std.error z-value
-    ## tau   0.100741  0.004689  21.486
-    ## kappa 2.526499  0.304730   8.291
+    ## tau   0.103605  0.005301  19.544
+    ## kappa 2.367111  0.312398   7.577
     ## 
     ## Random effects (Matern parameterization):
     ##       Estimate Std.error z-value
-    ## sigma  4.41591   0.18227   24.23
-    ## range  0.79161   0.09537    8.30
+    ## sigma   4.4361    0.1917  23.143
+    ## range   0.8449    0.1077   7.849
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
-    ## std. dev  0.01605   0.07417   0.216
+    ## std. dev  0.18984   0.06221   3.052
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -884.5764 
+    ## Log-Likelihood:  -886.8962 
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  3.13041 secs
+    ## Time used to:     fit the model =  3.53089 secs
 
 We can also have a glance at the fitted model:
 
@@ -1030,9 +1045,9 @@ glance(res_gl)
 ```
 
     ## # A tibble: 1 × 9
-    ##    nobs  sigma logLik   AIC   BIC deviance df.residual model          alpha
-    ##   <int>  <dbl>  <dbl> <dbl> <dbl>    <dbl>       <dbl> <chr>          <dbl>
-    ## 1   500 0.0160  -885. 1781. 1806.    1769.         494 GraphLaplacian     1
+    ##    nobs sigma logLik   AIC   BIC deviance df.residual model          alpha
+    ##   <int> <dbl>  <dbl> <dbl> <dbl>    <dbl>       <dbl> <chr>          <dbl>
+    ## 1   500 0.190  -887. 1786. 1811.    1774.         494 GraphLaplacian     1
 
 We can now obtain prediction at the observed locations by using the
 [`predict()`](https://rdrr.io/r/stats/predict.html) method. Let us
@@ -1115,31 +1130,31 @@ summary(res_gl_pred)
     ## 
     ## Fixed effects:
     ##             Estimate Std.error z-value Pr(>|z|)    
-    ## (Intercept)  -0.8789    0.1202  -7.312 2.62e-13 ***
-    ## lon           1.0508    0.1013  10.376  < 2e-16 ***
-    ## lat           1.9118    0.1036  18.453  < 2e-16 ***
+    ## (Intercept)  -0.7441    0.1264  -5.886 3.96e-09 ***
+    ## lon           1.4117    0.1094  12.908  < 2e-16 ***
+    ## lat           2.1124    0.1073  19.688  < 2e-16 ***
     ## 
     ## Random effects:
     ##       Estimate Std.error z-value
-    ## tau     0.1036    0.0117   8.855
-    ## kappa   2.4099    0.4590   5.250
+    ## tau   0.092157  0.009238   9.975
+    ## kappa 2.681332  0.504379   5.316
     ## 
     ## Random effects (Matern parameterization):
     ##       Estimate Std.error z-value
-    ## sigma   4.3956    0.1998  21.994
-    ## range   0.8299    0.1363   6.088
+    ## sigma   4.6858    0.1914  24.484
+    ## range   0.7459    0.1210   6.162
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
-    ## std. dev   0.8046    0.1355   5.937
+    ## std. dev   0.6881    0.1195   5.756
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -989.5669 
+    ## Log-Likelihood:  -1002.98 
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  3.77387 secs
+    ## Time used to:     fit the model =  4.09306 secs
 
 One should compare the estimates with the ones obtained in the model
 without the prediction locations.
@@ -1238,8 +1253,8 @@ summary(spde_bru_result)
 ```
 
     ##           mean       sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 2.078440 0.104970   1.880710 2.075480   2.290260 2.049560
-    ## range 0.182301 0.024905   0.138636 0.180464   0.236268 0.176632
+    ## sigma 2.096510 0.108678   1.890430 2.093240    2.31489 2.089020
+    ## range 0.187865 0.025785   0.142793 0.185922    0.24390 0.181743
 
 Here we are showing the estimate of the practical correlation range
 ($`2/\kappa`$) instead of $`\kappa`$ since that is easier to interpret.
@@ -1262,9 +1277,9 @@ We now compare the means of the estimated values with the true values:
   print(result_df_bru)
 ```
 
-    ##   parameter true      mean     mode
-    ## 1   std.dev  2.0 2.0784355 2.049560
-    ## 2     range  0.2 0.1823011 0.176632
+    ##   parameter true      mean      mode
+    ## 1   std.dev  2.0 2.0965144 2.0890186
+    ## 2     range  0.2 0.1878648 0.1817428
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
@@ -1280,7 +1295,7 @@ function:
   facet_wrap(~parameter, scales = "free") + labs(y = "Density")
 ```
 
-![](MetricGraph_files/figure-html/unnamed-chunk-57-1.png)
+![](MetricGraph_files/figure-html/unnamed-chunk-59-1.png)
 
 ### Kriging with the `inlabru` implementation
 

@@ -273,7 +273,7 @@ summary(res)
     ## Number of function calls by 'optim' = 19
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  0.70857 secs
+    ## Time used to:     fit the model =  0.91268 secs
 
 We can also take a glance at `res`:
 
@@ -531,7 +531,7 @@ summary(res_exp)
     ## Number of function calls by 'optim' = 21
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  0.29465 secs
+    ## Time used to:     fit the model =  0.28412 secs
 
 ``` r
 
@@ -796,7 +796,7 @@ fit_GL2 <- graph_lme(y ~ -1, graph=graph, model = list(type = "graphLaplacian", 
 ```
 
 Finally, we use the function
-[`posterior_crossvalidation()`](https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.md)
+[`posterior_crossvalidation()`](https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.graph_lme.md)
 to perform leave-one-out cross validation based on the estimated
 parameters and compare the results:
 
@@ -813,11 +813,11 @@ posterior_crossvalidation_loo(fitted_models_list, factor=1000)[["scores"]]
     ## # A tibble: 5 × 6
     ##   Model   logscore  crps scrps   mae  rmse
     ##   <chr>      <dbl> <dbl> <dbl> <dbl> <dbl>
-    ## 1 alpha=1    1319.  598. 1014.  867. 1156.
-    ## 2 alpha=2    1200.  545.  957.  794. 1055.
-    ## 3 isoExp     1322.  600. 1015.  868. 1160.
-    ## 4 GL1        1329.  610. 1019.  883. 1191.
-    ## 5 GL2        1244.  574.  979.  829. 1125.
+    ## 1 alpha=1    1279.  566.  993.  825. 1092.
+    ## 2 alpha=2    1166.  518.  938.  752. 1005.
+    ## 3 isoExp     1283.  567.  995.  825. 1093.
+    ## 4 GL1        1286.  572.  996.  832. 1107.
+    ## 5 GL2        1204.  538.  957.  775. 1044.
 
 ## A model with replicates
 
@@ -980,7 +980,7 @@ summary(fit_repl_isoexp)
     ## Number of function calls by 'optim' = 22
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  4.03566 secs
+    ## Time used to:     fit the model =  4.14852 secs
 
 To do kriging, we proceed in an identical way, by providing a
 `data.frame` with the locations we want to obtain predictions.

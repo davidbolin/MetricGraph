@@ -94,7 +94,7 @@ summary(fit_alpha1)
 #> Number of function calls by 'optim' = 245
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  13.26524 secs
+#> Time used to:     fit the model =  13.28662 secs
 ```
 
 Now, we will fit a Whittle-Matérn field with `alpha = 2`:
@@ -119,29 +119,29 @@ summary(fit_alpha2)
 #> 
 #> Fixed effects:
 #>             Estimate Std.error z-value Pr(>|z|)    
-#> (Intercept)   51.152     2.796    18.3   <2e-16 ***
+#> (Intercept)   51.219     2.813   18.21   <2e-16 ***
 #> 
 #> Random effects:
 #>       Estimate Std.error z-value
-#> tau    0.08648   0.01551   5.577
-#> kappa  0.44663   0.07533   5.929
+#> tau    0.09205   0.01596   5.767
+#> kappa  0.43173   0.07254   5.952
 #> 
 #> Random effects (Matern parameterization):
 #>       Estimate Std.error z-value
-#> sigma   19.371     2.531   7.653
-#> range    7.756     1.279   6.062
+#> sigma   19.147     2.572   7.446
+#> range    8.024     1.314   6.105
 #> 
 #> Measurement error:
 #>          Estimate Std.error z-value
-#> std. dev   7.2345    0.3722   19.44
+#> std. dev   7.1763    0.3764   19.07
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
 #> 
-#> Log-Likelihood:  -1207.997 
-#> Number of function calls by 'optim' = 279
+#> Log-Likelihood:  -1208.087 
+#> Number of function calls by 'optim' = 227
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  21.50407 secs
+#> Time used to:     fit the model =  14.02765 secs
 ```
 
 We will now fit Whittle-Matérn fields with `alpha = 1` and `alpha=2`,
@@ -193,7 +193,7 @@ summary(fit_alpha1_bc)
 #> Number of function calls by 'optim' = 193
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  11.34232 secs
+#> Time used to:     fit the model =  11.0432 secs
 ```
 
 and
@@ -210,29 +210,29 @@ summary(fit_alpha2_bc)
 #> 
 #> Fixed effects:
 #>             Estimate Std.error z-value Pr(>|z|)    
-#> (Intercept)    51.12      2.82   18.13   <2e-16 ***
+#> (Intercept)   51.149     2.828   18.09   <2e-16 ***
 #> 
 #> Random effects:
 #>       Estimate Std.error z-value
-#> tau    0.08740   0.01566   5.582
-#> kappa  0.43396   0.07524   5.768
+#> tau    0.09286   0.01610   5.768
+#> kappa  0.42028   0.07258   5.791
 #> 
 #> Random effects (Matern parameterization):
 #>       Estimate Std.error z-value
-#> sigma   20.011     2.728   7.335
-#> range    7.983     1.354   5.895
+#> sigma   19.762     2.764   7.150
+#> range    8.242     1.388   5.937
 #> 
 #> Measurement error:
 #>          Estimate Std.error z-value
-#> std. dev    7.236     0.372   19.45
+#> std. dev   7.1759    0.3759   19.09
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
 #> 
-#> Log-Likelihood:  -1208.181 
-#> Number of function calls by 'optim' = 167
+#> Log-Likelihood:  -1208.28 
+#> Number of function calls by 'optim' = 257
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  14.88038 secs
+#> Time used to:     fit the model =  16.93911 secs
 ```
 
 Similarly, let us now fit a Matérn Gaussian model based on the graph
@@ -287,7 +287,7 @@ summary(fit_GL1)
 #> Number of function calls by 'optim' = 143
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  1.11307 secs
+#> Time used to:     fit the model =  1.18594 secs
 ```
 
 and
@@ -326,7 +326,7 @@ summary(fit_GL2)
 #> Number of function calls by 'optim' = 181
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  2.13537 secs
+#> Time used to:     fit the model =  1.66471 secs
 ```
 
 Observe that the default optimizer (L-BFGS-B) failed to converge, thus
@@ -380,7 +380,7 @@ summary(fit_isoexp)
 #> Number of function calls by 'optim' = 299
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  2.56848 secs
+#> Time used to:     fit the model =  4.57258 secs
 ```
 
 Observe the warning, message. This message tells us that we did not
@@ -497,7 +497,7 @@ fit_isomat <- graph_lme(y ~ 1, graph = pems_graph,
 #> optimization method with largest likelihood was chosen. You can try to obtain a
 #> positive-definite Hessian by setting 'improve_hessian' to TRUE.
 #> Error in `chol.default()`:
-#> ! the leading minor of order 256 is not positive
+#> ! the leading minor of order 260 is not positive
 ```
 
 Indeed, the model could not be fitted.
@@ -525,13 +525,13 @@ table_lik <- sapply(fitted_models_list, logLik)
 # Printing the negative likelihoods:
 -table_lik
 #>     isoExp        GL1    alpha=1 alpha=1 bc        GL2    alpha=2 alpha=2 bc 
-#>   1223.838   1221.384   1221.225   1221.377   1208.703   1207.997   1208.181
+#>   1223.838   1221.384   1221.225   1221.377   1208.703   1208.087   1208.280
 ```
 
 ## Comparison by cross-validation
 
 We will now use the function
-[`posterior_crossvalidation()`](https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.md)
+[`posterior_crossvalidation()`](https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.graph_lme.md)
 to perform leave-one-out cross validation based on the estimated
 parameters and compare the results:
 
@@ -548,8 +548,8 @@ knitr::kable(res$scores, digits = 3)
 | alpha=1    |    3.605 | 4.738 | 2.133 | 6.178 | 8.614 |
 | alpha=1 bc |    3.604 | 4.736 | 2.133 | 6.168 | 8.612 |
 | GL2        |    3.551 | 4.531 | 2.107 | 5.853 | 8.304 |
-| alpha=2    |    3.549 | 4.522 | 2.107 | 5.841 | 8.257 |
-| alpha=2 bc |    3.549 | 4.521 | 2.107 | 5.843 | 8.256 |
+| alpha=2    |    3.548 | 4.519 | 2.106 | 5.851 | 8.255 |
+| alpha=2 bc |    3.548 | 4.518 | 2.106 | 5.853 | 8.255 |
 
 ## Kriging
 

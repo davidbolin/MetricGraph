@@ -28,6 +28,8 @@
   graphs](https://davidbolin.github.io/MetricGraph/articles/pde.md):
 - [Log-Gaussian Cox processes on metric
   graphs](https://davidbolin.github.io/MetricGraph/articles/pointprocess.md):
+- [Profile likelihood and REML for Whittle--Matérn
+  fields](https://davidbolin.github.io/MetricGraph/articles/profile_likelihood.md):
 - [Gaussian random fields on metric
   graphs](https://davidbolin.github.io/MetricGraph/articles/random_fields.md):
 - [An example with a river graph

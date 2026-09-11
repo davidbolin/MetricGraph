@@ -1,5 +1,5 @@
 pandoc: 3.8.3
-pkgdown: 2.2.0
+pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   comparison: comparison.html
@@ -15,10 +15,11 @@ articles:
   multi_likelihood: multi_likelihood.html
   pde: pde.html
   pointprocess: pointprocess.html
+  profile_likelihood: profile_likelihood.html
   random_fields: random_fields.html
   river_example: river_example.html
   spacetime: spacetime.html
-last_built: 2026-05-14T00:32Z
+last_built: 2026-09-11T20:56Z
 urls:
   reference: https://davidbolin.github.io/MetricGraph/reference
   article: https://davidbolin.github.io/MetricGraph/articles

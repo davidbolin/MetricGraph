@@ -95,7 +95,7 @@
 
   Summary Method for `graph_lme` Objects
 
-- [`posterior_crossvalidation()`](https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.md)
+- [`posterior_crossvalidation(`*`<graph_lme>`*`)`](https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.graph_lme.md)
   :
 
   Cross-validation for `graph_lme` models assuming observations at the
@@ -142,6 +142,10 @@
 
 - [`sample_spde()`](https://davidbolin.github.io/MetricGraph/reference/sample_spde.md)
   : Samples a Whittle-Matérn field on a metric graph
+- [`simulate(`*`<metric_graph>`*`)`](https://davidbolin.github.io/MetricGraph/reference/simulate.metric_graph.md)
+  : Simulate a Whittle-Matérn field on a metric graph
+- [`simulate_parallel()`](https://davidbolin.github.io/MetricGraph/reference/simulate_parallel.md)
+  : Parallel simulation of a Whittle-Matérn field on a metric graph
 
 ## Data manipulation on metric graphs
 
@@ -203,6 +207,10 @@
   : Covariance function for Whittle-Matérn fields
 - [`spde_variance()`](https://davidbolin.github.io/MetricGraph/reference/spde_variance.md)
   : Variancefor Whittle-Matérn fields
+- [`directional_ou_covariance()`](https://davidbolin.github.io/MetricGraph/reference/directional_ou_covariance.md)
+  : Closed-form covariance of the directional OU model
+- [`directional_ou_variance()`](https://davidbolin.github.io/MetricGraph/reference/directional_ou_variance.md)
+  : Closed-form marginal variance of the directional OU model
 
 ## Auxiliary constructors
 
@@ -221,6 +229,12 @@
 
   Convert an `stlpp` object to a metric graph object
 
+- [`fetch_osm()`](https://davidbolin.github.io/MetricGraph/reference/fetch_osm.md)
+  : Fetch OpenStreetMap data via the Overpass API
+
+- [`metric_graph_from_osm()`](https://davidbolin.github.io/MetricGraph/reference/metric_graph_from_osm.md)
+  : Build a metric_graph directly from an OpenStreetMap query
+
 ## Misc functions
 
 - [`selected_inv()`](https://davidbolin.github.io/MetricGraph/reference/selected_inv.md)
@@ -232,3 +246,5 @@
   Traffic speed data from San Jose, California
 - [`pems_repl`](https://davidbolin.github.io/MetricGraph/reference/pems_repl.md)
   : Traffic speed data with replicates from San Jose, California
+- [`columbia_main_component`](https://davidbolin.github.io/MetricGraph/reference/columbia_main_component.md)
+  : Largest connected component of the Mid-Columbia stream network

@@ -194,6 +194,8 @@ the vignette:
 
 - [`metric_graph$buildDirectionalConstraints()`](#method-metric_graph-buildDirectionalConstraints)
 
+- [`metric_graph$compute_directional_covariance()`](#method-metric_graph-compute_directional_covariance)
+
 - [`metric_graph$buildC()`](#method-metric_graph-buildC)
 
 - [`metric_graph$build_mesh()`](#method-metric_graph-build_mesh)
@@ -203,6 +205,8 @@ the vignette:
 - [`metric_graph$is_disconnected()`](#method-metric_graph-is_disconnected)
 
 - [`metric_graph$get_components()`](#method-metric_graph-get_components)
+
+- [`metric_graph$get_largest()`](#method-metric_graph-get_largest)
 
 - [`metric_graph$which_component()`](#method-metric_graph-which_component)
 
@@ -2503,6 +2507,60 @@ No return value. Called for its side effects.
 
 ------------------------------------------------------------------------
 
+### `metric_graph$compute_directional_covariance()`
+
+Closed-form covariance of the directional OU model at observation
+locations or arbitrary points.
+
+#### Usage
+
+    metric_graph$compute_directional_covariance(
+      kappa,
+      tau,
+      PtE = NULL,
+      PtE2 = NULL,
+      sigma_source = NULL,
+      normalized = TRUE,
+      cpp = TRUE
+    )
+
+#### Arguments
+
+- `kappa`:
+
+  Positive OU rate parameter.
+
+- `tau`:
+
+  White-noise scale; the stationary variance is `1/(2*kappa*tau^2)`.
+
+- `PtE`:
+
+  Evaluation points `(edge_number, distance_on_edge)`.
+
+- `PtE2`:
+
+  Optional second point set for cross-covariance.
+
+- `sigma_source`:
+
+  Optional source-vertex anchoring variances.
+
+- `normalized`:
+
+  Whether point distances are normalized to `[0, 1]`.
+
+- `cpp`:
+
+  Use C++ numeric setup and the shared C++ covariance fill when
+  available for oriented in-trees and out-trees.
+
+#### Returns
+
+A dense covariance matrix.
+
+------------------------------------------------------------------------
+
 ### `metric_graph$buildC()`
 
 Build Kirchoff constraint matrix from edges.
@@ -2523,8 +2581,8 @@ Build Kirchoff constraint matrix from edges.
 
 #### Details
 
-Currently not implemented for circles (edges that start and end in the
-same vertex)
+Circular edges (edges that start and end in the same vertex) are
+supported: both ends of the edge are constrained at that vertex.
 
 #### Returns
 
@@ -2653,6 +2711,32 @@ calls are O(1) until observations change (which invalidates the cache).
 #### Returns
 
 A list of `metric_graph` objects.
+
+------------------------------------------------------------------------
+
+### `metric_graph$get_largest()`
+
+Return only the largest connected component, as a `metric_graph` object.
+Equivalent to `get_components()[[1]]`, but it builds just that one
+component instead of all of them, which matters when a graph decomposes
+into many small pieces and only the main network is of interest. For a
+connected graph it returns the graph itself. Components are ranked by
+total edge length, so the result is the same graph
+`get_components()[[1]]` would return.
+
+#### Usage
+
+    metric_graph$get_largest(verbose = 0)
+
+#### Arguments
+
+- `verbose`:
+
+  Verbosity level passed to the component constructor (default `0`).
+
+#### Returns
+
+A `metric_graph` object, or `NULL` if the graph has no edges.
 
 ------------------------------------------------------------------------
 
@@ -3402,7 +3486,7 @@ graph <- metric_graph$new(edges)
 #> Computing bounding box...
 #> Setting up edges
 #> Merging close vertices
-#> Total construction time: 0.30 secs
+#> Total construction time: 0.26 secs
 #> Creating and updating vertices...
 #> Storing the initial graph...
 #> Computing the relative positions of the edges...

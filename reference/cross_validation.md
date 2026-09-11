@@ -12,7 +12,7 @@ When `true_CV = FALSE`, the original fit's `mode$theta` is held fixed so
 only the latent posterior is updated; when `TRUE`, theta is
 re-estimated. Posterior response samples are then drawn at the held-out
 locations via
-[`inlabru::generate()`](https://inlabru-org.github.io/inlabru/reference/generate.html).
+[`inlabru::generate()`](https://generics.r-lib.org/reference/generate.html).
 Works with the exact, non-FEM SPDE models in MetricGraph
 (`inla_metric_graph_spde`) and FEM-based rSPDE models alike.
 

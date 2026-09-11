@@ -162,7 +162,7 @@ print(cross.scores)
     ##   logscore  crps scrps   mae  rmse
     ##      <dbl> <dbl> <dbl> <dbl> <dbl>
     ## 1    0.777 0.273 0.710 0.346 0.498
-    ## 2    0.816 0.283 0.732 0.361 0.513
+    ## 2    0.810 0.280 0.726 0.361 0.512
 
 ## Directional models
 
@@ -197,7 +197,7 @@ print(cross.scores)
     ##   logscore  crps scrps   mae  rmse
     ##      <dbl> <dbl> <dbl> <dbl> <dbl>
     ## 1    0.777 0.273 0.710 0.346 0.498
-    ## 2    0.816 0.283 0.732 0.361 0.513
+    ## 2    0.810 0.280 0.726 0.361 0.512
     ## 3    0.273 0.195 0.484 0.267 0.366
 
 We could use other constraints. For instance in .. the authors used
@@ -231,7 +231,7 @@ print(cross.scores)
     ##   logscore  crps scrps   mae  rmse
     ##      <dbl> <dbl> <dbl> <dbl> <dbl>
     ## 1    0.777 0.273 0.710 0.346 0.498
-    ## 2    0.816 0.283 0.732 0.361 0.513
+    ## 2    0.810 0.280 0.726 0.361 0.512
     ## 3    0.273 0.195 0.484 0.267 0.366
     ## 4    0.443 0.217 0.568 0.308 0.392
 

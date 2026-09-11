@@ -2,6 +2,90 @@
 
 ## MetricGraph (development version)
 
+- [`fetch_osm()`](https://davidbolin.github.io/MetricGraph/reference/fetch_osm.md)
+  and
+  [`metric_graph_from_osm()`](https://davidbolin.github.io/MetricGraph/reference/metric_graph_from_osm.md)
+  retry transient Overpass failures (HTTP 429/5xx and connection errors)
+  with exponential backoff, controlled by the new `retries` argument,
+  and `endpoint` may now be a vector of mirrors tried in order. A failed
+  download no longer leaves the error page behind at `cache_path`.
+- [`posterior_crossvalidation()`](https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.graph_lme.md)
+  is now the S3 generic from rSPDE, re-exported by MetricGraph, which
+  provides the `graph_lme` method. Loading rSPDE after MetricGraph
+  therefore no longer masks MetricGraph’s version, and a list of models
+  may mix `graph_lme` and `rspde_lme` fits. Requires rSPDE \>=
+  2.6.0.9001.
+- Graph construction no longer materializes dense point-by-edge
+  matrices. `metric_graph$new()` used to densify the
+  [`st_is_within_distance()`](https://r-spatial.github.io/sf/reference/geos_binary_pred.html)
+  result into an `nEdges x nVertices` logical matrix before snapping
+  vertices to nearby edges, and `snapPointsToLines()` (used by
+  `add_observations()` with `data_coords = "spatial"`,
+  [`coordinates()`](https://edzer.github.io/sp/reference/coordinates.html)
+  and `which_component()`) built a full `nPoints x nEdges` distance
+  matrix. Both are now replaced by sparse candidate sets and C++ kernels
+  (`snap_points_to_edges_cpp()` and a grid-indexed
+  `nearest_edge_cpp()`), which return the same graphs and the same
+  snapped locations.
+- The edge-edge intersection search (`tolerance$edge_edge > 0`) also
+  keeps its neighbour list sparse instead of building an
+  `nEdges x nEdges` logical matrix.
+- Edge weights are no longer copied once per edge split.
+  `add_vertices()` now records which weight row each new edge inherits
+  and materializes the weight table once, instead of `rbind`-ing the
+  whole table inside every `split_edge()` call. `set_edge_weights()`
+  builds the per-edge weight rows without a `[.data.frame` call per
+  edge. The values are unchanged but row names of weight rows duplicated
+  by a split are now e.g. `"990509915.1"` rather than `"9905099151"`.
+- `prune_vertices()` no longer pays a `[.data.frame` call per edge when
+  rebuilding the edge attributes, and the serial fallback for
+  closed-loop chains compacts the weight table once instead of once per
+  removed vertex.
+- Added `metric_graph$get_largest()`, which returns only the largest
+  connected component. It is equivalent to `get_components()[[1]]` but
+  constructs just that component.
+- Added a mirrored closed-form directional OU covariance fast path for
+  out-trees, including direction-reversed K1 continuity graphs. Reversed
+  river networks now share the K1/K2 C++ pairwise kernel, using a cached
+  Euler/RMQ LCA index and source-normalized transfers instead of
+  allocating R objects or walking parent chains for every covariance
+  pair.
+- Added C++-backed directional alpha-1 edge precision and closed-form
+  directional OU covariance calculations. The C++ paths are now the
+  default, with pure-R reference implementations retained for validation
+  and fallback.
+- Added a packaged-data Mid-Columbia speed example covering K1, K2,
+  reversed-continuity and covariance likelihood evaluation.
+- Fixed a sign-convention inconsistency in the exact α = 2 codes. The
+  observation-/bridge-side covariance blocks treated the
+  endpoint-derivative states as −u′, while the prior precision (`Q00` /
+  `Qalpha2`) and the vertex constraints used +u′. Because both enter the
+  same quadratic forms, α = 2 covariances, likelihoods, posteriors and
+  exact samples were biased on graphs containing cycles.
+- Fixed the same α = 2 sign-convention bug in the profiled-likelihood
+  (v2) code path (`profile_lik_core_alpha2` in
+  `R/graph_likelihoods_v2.R`), which had reimplemented the affected
+  S-matrix construction independently and was not covered by the fix
+  above.
+- Added
+  [`simulate.metric_graph()`](https://davidbolin.github.io/MetricGraph/reference/simulate.metric_graph.md)
+  S3 method and
+  [`simulate_parallel()`](https://davidbolin.github.io/MetricGraph/reference/simulate_parallel.md)
+  for unconditional prior simulation of Whittle-Matérn fields: Method A
+  (`method = "direct"`, O(m³) per edge), Method B (`method = "kriging"`,
+  O(m) per edge), and the extended method (`method = "extended"`, single
+  sparse Cholesky on the graph with simulation locations promoted to
+  vertices). Both α = 1 and α = 2 are supported.
+- C++ (Rcpp/Eigen) implementations of the per-edge bridge draws,
+  `draw_edge_direct_cpp` and `draw_edge_kriging_cpp`, are now the
+  default (`impl = "cpp"`); the pure-R reference implementations remain
+  available via `impl = "R"`.
+- Updated `examples/fast_simulation/run_study.R` with warm-up
+  iterations, `n_rep = 5` medians, extended `n_pts` sweep {8,…,2048},
+  and all three simulation methods.
+- Added `examples/fast_simulation/benchmark.R` for per-edge R vs C++
+  speedup and whole-field method comparison.
+
 ## MetricGraph 1.6.0
 
 CRAN release: 2026-05-06

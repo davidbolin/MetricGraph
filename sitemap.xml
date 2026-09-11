@@ -14,6 +14,7 @@
 <url><loc>https://davidbolin.github.io/MetricGraph/articles/multi_likelihood.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/articles/pde.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/articles/pointprocess.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/articles/profile_likelihood.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/articles/random_fields.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/articles/river_example.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/articles/spacetime.html</loc></url>
@@ -23,9 +24,13 @@
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/MetricGraph-package.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/augment.graph_lme.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/bru_mapper.inla_metric_graph_spde.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/columbia_main_component.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/cross_validation.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/directional_ou_covariance.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/directional_ou_variance.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/drop_na.metric_graph_data.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/exp_covariance.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/fetch_osm.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/filter.metric_graph_data.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.html</loc></url>
@@ -46,13 +51,14 @@
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/make_Q_spacetime.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/match_mesh_data.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/metric_graph.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/metric_graph_from_osm.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/mutate.metric_graph_data.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/pems.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/pems_repl.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/pipe.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/plot.graph_bru_pred.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/plot.graph_bru_proc_pred.html</loc></url>
-<url><loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.graph_lme.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation_loo.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/precompute_lgcp_graph.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/predict.graph_lme.html</loc></url>
@@ -64,6 +70,8 @@
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/select.metric_graph_data.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/selected_inv.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/simulate.graph_lme.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/simulate.metric_graph.html</loc></url>
+<url><loc>https://davidbolin.github.io/MetricGraph/reference/simulate_parallel.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/simulate_spacetime.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/spde_covariance.html</loc></url>
 <url><loc>https://davidbolin.github.io/MetricGraph/reference/spde_metric_graph_result.html</loc></url>

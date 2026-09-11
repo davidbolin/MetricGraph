@@ -167,7 +167,7 @@ graph2 <- metric_graph$new(V = V, E = E)
 
     ## Merging close vertices
 
-    ## Total construction time: 0.27 secs
+    ## Total construction time: 0.22 secs
 
     ## Creating and updating vertices...
 
@@ -757,8 +757,8 @@ graph3$vertices
     ## 1  0.0 0.0000000      2        0         2        TRUE
     ## 2  1.0 0.0000000      1        1         0       FALSE
     ## 3  0.5 0.0300000      3        2         1       FALSE
-    ## 4  0.0 1.0000000      1        0         1       FALSE
-    ## 5 -1.0 0.0000000      1        1         0       FALSE
+    ## 4  0.0 1.0000000      1        1         0       FALSE
+    ## 5 -1.0 0.0000000      1        0         1       FALSE
     ## 6  0.0 0.3533333      4        2         2       FALSE
 
 and
@@ -800,8 +800,8 @@ graph3$edges
     ## 
     ## Edge 3 (first and last coordinates): 
     ##   x         y
-    ##   0 0.3533333
     ##  -1 0.0000000
+    ##   0 0.3533333
     ## Total number of coordinates: 3 
     ## Edge length: 2.190873 
     ## Weight: 1 
@@ -812,8 +812,8 @@ graph3$edges
     ## 
     ## Edge 4 (first and last coordinates): 
     ##  x         y
-    ##  0 1.0000000
     ##  0 0.3533333
+    ##  0 1.0000000
     ## Total number of coordinates: 3 
     ## Edge length: 0.6466667 
     ## Weight: 1 
@@ -855,19 +855,19 @@ graph3$edges[[4]]
     ## 
     ## Coordinates of the vertices of the edge: 
     ##  x         y
-    ##  0 1.0000000
     ##  0 0.3533333
+    ##  0 1.0000000
     ## 
     ## Coordinates of the edge:
     ##  x         y
-    ##  0 1.0000000
-    ##  0 0.7500000
     ##  0 0.3533333
+    ##  0 0.7500000
+    ##  0 1.0000000
     ## 
     ## Relative positions of the edge:
     ##  Edge number Distance on edge
     ##            4        0.0000000
-    ##            4        0.3865979
+    ##            4        0.6134021
     ##            4        1.0000000
     ## 
     ## Total number of coordinates: 3 
@@ -901,19 +901,19 @@ graph3$edges[[4]]
     ## 
     ## Coordinates of the vertices of the edge: 
     ##  x         y
-    ##  0 1.0000000
     ##  0 0.3533333
+    ##  0 1.0000000
     ## 
     ## Coordinates of the edge:
     ##  x         y
-    ##  0 1.0000000
-    ##  0 0.7500000
     ##  0 0.3533333
+    ##  0 0.7500000
+    ##  0 1.0000000
     ## 
     ## Relative positions of the edge:
     ##  Edge number Distance on edge
     ##            4        0.0000000
-    ##            4        0.3865979
+    ##            4        0.6134021
     ##            4        1.0000000
     ## 
     ## Total number of coordinates: 3 
@@ -974,25 +974,28 @@ value should be given in normalized distance or not.
 
 ### Methods for working with real data
 
-To illustrate the useage of `metric_graph` on some real data, we use the
-`osmdata` package to download data from OpenStreetMap. In the following
-code, we extract highways for a part of the city of Copenhagen:
+To illustrate the useage of `metric_graph` on some real data, we
+download OSM data with the
+[`fetch_osm()`](https://davidbolin.github.io/MetricGraph/reference/fetch_osm.md)
+helper. In the following code we extract highways for a part of the city
+of Copenhagen:
 
 ``` r
 
-library(osmdata)
 bbox <- c(12.5900, 55.6000, 12.6850, 55.6450)
-call <- opq(bbox)
-call <- add_osm_feature(call, key = "highway",value=c("motorway", "primary",
-                                                        "secondary", "tertiary"))
-data_sf <- osmdata_sf(call)
+data_sf <- fetch_osm(bbox = bbox,
+                     value = c("motorway", "primary",
+                               "secondary", "tertiary"))
+```
 
-graph5 <- metric_graph$new(lapply(data_sf$osm_lines$geometry, 
+``` r
+
+graph5 <- metric_graph$new(lapply(data_sf$osm_lines$geometry,
   function(dat){sf::st_coordinates(dat)[,1:2]}))
 graph5$plot(vertex_size = 0)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-43-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-45-1.png)
 
 There are a few things to note about data like this. The first is that
 the coordinates are given in Longitude and Latitude. Because of this,
@@ -1049,15 +1052,15 @@ We can see now that `graph5` automatically has the correct CRS:
 graph5
 ```
 
-    ## A metric graph with  347  vertices and  366  edges.
+    ## A metric graph with  350  vertices and  369  edges.
     ## 
     ## Vertices:
-    ##   Degree 1: 29;  Degree 2: 266;  Degree 3: 39;  Degree 4: 11;  Degree 5: 2; 
+    ##   Degree 1: 28;  Degree 2: 271;  Degree 3: 38;  Degree 4: 11;  Degree 5: 2; 
     ##   With incompatible directions:  5 
     ## 
     ## Edges: 
     ##   Lengths: 
-    ##       Min: 0.001650041  ; Max: 4.042991  ; Total: 68.82467 
+    ##       Min: 0.001650041  ; Max: 4.042991  ; Total: 68.78652 
     ##   Weights: 
     ##       Columns: osm_id name alt_name animal_crossing:animal bicycle bridge cycleway cycleway:both cycleway:left cycleway:right cycleway:width destination destination:lanes destination:ref destination:symbol foot hazard hazmat:conditional highway horse int_ref junction lane_markings lanes lanes:backward lanes:forward layer lit mapillary maxheight maxspeed maxspeed:advisory maxspeed:variable maxweight:signed mofa motorcar name:etymology name:etymology:wikidata name:etymology:wikipedia name:sv noname note oneway operator operator:wikidata operator:wikipedia placement priority ref shoulder sidewalk sidewalk:both:surface sidewalk:left sidewalk:left:surface sidewalk:right sidewalk:right:surface smoothness source:maxspeed start_date surface toll traffic_calming tunnel tunnel:alt_name:da tunnel:alt_name:sv tunnel:name tunnel:name:da tunnel:name:de tunnel:name:en tunnel:name:sv tunnel:official_name turn:lanes turn:lanes:backward turn:lanes:forward width wikidata .weights 
     ##   That are circles:  0 
@@ -1068,6 +1071,17 @@ graph5
     ## Longitude and Latitude coordinates:  TRUE
     ##   Which spatial package:  sp 
     ##   CRS:  EPSG:4326
+
+As a shortcut, the OSM download and the graph construction can be done
+in a single call with
+[`metric_graph_from_osm()`](https://davidbolin.github.io/MetricGraph/reference/metric_graph_from_osm.md):
+
+``` r
+
+graph5 <- metric_graph_from_osm(bbox  = c(12.5900, 55.6000, 12.6850, 55.6450),
+                                value = c("motorway", "primary",
+                                          "secondary", "tertiary"))
+```
 
 This also allows us to plot the graph interactively with the underlying
 world map, if the data has a coordinate reference system, by setting
@@ -1097,7 +1111,7 @@ graph automatically adds the edge observations as `edge_weights`:
 graph5$get_edge_weights()
 ```
 
-    ## # A tibble: 366 × 77
+    ## # A tibble: 369 × 77
     ##    osm_id  name          alt_name animal_crossing:anim…¹ bicycle bridge cycleway
     ##    <chr>   <chr>         <chr>    <chr>                  <chr>   <chr>  <chr>   
     ##  1 1525051 Backersvej    NA       NA                     NA      NA     lane    
@@ -1110,7 +1124,7 @@ graph5$get_edge_weights()
     ##  8 2373286 Kastruplundg… NA       NA                     NA      NA     no      
     ##  9 3431744 Kirstinehøj   NA       NA                     NA      NA     track   
     ## 10 3431748 Tømmerupvej   NA       NA                     NA      NA     track   
-    ## # ℹ 356 more rows
+    ## # ℹ 359 more rows
     ## # ℹ abbreviated name: ¹​`animal_crossing:animal`
     ## # ℹ 70 more variables: `cycleway:both` <chr>, `cycleway:left` <chr>,
     ## #   `cycleway:right` <chr>, `cycleway:width` <chr>, destination <chr>,
@@ -1146,7 +1160,7 @@ graph5$set_edge_weights(weights = graph5$mutate_weights(lanes = ifelse(is.na(lan
 graph5$plot(vertex_size = 0, edge_weight = "maxspeed", edge_width_weight = "lanes")
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-53-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-56-1.png)
 
 However, observe that the edge widths are always relative, with the
 largest being set to `edge_width`. So, let us set `edge_width` to 4 to
@@ -1158,7 +1172,7 @@ graph5$set_edge_weights(weights = graph5$mutate_weights(lanes = ifelse(is.na(lan
 graph5$plot(vertex_size = 0, edge_weight = "maxspeed", edge_width_weight = "lanes", edge_width = 4)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-54-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-57-1.png)
 
 If one does not want to have the edge weights added, one must set
 `include_edge_weights` to `FALSE`:
@@ -1169,7 +1183,7 @@ graph5 <- metric_graph$new(data_sf, include_edge_weights=FALSE)
 graph5$get_edge_weights()
 ```
 
-    ## # A tibble: 366 × 1
+    ## # A tibble: 369 × 1
     ##    .weights
     ##       <dbl>
     ##  1        1
@@ -1182,7 +1196,7 @@ graph5$get_edge_weights()
     ##  8        1
     ##  9        1
     ## 10        1
-    ## # ℹ 356 more rows
+    ## # ℹ 359 more rows
 
 Similarly, if one wants just to add some columns of the `osmdata` object
 as edge weights, one can pass a vector with the column names as the
@@ -1195,7 +1209,7 @@ graph5 <- metric_graph$new(data_sf, include_edge_weights=c("highway", "lanes"))
 graph5$get_edge_weights()
 ```
 
-    ## # A tibble: 366 × 3
+    ## # A tibble: 369 × 3
     ##    highway  lanes .weights
     ##    <chr>    <chr>    <dbl>
     ##  1 tertiary NA           1
@@ -1208,14 +1222,15 @@ graph5$get_edge_weights()
     ##  8 tertiary 2            1
     ##  9 tertiary 3            1
     ## 10 tertiary 2            1
-    ## # ℹ 356 more rows
+    ## # ℹ 359 more rows
 
 The same idea also works is one has an `sf` object instead. Let us
-obtain the `sf` version from the `osmdata` object:
+obtain the `sf` version from the `osmdata` object by extracting the
+`osm_lines` element:
 
 ``` r
 
-data_sf <- osmdata_sf(call)
+data_sf <- data_sf$osm_lines
 ```
 
 We can now directly create the metric graph object:
@@ -1232,15 +1247,15 @@ Let us check that `graph5` still has the correct CRS:
 graph5
 ```
 
-    ## A metric graph with  347  vertices and  366  edges.
+    ## A metric graph with  350  vertices and  369  edges.
     ## 
     ## Vertices:
-    ##   Degree 1: 29;  Degree 2: 266;  Degree 3: 39;  Degree 4: 11;  Degree 5: 2; 
+    ##   Degree 1: 28;  Degree 2: 271;  Degree 3: 38;  Degree 4: 11;  Degree 5: 2; 
     ##   With incompatible directions:  5 
     ## 
     ## Edges: 
     ##   Lengths: 
-    ##       Min: 0.001650041  ; Max: 4.042991  ; Total: 68.82467 
+    ##       Min: 0.001650041  ; Max: 4.042991  ; Total: 68.78652 
     ##   Weights: 
     ##       Columns: osm_id name alt_name animal_crossing:animal bicycle bridge cycleway cycleway:both cycleway:left cycleway:right cycleway:width destination destination:lanes destination:ref destination:symbol foot hazard hazmat:conditional highway horse int_ref junction lane_markings lanes lanes:backward lanes:forward layer lit mapillary maxheight maxspeed maxspeed:advisory maxspeed:variable maxweight:signed mofa motorcar name:etymology name:etymology:wikidata name:etymology:wikipedia name:sv noname note oneway operator operator:wikidata operator:wikipedia placement priority ref shoulder sidewalk sidewalk:both:surface sidewalk:left sidewalk:left:surface sidewalk:right sidewalk:right:surface smoothness source:maxspeed start_date surface toll traffic_calming tunnel tunnel:alt_name:da tunnel:alt_name:sv tunnel:name tunnel:name:da tunnel:name:de tunnel:name:en tunnel:name:sv tunnel:official_name turn:lanes turn:lanes:backward turn:lanes:forward width wikidata .weights 
     ##   That are circles:  0 
@@ -1269,7 +1284,7 @@ Also, that it has the edge weights:
 graph5$get_edge_weights()
 ```
 
-    ## # A tibble: 366 × 77
+    ## # A tibble: 369 × 77
     ##    osm_id  name          alt_name animal_crossing:anim…¹ bicycle bridge cycleway
     ##    <chr>   <chr>         <chr>    <chr>                  <chr>   <chr>  <chr>   
     ##  1 1525051 Backersvej    NA       NA                     NA      NA     lane    
@@ -1282,7 +1297,7 @@ graph5$get_edge_weights()
     ##  8 2373286 Kastruplundg… NA       NA                     NA      NA     no      
     ##  9 3431744 Kirstinehøj   NA       NA                     NA      NA     track   
     ## 10 3431748 Tømmerupvej   NA       NA                     NA      NA     track   
-    ## # ℹ 356 more rows
+    ## # ℹ 359 more rows
     ## # ℹ abbreviated name: ¹​`animal_crossing:animal`
     ## # ℹ 70 more variables: `cycleway:both` <chr>, `cycleway:left` <chr>,
     ## #   `cycleway:right` <chr>, `cycleway:width` <chr>, destination <chr>,
@@ -1319,7 +1334,7 @@ length(comps)
 sapply(comps, function(g) sum(as.numeric(g$edge_lengths)))
 ```
 
-    ## [1] 49.257010  9.786714  9.780944
+    ## [1] 49.218865  9.786714  9.780944
 
 To draw every component in its own colour we pass `components = TRUE` to
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
@@ -1390,11 +1405,11 @@ graph5$vertices
     ## 5   12.62580 55.62302     17        8         9       FALSE
     ## 6   12.58937 55.64109      2        0         2        TRUE
     ## 7   12.59120 55.64169     10        5         5       FALSE
-    ## 8   12.66141 55.60655      4        2         2       FALSE
+    ## 8   12.66140 55.60660      4        2         2       FALSE
     ## 9   12.66156 55.60241      2        1         1       FALSE
     ## 10  12.64146 55.63763      9        4         5       FALSE
 
-    ## # 92 more rows
+    ## # 93 more rows
 
     ## # Use `print(n=...)` to see more rows
 
@@ -1456,7 +1471,7 @@ graph5$edges
     ##  Longitude Latitude
     ##   12.61968 55.63542
     ##   12.61968 55.63542
-    ## Total number of coordinates: 7 
+    ## Total number of coordinates: 8 
     ## Edge length: 0.1219161 km 
     ## Weights: 
     ##   osm_id         name alt_name animal_crossing:animal bicycle bridge cycleway
@@ -1536,7 +1551,7 @@ graph5$edges
     ##  Longitude Latitude
     ##   12.61968 55.63542
     ##   12.61968 55.63542
-    ## Total number of coordinates: 4 
+    ## Total number of coordinates: 5 
     ## Edge length: 0.1250789 km 
     ## Weights: 
     ##   osm_id      name alt_name animal_crossing:animal bicycle bridge cycleway
@@ -1572,7 +1587,7 @@ graph5$edges
     ## 
     ## Directional weight: 1
 
-    ## # 274 more edges
+    ## # 276 more edges
 
     ## # Use `print(n=...)` to see more edges
 
@@ -1583,7 +1598,7 @@ Also observe that it has the corresponding edge weights:
 graph5$get_edge_weights()
 ```
 
-    ## # A tibble: 278 × 77
+    ## # A tibble: 280 × 77
     ##    osm_id  name          alt_name animal_crossing:anim…¹ bicycle bridge cycleway
     ##    <chr>   <chr>         <chr>    <chr>                  <chr>   <chr>  <chr>   
     ##  1 1525051 Backersvej    NA       NA                     NA      NA     lane    
@@ -1596,7 +1611,7 @@ graph5$get_edge_weights()
     ##  8 2373286 Kastruplundg… NA       NA                     NA      NA     no      
     ##  9 3431744 Kirstinehøj   NA       NA                     NA      NA     track   
     ## 10 3431748 Tømmerupvej   NA       NA                     NA      NA     track   
-    ## # ℹ 268 more rows
+    ## # ℹ 270 more rows
     ## # ℹ abbreviated name: ¹​`animal_crossing:animal`
     ## # ℹ 70 more variables: `cycleway:both` <chr>, `cycleway:left` <chr>,
     ## #   `cycleway:right` <chr>, `cycleway:width` <chr>, destination <chr>,
@@ -1614,20 +1629,20 @@ summary(graph5)
     ## A metric graph object with:
     ## 
     ## Vertices:
-    ##   Total: 102 
-    ##   Degree 1: 13;  Degree 2: 31;  Degree 3: 6;  Degree 4: 22;  Degree 5: 2; 
-    ##   Degree 6: 5;  Degree 7: 1;  Degree 8: 2;  Degree 9: 5;  Degree 10: 5; 
-    ##   Degree 11: 2;  Degree 12: 1;  Degree 13: 1;  Degree 17: 1;  Degree 19: 1; 
+    ##   Total: 103 
+    ##   Degree 1: 13;  Degree 2: 31;  Degree 3: 7;  Degree 4: 22;  Degree 5: 2; 
+    ##   Degree 6: 6;  Degree 7: 1;  Degree 8: 1;  Degree 9: 4;  Degree 10: 5; 
+    ##   Degree 11: 2;  Degree 12: 2;  Degree 13: 1;  Degree 17: 1;  Degree 19: 1; 
     ##   Degree 23: 1;  Degree 24: 1;  Degree 29: 1;  Degree 58: 1; 
     ##   With incompatible directions:  2 
     ## 
     ## Edges: 
-    ##   Total: 278 
+    ##   Total: 280 
     ##   Lengths: 
-    ##       Min: 0.004165961  ; Max: 4.042991  ; Total: 95.69644 
+    ##       Min: 0.004165961  ; Max: 4.042991  ; Total: 95.86926 
     ##   Weights: 
     ##       Columns: osm_id name alt_name animal_crossing:animal bicycle bridge cycleway cycleway:both cycleway:left cycleway:right cycleway:width destination destination:lanes destination:ref destination:symbol foot hazard hazmat:conditional highway horse int_ref junction lane_markings lanes lanes:backward lanes:forward layer lit mapillary maxheight maxspeed maxspeed:advisory maxspeed:variable maxweight:signed mofa motorcar name:etymology name:etymology:wikidata name:etymology:wikipedia name:sv noname note oneway operator operator:wikidata operator:wikipedia placement priority ref shoulder sidewalk sidewalk:both:surface sidewalk:left sidewalk:left:surface sidewalk:right sidewalk:right:surface smoothness source:maxspeed start_date surface toll traffic_calming tunnel tunnel:alt_name:da tunnel:alt_name:sv tunnel:name tunnel:name:da tunnel:name:de tunnel:name:en tunnel:name:sv tunnel:official_name turn:lanes turn:lanes:backward turn:lanes:forward width wikidata .weights 
-    ##   That are circles:  139 
+    ##   That are circles:  140 
     ## 
     ## Graph units: 
     ##   Vertices unit:  degree  ; Lengths unit:  km 
@@ -1688,7 +1703,7 @@ Let us take a look at the graph:
 river_graph$plot()
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-73-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-76-1.png)
 
 Let us also look at the interactive plot with the underlying map:
 
@@ -1833,7 +1848,7 @@ graph$add_observations(data = df_graph)
 graph$plot(data = "y", data_size = 2)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-81-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-84-1.png)
 
 In certain situations, it might be easier to specify the relative
 distances on the edges, so that 0 represents the start and 1 the end of
@@ -1859,7 +1874,7 @@ graph$add_observations(data=df_new, normalized = TRUE)
 graph$plot(data = "y")
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-82-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-85-1.png)
 
 An alternative method is to specify the observations as spatial points
 objects, where the locations are given in Euclidean coordinates. In this
@@ -1883,7 +1898,7 @@ graph$add_observations(points)
 graph$plot(data = "y")
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-83-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-86-1.png)
 
 If we want to replace the data in the object, we can use
 `clear_observations()` to remove all current data:
@@ -1925,7 +1940,7 @@ group is shown.
 graph$plot(data = "y", group = 2)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-86-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-89-1.png)
 
 In some cases, we might want to add the observation locations as
 vertices in the graph. This can be done as follows:
@@ -1936,7 +1951,7 @@ graph$observation_to_vertex()
 graph$plot(data = "x", group = 1)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-87-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-90-1.png)
 
 One can note that the command adds all observation locations, from all
 groups as vertices.
@@ -2035,7 +2050,7 @@ We can also plot the data:
 river_graph$plot(data = "Summer_mn", vertex_size = 0.25)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-91-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-94-1.png)
 
 Let us clear the observations from the river graph:
 
@@ -2100,7 +2115,7 @@ graph$build_mesh(h = 0.5)
 graph$plot(mesh=TRUE)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-95-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-98-1.png)
 
 In the command `build_mesh`, the argument `h` decides the largest
 spacing between nodes in the mesh. As can be seen in the plot, the mesh
@@ -2132,7 +2147,7 @@ graph$plot_function(X = f)
     ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
     ## generated.
 
-![](metric_graph_files/figure-html/unnamed-chunk-97-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-100-1.png)
 
 Alternatively, we can set `type = "plotly"` in the plot command to get a
 3D visualization of the function:
@@ -2187,7 +2202,7 @@ graph$add_observations(data = data_f, clear_obs = TRUE, normalized = TRUE)
 graph$plot_function(data = "f")
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-100-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-103-1.png)
 
 ### Further details on `plot_function`
 
@@ -2217,7 +2232,7 @@ graph$build_mesh(h=0.8)
 graph$plot(mesh=TRUE)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-102-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-105-1.png)
 
 Let us compute the function the same function as before on this mesh:
 
@@ -2235,7 +2250,7 @@ default, the interpolated plot:
 graph$plot_function(f)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-104-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-107-1.png)
 
 We can, now, turn off the interpolation by setting `interpolate_plot` to
 `FALSE`:
@@ -2245,7 +2260,7 @@ We can, now, turn off the interpolation by setting `interpolate_plot` to
 graph$plot_function(f, interpolate_plot = FALSE)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-105-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-108-1.png)
 
 Alternatively, we can supply the data through the `newdata` argument. To
 such an end, we will need to supply the `data.frame`. So let us build
@@ -2274,7 +2289,7 @@ We will now plot this function. First, let us do the default plot from
 graph$plot_function(data = "f", newdata= df_f)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-108-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-111-1.png)
 
 Let us now, create the same plot with `interpolate_plot=FALSE`:
 
@@ -2283,7 +2298,7 @@ Let us now, create the same plot with `interpolate_plot=FALSE`:
 graph$plot_function(data = "f", newdata= df_f, interpolate_plot=FALSE)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-109-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-112-1.png)
 
 Let us now obtain a 3d plot. First, of the default version:
 
@@ -2335,7 +2350,7 @@ We will now plot this function with the default plot from
 graph$plot_function(data = "f", newdata= df_f)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-114-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-117-1.png)
 
 Let us now, create the same plot with `interpolate_plot=FALSE`:
 
@@ -2344,7 +2359,7 @@ Let us now, create the same plot with `interpolate_plot=FALSE`:
 graph$plot_function(data = "f", newdata= df_f, interpolate_plot=FALSE)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-115-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-118-1.png)
 
 Let us now obtain a 3d plot. First, of the default version:
 
@@ -2381,7 +2396,7 @@ f <- graph$mesh$PtE[,1]/4
 graph$plot_function(f)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-119-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-122-1.png)
 
 Similarly to the case for continuous meshes, we have the
 `interpolate_plot` option:
@@ -2391,7 +2406,7 @@ Similarly to the case for continuous meshes, we have the
 graph$plot_function(f, interpolate_plot = FALSE)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-120-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-123-1.png)
 
 Now, the 3d plot:
 
@@ -2420,7 +2435,7 @@ graph$plot_function(data = "f", newdata= df_f,
                       continuous = FALSE)
 ```
 
-![](metric_graph_files/figure-html/unnamed-chunk-123-1.png)
+![](metric_graph_files/figure-html/unnamed-chunk-126-1.png)
 
 Now, the 3d plot:
 
