@@ -44,7 +44,9 @@ jobs:
           RSPDE_COMPILE: 1
         run: |
           install.packages(c("remotes", "rmarkdown"),dependencies=TRUE)
-          remotes::install_github("davidbolin/rSPDE", ref = "devel")
+          # force: setup-r-dependencies already installed this commit (pure R),
+          # so without it remotes skips the compiled reinstall.
+          remotes::install_github("davidbolin/rSPDE", ref = "devel", force = TRUE)
           if (!nzchar(system.file("shared", "rspde_cgeneric_models.so", package = "rSPDE"))) {
             stop("rSPDE was installed without its compiled cgeneric library")
           }
