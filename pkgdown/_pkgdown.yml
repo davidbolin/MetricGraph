@@ -119,6 +119,8 @@ reference:
   - title: Sampling SPDE on metric graphs
     contents:
     - sample_spde
+    - simulate.metric_graph
+    - simulate_parallel
   - title: Data manipulation on metric graphs
     contents:
     - select.metric_graph_data
@@ -138,11 +140,15 @@ reference:
     - exp_covariance
     - spde_covariance
     - spde_variance
+    - directional_ou_covariance
+    - directional_ou_variance
   - title: Auxiliary constructors
     contents:
     - linnet.to.graph
     - psp.to.graph
     - stlpp.to.graph
+    - fetch_osm
+    - metric_graph_from_osm
   - title: Misc functions
     contents:
     - selected_inv
@@ -150,3 +156,4 @@ reference:
     contents:
     - pems
     - pems_repl
+    - columbia_main_component
