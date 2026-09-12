@@ -13,6 +13,6 @@ examples
 ^pkgdown/_pkgdown\.yml$
 ^index\.md$
 ^.vscode$
-^.claude$
 ^benchmarks$
 ^\.claude$
+^data-raw$

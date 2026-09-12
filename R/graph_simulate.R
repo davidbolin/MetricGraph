@@ -509,6 +509,7 @@ simulate.metric_graph <- function(object, nsim = 1, seed = NULL,
     n_par  <- min(n_par, length(edge_data))
     chunks <- split(seq_along(edge_data),
                     ceiling(seq_along(edge_data) / ceiling(length(edge_data) / n_par)))
+    ed_ch <- NULL
     u_chunks <- foreach::foreach(
       ed_ch = lapply(chunks, function(i) edge_data[i])
     ) %dopar% {

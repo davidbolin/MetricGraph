@@ -211,6 +211,12 @@ test_that("the packaged Columbia component reconstructs in both directions", {
   helper <- test_path(
     "..", "..", "examples", "directional", "columbia_full_graph_helpers.R"
   )
+  # 'examples' is in .Rbuildignore, so the helper is only available when the
+  # tests run from the source repository, not from a built package.
+  skip_if_not(
+    file.exists(helper),
+    "examples/ is not shipped with the built package."
+  )
   source(helper, local = environment)
 
   tampered <- environment$columbia_main_component
