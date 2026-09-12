@@ -193,9 +193,9 @@ spde_result <- spde_metric_graph_result(spde_fit, "field", spde_model)
 summary(spde_result)
 ```
 
-    ##           mean        sd 0.025quant 0.5quant 0.975quant    mode
-    ## sigma 2.116330 0.2199780   1.726230 2.100400   2.598050 2.09175
-    ## range 0.166991 0.0394403   0.105827 0.161258   0.259825 0.14953
+    ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 2.116690 0.2197720   1.728420 2.100660   2.598590 2.091770
+    ## range 0.167032 0.0394885   0.106045 0.161194   0.260193 0.149314
 
 We will now compare the means of the estimated values with the true
 values:
@@ -218,8 +218,8 @@ values:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev 2.00 2.1163304 2.0917516
-    ## 2     range 0.15 0.1669914 0.1495297
+    ## 1   std.dev 2.00 2.1166917 2.0917686
+    ## 2     range 0.15 0.1670317 0.1493142
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)

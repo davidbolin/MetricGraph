@@ -272,7 +272,7 @@ summary(fit)
     ## Number of function calls by 'optim' = 65
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  22.73491 secs
+    ## Time used to:     fit the model =  23.40653 secs
 
 An improved estimate of the Hessian can be obtained by setting
 `improve_hessian` to `TRUE`, which improves the precision of the
@@ -325,8 +325,8 @@ summary(fit)
     ## Number of function calls by 'optim' = 65
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  20.28788 secs 
-    ##   compute the Hessian = 3.14212 secs
+    ## Time used to:     fit the model =  21.04701 secs 
+    ##   compute the Hessian = 3.23019 secs
 
 We can also obtain additional information by using the function
 [`glance()`](https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.md):
@@ -490,7 +490,7 @@ summary(fit_fixed)
     ## Number of function calls by 'optim' = 38
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  15.31031 secs
+    ## Time used to:     fit the model =  15.97415 secs
 
 ``` r
 
@@ -606,8 +606,8 @@ summary(fit_repl)
     ## Number of function calls by 'optim' = 117
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  1.19277 mins 
-    ##   set up the parallelization = 2.7651 secs
+    ## Time used to:     fit the model =  1.15531 mins 
+    ##   set up the parallelization = 2.71371 secs
 
 Let us also take a glance of the fit:
 
@@ -682,7 +682,7 @@ Let us create the model object:
 ``` r
 
   library(INLA)
-  rspde_model <- rspde.metric_graph(graph, shared_lib = "rSPDE")
+  rspde_model <- rspde.metric_graph(graph)
 ```
 
 By default, the order of the rational approximation is 2.
@@ -1529,7 +1529,7 @@ summary(fit)
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  55.41056 secs
+    ## Time used to:     fit the model =  55.68221 secs
 
 Let us plot the range parameter along the mesh, so we can see how it is
 varying:
@@ -1651,7 +1651,7 @@ summary(fit_ns_fixed_theta1)
     ## Number of function calls by 'optim' = 443
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  32.3556 secs
+    ## Time used to:     fit the model =  32.24226 secs
 
 Similarly, we can provide starting values for the entire theta vector
 with `start_theta`:
@@ -1707,7 +1707,7 @@ summary(fit_ns_start)
     ## Number of function calls by 'optim' = 502
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  45.27402 secs
+    ## Time used to:     fit the model =  47.0822 secs
 
 ### Fitting the inlabru rSPDE model
 
@@ -1773,32 +1773,32 @@ summary(rspde_fit_nonstat)
     ##     Additive/Linear/Rowwise: TRUE/TRUE/TRUE
     ##     Used components: effect[Intercept, field], latent[] 
     ## Time used:
-    ##     Pre = 0.156, Running = 50.2, Post = 0.285, Total = 50.6 
+    ##     Pre = 0.161, Running = 60.3, Post = 0.332, Total = 60.8 
     ## Fixed effects:
-    ##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld
-    ## Intercept 50.943 1.086     48.819    50.94     53.086 50.939   0
+    ##             mean    sd 0.025quant 0.5quant 0.975quant  mode kld
+    ## Intercept 50.606 2.875     44.838   50.621     56.291 50.62   0
     ## 
     ## Random effects:
     ##   Name     Model
     ##     field CGeneric
     ## 
     ## Model hyperparameters:
-    ##                                           mean    sd 0.025quant 0.5quant
-    ## Precision for the Gaussian observations  0.005 0.001      0.004    0.005
-    ## Theta1 for field                         1.213 0.938     -0.906    1.309
-    ## Theta2 for field                        -0.335 1.719     -3.446   -0.417
-    ## Theta3 for field                        -0.320 1.097     -2.419   -0.340
-    ## Theta4 for field                        -0.743 1.063     -2.910   -0.719
-    ## Theta5 for field                         0.196 0.935     -1.555    0.167
-    ##                                         0.975quant   mode
-    ## Precision for the Gaussian observations      0.007  0.005
-    ## Theta1 for field                             2.710  1.794
-    ## Theta2 for field                             3.295 -0.812
-    ## Theta3 for field                             1.904 -0.433
-    ## Theta4 for field                             1.274 -0.608
-    ## Theta5 for field                             2.123  0.035
+    ##                                         mean    sd 0.025quant 0.5quant
+    ## Precision for the Gaussian observations 0.02 0.002      0.016     0.02
+    ## Theta1 for field                        3.04 0.166      2.725     3.03
+    ## Theta2 for field                        2.02 0.179      1.677     2.01
+    ## Theta3 for field                        2.67 0.189      2.289     2.68
+    ## Theta4 for field                        1.66 0.154      1.342     1.67
+    ## Theta5 for field                        1.23 0.130      1.027     1.22
+    ##                                         0.975quant  mode
+    ## Precision for the Gaussian observations      0.025 0.019
+    ## Theta1 for field                             3.378 3.008
+    ## Theta2 for field                             2.380 1.993
+    ## Theta3 for field                             3.031 2.699
+    ## Theta4 for field                             1.948 1.691
+    ## Theta5 for field                             1.527 1.155
     ## 
-    ## Marginal log-Likelihood:  -1364.48 
+    ## Marginal log-Likelihood:  -1242.54 
     ##  is computed 
     ## Posterior summaries for the linear predictor and the fitted values are computed
     ## (Posterior marginals needs also 'control.compute=list(return.marginals.predictor=TRUE)')
@@ -1813,12 +1813,12 @@ result_fit_nonstat <- rspde.result(rspde_fit_nonstat, "field", rspde_model_nonst
 summary(result_fit_nonstat)
 ```
 
-    ##                    mean       sd 0.025quant  0.5quant 0.975quant      mode
-    ## Theta1.matern  1.212520 0.938102  -0.905909  1.309040    2.71042  1.794370
-    ## Theta2.matern -0.334563 1.718880  -3.445890 -0.417068    3.29472 -0.812074
-    ## Theta3.matern -0.319728 1.097230  -2.419190 -0.340012    1.90381 -0.432562
-    ## Theta4.matern -0.743416 1.062650  -2.910350 -0.719109    1.27437 -0.608449
-    ## nu             1.078650 0.392116   0.352966  1.078880    1.78225  1.030880
+    ##                  mean        sd 0.025quant 0.5quant 0.975quant    mode
+    ## Theta1.matern 3.03611 0.1661290    2.72466  3.03110    3.37801 3.00840
+    ## Theta2.matern 2.01598 0.1787190    1.67706  2.01176    2.38046 1.99289
+    ## Theta3.matern 2.67387 0.1885230    2.28897  2.67847    3.03091 2.69906
+    ## Theta4.matern 1.66129 0.1541420    1.34210  1.66655    1.94813 1.69082
+    ## nu            1.54736 0.0441706    1.47293  1.54312    1.64200 1.52303
 
 We can also plot the posterior densities. To this end we will use the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)

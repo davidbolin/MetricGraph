@@ -94,7 +94,7 @@ summary(fit_alpha1)
 #> Number of function calls by 'optim' = 245
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  13.28662 secs
+#> Time used to:     fit the model =  13.3777 secs
 ```
 
 Now, we will fit a Whittle-Matérn field with `alpha = 2`:
@@ -141,7 +141,7 @@ summary(fit_alpha2)
 #> Number of function calls by 'optim' = 227
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  14.02765 secs
+#> Time used to:     fit the model =  14.73795 secs
 ```
 
 We will now fit Whittle-Matérn fields with `alpha = 1` and `alpha=2`,
@@ -193,7 +193,7 @@ summary(fit_alpha1_bc)
 #> Number of function calls by 'optim' = 193
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  11.0432 secs
+#> Time used to:     fit the model =  11.03254 secs
 ```
 
 and
@@ -232,7 +232,7 @@ summary(fit_alpha2_bc)
 #> Number of function calls by 'optim' = 257
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  16.93911 secs
+#> Time used to:     fit the model =  16.94137 secs
 ```
 
 Similarly, let us now fit a Matérn Gaussian model based on the graph
@@ -287,7 +287,7 @@ summary(fit_GL1)
 #> Number of function calls by 'optim' = 143
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  1.18594 secs
+#> Time used to:     fit the model =  1.25415 secs
 ```
 
 and
@@ -326,7 +326,7 @@ summary(fit_GL2)
 #> Number of function calls by 'optim' = 181
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  1.66471 secs
+#> Time used to:     fit the model =  1.72677 secs
 ```
 
 Observe that the default optimizer (L-BFGS-B) failed to converge, thus
@@ -380,7 +380,7 @@ summary(fit_isoexp)
 #> Number of function calls by 'optim' = 299
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  4.57258 secs
+#> Time used to:     fit the model =  3.31295 secs
 ```
 
 Observe the warning, message. This message tells us that we did not

@@ -215,7 +215,7 @@ function:</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Time used:</span></span>
-<span><span class="co">##     Pre = 0.15, Running = 0.777, Post = 0.0344, Total = 0.961 </span></span>
+<span><span class="co">##     Pre = 0.154, Running = 0.831, Post = 0.0352, Total = 1.02 </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
 <span><span class="co">## Intercept -0.619 0.328     -1.275   -0.617      0.021 -0.616   0</span></span>
@@ -242,8 +242,8 @@ function:</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.566934 0.155763   0.305471 0.553637   0.911241 0.526013</span></span>
-<span><span class="co">## range   2.957470 2.062930   0.632181 2.432960   8.404230 1.564980</span></span></code></pre>
+<span><span class="co">## std.dev 0.566934 0.155763   0.305471 0.553637   0.911243 0.526013</span></span>
+<span><span class="co">## range   2.957470 2.062920   0.632182 2.432960   8.404210 1.564990</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
@@ -260,9 +260,9 @@ values:</p>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   parameter true     mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.566934 0.5260129</span></span>
-<span><span class="co">## 2     range  2.0 2.957473 1.5649835</span></span></code></pre>
+<pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
+<span><span class="co">## 1   std.dev  0.5 0.5669341 0.5260126</span></span>
+<span><span class="co">## 2     range  2.0 2.9574725 1.5649852</span></span></code></pre>
 <p>If we have the actual values of the covariates at the integration
 points, we can pass them to the <code><a href="../reference/lgcp_graph.html">lgcp_graph()</a></code> function via
 the <code>manual_covariates</code> argument.</p>
@@ -276,7 +276,7 @@ the <code>manual_covariates</code> argument.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Time used:</span></span>
-<span><span class="co">##     Pre = 0.143, Running = 0.73, Post = 0.0271, Total = 0.899 </span></span>
+<span><span class="co">##     Pre = 0.143, Running = 0.797, Post = 0.0271, Total = 0.967 </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
 <span><span class="co">## Intercept -0.818 0.282     -1.387   -0.814     -0.277 -0.814   0</span></span>
@@ -300,9 +300,9 @@ the <code>manual_covariates</code> argument.</p>
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">inla_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant    mode</span></span>
-<span><span class="co">## std.dev 0.457014 0.157056   0.201970 0.441544   0.808332 0.40474</span></span>
-<span><span class="co">## range   3.074480 2.535790   0.429986 2.382000   9.844050 1.18158</span></span></code></pre>
+<pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## std.dev 0.457013 0.157056    0.20197 0.441544   0.808332 0.404739</span></span>
+<span><span class="co">## range   3.074480 2.535820    0.42998 2.381990   9.844160 1.181570</span></span></code></pre>
 <p>We can also plot the posterior marginal densities with the help of
 the <code><a href="../reference/gg_df.metric_graph_spde_result.html">gg_df()</a></code> function:</p>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
@@ -339,7 +339,7 @@ the <code>LGCP</code> argument to <code>TRUE</code>:</p>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit_spde</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Time used:</span></span>
-<span><span class="co">##     Pre = 0.162, Running = 0.749, Post = 0.0312, Total = 0.942 </span></span>
+<span><span class="co">##     Pre = 0.158, Running = 0.877, Post = 0.0304, Total = 1.07 </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
 <span><span class="co">## Intercept -0.586 0.250     -1.076   -0.586     -0.097 -0.586   0</span></span>
@@ -352,7 +352,7 @@ the <code>LGCP</code> argument to <code>TRUE</code>:</p>
 <span><span class="co">## Model hyperparameters:</span></span>
 <span><span class="co">##                   mean    sd 0.025quant 0.5quant 0.975quant  mode</span></span>
 <span><span class="co">## Theta1 for field  1.24 0.798     -0.266     1.22       2.87  1.12</span></span>
-<span><span class="co">## Theta2 for field -1.49 1.352     -4.271    -1.45       1.05 -1.27</span></span>
+<span><span class="co">## Theta2 for field -1.49 1.352     -4.269    -1.45       1.05 -1.27</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Marginal log-Likelihood:  -102.38 </span></span>
 <span><span class="co">##  is computed </span></span>
@@ -363,9 +363,9 @@ the <code>LGCP</code> argument to <code>TRUE</code>:</p>
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/spde_metric_graph_result.html">spde_metric_graph_result</a></span><span class="op">(</span><span class="va">inla_fit_spde</span>, <span class="st">"field"</span>, <span class="va">spde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##           mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## sigma 2.142420 0.562560  1.2141800  2.09352    3.38826 2.070980</span></span>
-<span><span class="co">## range 0.518013 0.882188  0.0143577  0.23718    2.79804 0.030461</span></span></code></pre>
+<pre><code><span><span class="co">##           mean       sd 0.025quant 0.5quant 0.975quant      mode</span></span>
+<span><span class="co">## sigma 2.141820 0.562334  1.2139000 2.092950    3.38710 2.0702500</span></span>
+<span><span class="co">## range 0.518331 0.882375  0.0143923 0.237429    2.79903 0.0305222</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="an-example-with-replicates-in-our-inla-interface">An example with replicates in our <code>INLA</code> interface<a class="anchor" aria-label="anchor" href="#an-example-with-replicates-in-our-inla-interface"></a>
@@ -416,7 +416,7 @@ will be used.</p>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Time used:</span></span>
-<span><span class="co">##     Pre = 0.15, Running = 2.59, Post = 0.125, Total = 2.86 </span></span>
+<span><span class="co">##     Pre = 0.156, Running = 2.66, Post = 0.136, Total = 2.95 </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
 <span><span class="co">## Intercept -0.806 0.149     -1.100   -0.806     -0.515 -0.806   0</span></span>
@@ -442,7 +442,7 @@ will be used.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
 <span><span class="co">## std.dev 0.541597 0.0795084   0.398111 0.537648   0.709556 0.531493</span></span>
-<span><span class="co">## range   4.328110 1.5091100   2.106240 4.081340   7.972460 3.623470</span></span></code></pre>
+<span><span class="co">## range   4.328110 1.5091100   2.106240 4.081340   7.972470 3.623470</span></span></code></pre>
 <p>As in the previous case, we can also supply the covariates
 manually:</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
@@ -458,7 +458,7 @@ manually:</p>
 <div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Time used:</span></span>
-<span><span class="co">##     Pre = 0.147, Running = 2.36, Post = 0.105, Total = 2.61 </span></span>
+<span><span class="co">##     Pre = 0.152, Running = 2.37, Post = 0.108, Total = 2.63 </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
 <span><span class="co">## Intercept -0.988 0.124     -1.233   -0.987     -0.747 -0.987   0</span></span>
@@ -484,7 +484,7 @@ manually:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
 <span><span class="co">## std.dev 0.430313 0.078658    0.29010 0.426074   0.597544 0.419663</span></span>
-<span><span class="co">## range   4.721710 2.083590    1.87198 4.318340   9.920010 3.613590</span></span></code></pre>
+<span><span class="co">## range   4.721710 2.083600    1.87198 4.318340   9.920010 3.613590</span></span></code></pre>
 <p>We can also fit the model with replicates using the exact model:</p>
 <div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">inla_fit_spde_rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/lgcp_graph.html">lgcp_graph</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="op">-</span><span class="fl">1</span> <span class="op">+</span> <span class="va">Intercept</span> <span class="op">+</span> <span class="va">cov_lgcp</span> <span class="op">+</span> </span>
@@ -494,7 +494,7 @@ manually:</p>
 <div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">inla_fit_spde_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Time used:</span></span>
-<span><span class="co">##     Pre = 0.171, Running = 3.32, Post = 0.137, Total = 3.63 </span></span>
+<span><span class="co">##     Pre = 0.175, Running = 3.33, Post = 0.138, Total = 3.65 </span></span>
 <span><span class="co">## Fixed effects:</span></span>
 <span><span class="co">##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld</span></span>
 <span><span class="co">## Intercept -0.805 0.154     -1.108   -0.805     -0.502 -0.804   0</span></span>
@@ -520,7 +520,7 @@ manually:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result_rep</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##           mean        sd 0.025quant 0.5quant 0.975quant    mode</span></span>
 <span><span class="co">## sigma 0.609965 0.0921866   0.441388  0.60662   0.801715 0.58510</span></span>
-<span><span class="co">## range 6.075630 3.4547500   1.930170  5.24073  15.103500 3.93607</span></span></code></pre>
+<span><span class="co">## range 6.075620 3.4547300   1.930180  5.24073  15.103400 3.93607</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="fitting-lgcp-models-without-our-inla-interface">Fitting LGCP models without our <code>INLA</code> interface<a class="anchor" aria-label="anchor" href="#fitting-lgcp-models-without-our-inla-interface"></a>
@@ -607,9 +607,9 @@ to the stack by using the <code>graph_spde_data()</code> function.</p>
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant    mode</span></span>
-<span><span class="co">## std.dev 0.457014 0.157056   0.201970 0.441544   0.808331 0.40474</span></span>
-<span><span class="co">## range   3.074470 2.535780   0.429988 2.382000   9.844030 1.18158</span></span></code></pre>
+<pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## std.dev 0.457014 0.157056   0.201970 0.441544   0.808332 0.404739</span></span>
+<span><span class="co">## range   3.074480 2.535790   0.429986 2.381990   9.844070 1.181580</span></span></code></pre>
 <p>We will now compare the means of the estimated values with the true
 values:</p>
 <div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
@@ -627,8 +627,8 @@ values:</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.4570136 0.4047397</span></span>
-<span><span class="co">## 2     range  2.0 3.0744746 1.1815837</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.4570135 0.4047395</span></span>
+<span><span class="co">## 2     range  2.0 3.0744769 1.1815798</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="an-example-with-replicates">An example with replicates<a class="anchor" aria-label="anchor" href="#an-example-with-replicates"></a>
@@ -696,9 +696,9 @@ exposure terms</p>
 <div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">spde_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://davidbolin.github.io/rSPDE/reference/rspde.result.html" class="external-link">rspde.result</a></span><span class="op">(</span><span class="va">spde_fit</span>, <span class="st">"field"</span>, <span class="va">rspde_model</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">spde_result</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##             mean        sd 0.025quant 0.5quant 0.975quant     mode</span></span>
-<span><span class="co">## std.dev 0.430313 0.0786579    0.29010 0.426074   0.597544 0.419663</span></span>
-<span><span class="co">## range   4.721710 2.0835900    1.87198 4.318340   9.920010 3.613590</span></span></code></pre>
+<pre><code><span><span class="co">##             mean       sd 0.025quant 0.5quant 0.975quant     mode</span></span>
+<span><span class="co">## std.dev 0.430313 0.078658    0.29010 0.426074   0.597544 0.419663</span></span>
+<span><span class="co">## range   4.721710 2.083600    1.87198 4.318340   9.920020 3.613590</span></span></code></pre>
 <div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    parameter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"std.dev"</span>, <span class="st">"range"</span><span class="op">)</span>,</span>
@@ -714,8 +714,8 @@ exposure terms</p>
 <span>  <span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result_df</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   parameter true      mean      mode</span></span>
-<span><span class="co">## 1   std.dev  0.5 0.4303133 0.4196634</span></span>
-<span><span class="co">## 2     range  2.0 4.7217075 3.6135944</span></span></code></pre>
+<span><span class="co">## 1   std.dev  0.5 0.4303133 0.4196633</span></span>
+<span><span class="co">## 2     range  2.0 4.7217081 3.6135939</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="using-precomputed-data-for-efficient-model-fitting">Using precomputed data for efficient model fitting<a class="anchor" aria-label="anchor" href="#using-precomputed-data-for-efficient-model-fitting"></a>
@@ -809,10 +809,10 @@ precomputed data:</p>
 <div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">timing_single</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##                 Method Time_seconds</span></span>
-<span><span class="co">## 1    Original (3 fits)        5.135</span></span>
-<span><span class="co">## 2       Precomputation        0.694</span></span>
-<span><span class="co">## 3 Precomputed (3 fits)        3.085</span></span>
-<span><span class="co">## 4    Total precomputed        3.779</span></span></code></pre>
+<span><span class="co">## 1    Original (3 fits)        5.162</span></span>
+<span><span class="co">## 2       Precomputation        0.684</span></span>
+<span><span class="co">## 3 Precomputed (3 fits)        2.951</span></span>
+<span><span class="co">## 4    Total precomputed        3.635</span></span></code></pre>
 <p>Let’s verify that the results are equivalent by comparing the log
 marginal likelihoods:</p>
 <div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
@@ -820,15 +820,15 @@ marginal likelihoods:</p>
 <span><span class="co"># Log marginal likelihood comparison (fit2):</span></span>
 <span><span class="co"># Original:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit2_orig</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] -104.5083</span></span></code></pre>
+<pre><code><span><span class="co">## [1] -104.5081</span></span></code></pre>
 <div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Precomputed:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit2_precomp</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] -104.5076</span></span></code></pre>
+<pre><code><span><span class="co">## [1] -104.5078</span></span></code></pre>
 <div class="sourceCode" id="cb89"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Difference:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">fit2_orig</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">fit2_precomp</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 0.0007000778</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 0.0002761873</span></span></code></pre>
 <div class="section level4">
 <h4 id="using-manual-covariates-with-precomputation">Using manual covariates with precomputation<a class="anchor" aria-label="anchor" href="#using-manual-covariates-with-precomputation"></a>
 </h4>
@@ -863,11 +863,11 @@ when you have the exact values of covariates at the integration points
 <span></span>
 <span><span class="co"># Manual covariates fit time (seconds):</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_manual</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 13.792</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 14.361</span></span></code></pre>
 <div class="sourceCode" id="cb93"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Manual covariates log marginal likelihood:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit_manual</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 36314.83</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 26722.82</span></span></code></pre>
 </div>
 <div class="section level4">
 <h4 id="performance-optimization-avoiding-graph-cloning">Performance optimization: avoiding graph cloning<a class="anchor" aria-label="anchor" href="#performance-optimization-avoiding-graph-cloning"></a>
@@ -889,20 +889,20 @@ graph, which is faster but modifies the input:</p>
 <span></span>
 <span><span class="co"># Time with cloning (seconds):</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_with_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 1.716</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 1.605</span></span></code></pre>
 <div class="sourceCode" id="cb97"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Time without cloning (seconds):</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_without_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 1.766</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 1.735</span></span></code></pre>
 <div class="sourceCode" id="cb99"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Speedup factor:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">time_with_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span> <span class="op">/</span> <span class="va">time_without_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span>, <span class="fl">2</span><span class="op">)</span>, <span class="st">"x"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] "0.97 x"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "0.93 x"</span></span></code></pre>
 <div class="sourceCode" id="cb101"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># The results should be identical</span></span>
 <span><span class="co"># Log marginal likelihood difference:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">fit_clone</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="va">fit_no_clone</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 0.001085931</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 0.0001170718</span></span></code></pre>
 <p>You can also use <code>clone_graph = FALSE</code> with precomputation
 for even better performance:</p>
 <div class="sourceCode" id="cb103"><pre class="downlit sourceCode r">
@@ -927,11 +927,11 @@ for even better performance:</p>
 <span></span>
 <span><span class="co"># Precomputation time (no clone, seconds):</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_precomp_no_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 0.734</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 0.72</span></span></code></pre>
 <div class="sourceCode" id="cb105"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fit time with precomputed data (no clone, seconds):</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_fit_no_clone</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 1.057</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 1.02</span></span></code></pre>
 </div>
 </div>
 <div class="section level3">
@@ -998,7 +998,7 @@ argument.</p>
 <span></span>
 <span><span class="co"># Manual covariates (replicates) fit time (seconds):</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">time_manual_rep</span><span class="op">[[</span><span class="st">"elapsed"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] 2.598</span></span></code></pre>
+<pre><code><span><span class="co">## [1] 2.699</span></span></code></pre>
 <div class="sourceCode" id="cb113"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Manual covariates (replicates) log marginal likelihood:</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit_manual_rep</span><span class="op">$</span><span class="va">mlik</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
