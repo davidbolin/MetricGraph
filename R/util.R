@@ -730,8 +730,6 @@ exp_covariance <- function(h, theta){
 }
 
 
-#' Processing data to be used in add_observations
-#' @noRd
 #' Index each (edge, distance) pair among the sorted unique pairs
 #'
 #' Equivalent to matching a pasted `"edge|distance"` key against the sorted
@@ -762,6 +760,8 @@ location_codes <- function(e, d) {
   list(idx = idx, n_unique = sum(is_new))
 }
 
+#' Processing data to be used in add_observations
+#' @noRd
 process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress_warnings) {
   new_data[[".edge_number"]] <- PtE[, 1]
   new_data[[".distance_on_edge"]] <- PtE[, 2]

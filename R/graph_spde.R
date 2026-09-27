@@ -1138,8 +1138,15 @@ graph_data_spde <- function(graph_spde, name = "field", repl = NULL, repl_col = 
     if (any(is.na(ret[["data"]][[repl_col]]))) {
       # Group by .group and fill NA values with first non-NA value within each group
       groups <- unique(ret[["data"]][[".group"]])
-      for (grp in groups) {
-        grp_idx <- which(ret[["data"]][[".group"]] == grp)
+      # Row indices per group, built in one pass. Re-extracting the group
+      # column and scanning it once per group is O(n_groups * n_obs).
+      group_col <- ret[["data"]][[".group"]]
+      group_rows <- split(seq_along(group_col),
+                          factor(match(group_col, groups),
+                                 levels = seq_along(groups)))
+      for (gi in seq_along(groups)) {
+        grp <- groups[gi]
+        grp_idx <- group_rows[[gi]]
         grp_repl_vals <- ret[["data"]][[repl_col]][grp_idx]
 
         if (any(is.na(grp_repl_vals))) {

@@ -13,12 +13,19 @@ cv_build_idx_map <- function(precomputed_data) {
 
   idx_cache <- integer(0)
 
+  # Row indices per replicate, built in one pass. Testing `repl_vec` against
+  # each replicate inside the loop rescans every observation once per
+  # replicate, which is O(n_replicates * n_obs).
+  repl_rows <- split(seq_along(repl_vec),
+                     factor(match(repl_vec, u_repl),
+                            levels = seq_along(u_repl)))
+
   for (repl_y in seq_along(u_repl)) {
     curr_repl  <- u_repl[repl_y]
     repl_name  <- paste0("repl_", curr_repl)
 
-    ind_repl       <- (repl_vec == curr_repl)
-    global_in_repl <- which(ind_repl)
+    ind_repl       <- repl_rows[[repl_y]]
+    global_in_repl <- ind_repl
     PtE_repl       <- PtE[ind_repl, , drop = FALSE]
 
     for (j in seq_along(obs.edges)) {
@@ -447,9 +454,16 @@ cv_build_idx_map_alpha1 <- function(graph, precomputed_data,
 
   idx_cache <- integer(0)
 
+  # Row indices per replicate, built in one pass. Testing `repl_vec` against
+  # each replicate inside the loop rescans every observation once per
+  # replicate, which is O(n_replicates * n_obs).
+  repl_rows <- split(seq_along(repl_vec),
+                     factor(match(repl_vec, u_repl),
+                            levels = seq_along(u_repl)))
+
   for (repl_y in seq_along(u_repl)) {
-    ind_repl       <- (repl_vec == u_repl[repl_y])
-    global_in_repl <- which(ind_repl)
+    ind_repl       <- repl_rows[[repl_y]]
+    global_in_repl <- ind_repl
     PtE_repl       <- PtE[ind_repl, , drop = FALSE]
     y_repl         <- y_resp_full[ind_repl]
     edge_cache     <- precomputed_data$edge_cache[[repl_y]]

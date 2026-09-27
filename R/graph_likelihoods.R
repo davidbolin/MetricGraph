@@ -150,19 +150,27 @@ likelihood_alpha1_directional <- function(theta,
   }
   n.o <- 0
 
+  repl_vec_dir <- graph$.__enclos_env__$private$data[[".group"]]
+  # Row indices per replicate, built in one pass. Testing the group column
+  # against each replicate inside the loop rescans every observation once per
+  # replicate, which is O(n_replicates * n_obs).
+  repl_rows <- split(seq_along(repl_vec_dir),
+                     factor(match(repl_vec_dir, u_repl),
+                            levels = seq_along(u_repl)))
+
   for(repl_y in 1:length(u_repl)){
     loglik <- loglik + det_R
     count <- 0
     Qpmu <- rep(0, 2*nrow(graph$E))
 
-    ind_repl <- graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]
+    ind_repl <- repl_rows[[repl_y]]
     y_rep <- y_resp[ind_repl]
     if(!is.null(X_cov)){
       n_cov <- ncol(X_cov)
       if(n_cov == 0){
         X_cov_rep <- 0
       } else{
-        X_cov_rep <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
+        X_cov_rep <- X_cov[ind_repl, , drop=FALSE]
       }
     }
 
@@ -974,11 +982,18 @@ likelihood_alpha1_v2 <- function(theta, graph, X_cov, y, repl, BC, parameterizat
 
   l <- 0
 
-  for(i in repl){
+  # Row indices per replicate, built in one pass. Testing `repl_vec` against
+  # each replicate inside the loop rescans every observation once per
+  # replicate, which is O(n_replicates * n_obs).
+  repl_rows <- split(seq_along(repl_vec),
+                     factor(match(repl_vec, repl), levels = seq_along(repl)))
+
+  for(i_repl in seq_along(repl)){
+      i <- repl[i_repl]
       .row_idx <- graph$PtV
       A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
                                 x = 1, dims = c(length(.row_idx), graph$nV))
-      ind_tmp <- (repl_vec %in% i)
+      ind_tmp <- repl_rows[[i_repl]]
       y_tmp <- y[ind_tmp]
       if(ncol(X_cov) == 0){
         X_cov_tmp <- 0
@@ -1925,10 +1940,16 @@ likelihood_graph_covariance <- function(graph,
     loglik_val <- 0
 
     # Process each replicate
+    # Row indices per replicate, built in one pass. Testing `repl_vec`
+    # against each replicate inside the loop rescans every observation once
+    # per replicate, which is O(n_replicates * n_obs).
+    repl_rows <- split(seq_along(repl_vec),
+                       factor(match(repl_vec, u_repl),
+                              levels = seq_along(u_repl)))
+
     for(repl_y in seq_along(u_repl)){
       # Get data for this replicate
-      curr_repl <- u_repl[repl_y]
-      ind_tmp <- (repl_vec %in% curr_repl)
+      ind_tmp <- repl_rows[[repl_y]]
       y_tmp <- y_graph[ind_tmp]
       na_obs <- is.na(y_tmp)
 
@@ -1953,11 +1974,11 @@ likelihood_graph_covariance <- function(graph,
       R <- base::chol(Sigma_non_na)
 
       # Get data vector
-      v <- y_graph[repl_vec == curr_repl]
+      v <- y_graph[ind_tmp]
 
       # Apply covariate adjustment if needed
       if(!is.null(X_cov) && n_cov > 0){
-        X_cov_repl <- X_cov[repl_vec == curr_repl, , drop=FALSE]
+        X_cov_repl <- X_cov[ind_tmp, , drop=FALSE]
         v <- v - X_cov_repl %*% theta_covariates
       } else{
         X_cov_repl <- 0
@@ -2060,13 +2081,20 @@ precompute_graph_covariance <- function(graph,
   }
 
   # Precompute data for each replicate
+  # Row indices per replicate, built in one pass. Testing `repl_vec`
+  # against each replicate inside the loop rescans every observation once
+  # per replicate, which is O(n_replicates * n_obs).
+  repl_rows <- split(seq_along(repl_vec),
+             factor(match(repl_vec, u_repl),
+                levels = seq_along(u_repl)))
+
   for(i in seq_along(u_repl)) {
     curr_repl <- u_repl[i]
     # Use character names for replicate indices
     repl_name <- paste0("repl_", curr_repl)
 
     # Get data for this replicate
-    ind_tmp <- (repl_vec %in% curr_repl)
+    ind_tmp <- repl_rows[[i]]
     y_tmp <- y_graph[ind_tmp]
     na_obs <- is.na(y_tmp)
 
@@ -2366,9 +2394,26 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
     y_resp <- y_graph
 
     l <- 0
-    A <- graph$.__enclos_env__$private$A(group = ".all", drop_all_na = FALSE, drop_na = FALSE)
 
     u_repl <- unique(graph$.__enclos_env__$private$data[[".group"]])
+
+    # One observation matrix per replicate. `group = ".all"` returns the
+    # block-diagonal operator over every replicate (n_obs x nV * n_replicates),
+    # which does not conform with the single-replicate precision matrix built
+    # inside the loop below. The two coincide when there is a single
+    # replicate, which is why this only shows up with replicated data.
+    A_repl_list <- lapply(u_repl, function(grp) {
+      graph$.__enclos_env__$private$A(group = grp, drop_all_na = FALSE,
+                                      drop_na = FALSE)
+    })
+
+    # Row indices per replicate, built in one pass. Testing the group column
+    # against each replicate inside the loop rescans every observation once
+    # per replicate, which is O(n_replicates * n_obs).
+    repl_vec_lap <- graph$.__enclos_env__$private$data[[".group"]]
+    repl_rows <- split(seq_along(repl_vec_lap),
+                       factor(match(repl_vec_lap, u_repl),
+                              levels = seq_along(u_repl)))
 
     for(repl_y in 1:length(u_repl)){
       K <- kappa^2*Diagonal(graph$nV, 1) + graph$Laplacian[[u_repl[repl_y]]]
@@ -2384,9 +2429,9 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
 
       R <- Matrix::Cholesky(Q)
 
-      v <- y_resp[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y]]
+      v <- y_resp[repl_rows[[repl_y]]]
       na.obs <- is.na(v)
-      A.repl <- A[!na.obs, ]
+      A.repl <- A_repl_list[[repl_y]][!na.obs, , drop = FALSE]
       v <- v[!na.obs]
       n.o <- length(v)
       Q.p <- Q  + t(A.repl) %*% A.repl/sigma_e^2
@@ -2401,7 +2446,7 @@ likelihood_graph_laplacian <- function(graph, alpha, y_graph, repl,
           if(n_cov == 0){
             X_cov_repl <- 0
           } else{
-            X_cov_repl <- X_cov[graph$.__enclos_env__$private$data[[".group"]] == u_repl[repl_y], , drop=FALSE]
+            X_cov_repl <- X_cov[repl_rows[[repl_y]], , drop=FALSE]
             X_cov_repl <- X_cov_repl[!na.obs, , drop = FALSE]
             v <- v - X_cov_repl %*% new_theta[4:(3+n_cov)]
           }
