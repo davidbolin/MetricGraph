@@ -246,33 +246,33 @@ summary(fit)
     ## 
     ## Fixed effects:
     ##             Estimate Std.error z-value Pr(>|z|)    
-    ## (Intercept)   0.2646    0.7101   0.373   0.7094    
-    ## x1            2.1377    0.1989  10.747   <2e-16 ***
-    ## x2           -2.1069    0.7074  -2.979   0.0029 ** 
+    ## (Intercept)   0.2407    0.7150   0.337  0.73636    
+    ## x1            2.1476    0.2004  10.715  < 2e-16 ***
+    ## x2           -2.1150    0.7093  -2.982  0.00286 ** 
     ## 
     ## Random effects:
     ##        Estimate Std.error z-value
-    ## alpha  1.265733  0.019863  63.722
-    ## tau    0.056240  0.005443  10.333
-    ## kappa 15.712349  2.553094   6.154
+    ## alpha  1.259676  0.021008  59.960
+    ## tau    0.057974  0.005823   9.956
+    ## kappa 15.458478  2.548272   6.066
     ## 
     ## Random effects (Matern parameterization):
     ##       Estimate Std.error z-value
-    ## nu     0.76573   0.01986  38.550
-    ## sigma  1.32354   0.13564   9.758
-    ## range  0.15752   0.02441   6.453
+    ## nu     0.75968   0.02101  36.160
+    ## sigma  1.32518   0.13642   9.714
+    ## range  0.15947   0.02495   6.392
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
-    ## std. dev 0.097018  0.006282   15.44
+    ## std. dev 0.097230  0.006306   15.42
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -126.561 
-    ## Number of function calls by 'optim' = 65
+    ## Log-Likelihood:  -126.5585 
+    ## Number of function calls by 'optim' = 57
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  23.40653 secs
+    ## Time used to:     fit the model =  15.88694 secs
 
 An improved estimate of the Hessian can be obtained by setting
 `improve_hessian` to `TRUE`, which improves the precision of the
@@ -299,34 +299,34 @@ summary(fit)
     ## 
     ## Fixed effects:
     ##             Estimate Std.error z-value Pr(>|z|)    
-    ## (Intercept)   0.2646    0.7112   0.372   0.7098    
-    ## x1            2.1377    0.1995  10.715   <2e-16 ***
-    ## x2           -2.1069    0.7074  -2.978   0.0029 ** 
+    ## (Intercept)   0.2407    0.7175   0.336  0.73723    
+    ## x1            2.1476    0.2018  10.641  < 2e-16 ***
+    ## x2           -2.1150    0.7093  -2.982  0.00287 ** 
     ## 
     ## Random effects:
     ##       Estimate Std.error z-value
-    ## alpha  1.26573   0.05265  24.041
-    ## tau    0.05624   0.01402   4.012
-    ## kappa 15.71235   3.03851   5.171
+    ## alpha  1.25968   0.08001  15.743
+    ## tau    0.05797   0.02108   2.750
+    ## kappa 15.45848   3.48614   4.434
     ## 
     ## Random effects (Matern parameterization):
     ##       Estimate Std.error z-value
-    ## nu     0.76573   0.05265  14.544
-    ## sigma  1.32354   0.13564   9.758
-    ## range  0.15752   0.02441   6.453
+    ## nu     0.75968   0.08001   9.494
+    ## sigma  1.32518   0.13642   9.714
+    ## range  0.15947   0.02495   6.392
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
-    ## std. dev 0.097018  0.006288   15.43
+    ## std. dev 0.097230  0.006319   15.39
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -126.561 
-    ## Number of function calls by 'optim' = 65
+    ## Log-Likelihood:  -126.5585 
+    ## Number of function calls by 'optim' = 57
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  21.04701 secs 
-    ##   compute the Hessian = 3.23019 secs
+    ## Time used to:     fit the model =  13.95877 secs 
+    ##   compute the Hessian = 2.31403 secs
 
 We can also obtain additional information by using the function
 [`glance()`](https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.md):
@@ -339,7 +339,7 @@ glance(fit)
     ## # A tibble: 1 × 9
     ##    nobs  sigma logLik   AIC   BIC deviance df.residual model         alpha
     ##   <int>  <dbl>  <dbl> <dbl> <dbl>    <dbl>       <dbl> <chr>         <dbl>
-    ## 1   400 0.0970  -127.  267.  295.     253.         393 WhittleMatern  1.27
+    ## 1   400 0.0972  -127.  267.  295.     253.         393 WhittleMatern  1.26
 
 Let us compare the values of the parameters of the latent model with the
 true ones:
@@ -354,7 +354,7 @@ print(data.frame(sigma = c(sigma, fit$alt_par_coeff$coeff["sigma"]),
 
     ##              sigma     range        nu
     ## Truth     1.300000 0.1500000 0.8000000
-    ## Estimates 1.323538 0.1575225 0.7657331
+    ## Estimates 1.325181 0.1594749 0.7596757
 
 ### Kriging
 
@@ -487,10 +487,10 @@ summary(fit_fixed)
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
     ## Log-Likelihood:  -132.2996 
-    ## Number of function calls by 'optim' = 38
+    ## Number of function calls by 'optim' = 63
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  15.97415 secs
+    ## Time used to:     fit the model =  14.35021 secs
 
 ``` r
 
@@ -505,7 +505,7 @@ cat("Log-likelihood with fixed sigma:", logLik(fit_fixed), "\n")
 cat("Log-likelihood with all parameters estimated:", logLik(fit), "\n")
 ```
 
-    ## Log-likelihood with all parameters estimated: -126.561
+    ## Log-likelihood with all parameters estimated: -126.5585
 
 ## Fitting a model with replicates
 
@@ -585,29 +585,29 @@ summary(fit_repl)
 
     ## 
     ## Random effects:
-    ##        Estimate Std.error z-value
-    ## alpha  1.289682  0.006362  202.72
-    ## tau    0.052035  0.001474   35.30
-    ## kappa 15.901647  0.507588   31.33
+    ##       Estimate Std.error z-value
+    ## alpha  1.28675       NaN     NaN
+    ## tau    0.05265       NaN     NaN
+    ## kappa 15.85393   0.44479   35.64
     ## 
     ## Random effects (Matern parameterization):
     ##       Estimate Std.error z-value
-    ## nu    0.789682  0.006362  124.13
-    ## sigma 1.313555  0.024716   53.15
-    ## range 0.158063  0.004862   32.51
+    ## nu    0.786753        NA      NA
+    ## sigma 1.313324  0.024706   53.16
+    ## range 0.158244  0.004881   32.42
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
-    ## std. dev   0.3014    0.0030   100.5
+    ## std. dev 0.301447  0.002987   100.9
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
-    ## Log-Likelihood:  -9837.691 
-    ## Number of function calls by 'optim' = 117
+    ## Log-Likelihood:  -9837.699 
+    ## Number of function calls by 'optim' = 86
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  1.15531 mins 
-    ##   set up the parallelization = 2.71371 secs
+    ## Time used to:     fit the model =  40.49715 secs 
+    ##   set up the parallelization = 2.03641 secs
 
 Let us also take a glance of the fit:
 
@@ -632,9 +632,9 @@ print(data.frame(sigma = c(sigma, fit_repl$alt_par_coeff$coeff["sigma"]),
                    row.names = c("Truth", "Estimates")))
 ```
 
-    ##              sigma     range        nu
-    ## Truth     1.300000 0.1500000 0.8000000
-    ## Estimates 1.313555 0.1580625 0.7896819
+    ##              sigma    range        nu
+    ## Truth     1.300000 0.150000 0.8000000
+    ## Estimates 1.313324 0.158244 0.7867531
 
 Let us do kriging. We will use the same prediction locations as in the
 previous example. Let us get prediction for replicate 10, then add the
@@ -746,9 +746,9 @@ the `result` object:
 ```
 
     ##             mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## std.dev 1.397280 0.1600590   1.114000 1.386190   1.741860 1.361870
-    ## range   0.186825 0.0514245   0.108250 0.179105   0.308829 0.164048
-    ## nu      0.690081 0.0952478   0.509418 0.688366   0.882027 0.686564
+    ## std.dev 1.392340 0.1584570   1.113090 1.380850   1.734600 1.354540
+    ## range   0.185350 0.0514600   0.106507 0.177725   0.307240 0.162840
+    ## nu      0.691984 0.0986313   0.505912 0.689796   0.891698 0.686707
 
 Let us compare with the true values:
 
@@ -772,9 +772,9 @@ Let us compare with the true values:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev 1.30 1.3972820 1.3618734
-    ## 2     range 0.15 0.1868252 0.1640483
-    ## 3        nu 0.80 0.6900807 0.6865640
+    ## 1   std.dev 1.30 1.3923376 1.3545405
+    ## 2     range 0.15 0.1853497 0.1628396
+    ## 3        nu 0.80 0.6919843 0.6867065
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
@@ -981,9 +981,9 @@ function:
 ```
 
     ##             mean         sd 0.025quant 0.5quant 0.975quant     mode
-    ## std.dev 1.325270 0.02459720   1.278100 1.324840   1.374690 1.323680
-    ## range   0.169338 0.00778464   0.154011 0.169403   0.184548 0.169864
-    ## nu      0.701944 0.02699590   0.652507 0.700527   0.758250 0.695990
+    ## std.dev 1.325150 0.02544190   1.272490 1.326440   1.371960 1.331250
+    ## range   0.167912 0.00826268   0.149713 0.168899   0.181187 0.173334
+    ## nu      0.708543 0.02625250   0.668534 0.704609   0.768705 0.690036
 
 Let us compare with the true values of the parameters:
 
@@ -1007,9 +1007,9 @@ Let us compare with the true values of the parameters:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev 1.30 1.3252690 1.3236826
-    ## 2     range 0.15 0.1693380 0.1698636
-    ## 3        nu 0.80 0.7019436 0.6959898
+    ## 1   std.dev 1.30 1.3251498 1.3312463
+    ## 2     range 0.15 0.1679116 0.1733345
+    ## 3        nu 0.80 0.7085433 0.6900358
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
@@ -1101,9 +1101,9 @@ function:
 ```
 
     ##             mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## std.dev 1.398990 0.1706930   1.102360 1.384940   1.771370 1.352720
-    ## range   0.187693 0.0523565   0.109026 0.179330   0.313103 0.163428
-    ## nu      0.690243 0.0920886   0.514697 0.688932   0.874979 0.688221
+    ## std.dev 1.395650 0.1629350   1.108460 1.383900   1.747550 1.357430
+    ## range   0.187217 0.0571916   0.102317 0.177840   0.325032 0.160477
+    ## nu      0.691545 0.1079370   0.487424 0.689551   0.909091 0.687773
 
 Let us compare with the true values of the parameters:
 
@@ -1127,9 +1127,9 @@ Let us compare with the true values of the parameters:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev 1.30 1.3989924 1.3527157
-    ## 2     range 0.15 0.1876933 0.1634278
-    ## 3        nu 0.80 0.6902427 0.6882206
+    ## 1   std.dev 1.30 1.3956456 1.3574305
+    ## 2     range 0.15 0.1872173 0.1604774
+    ## 3        nu 0.80 0.6915453 0.6877734
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
@@ -1259,9 +1259,9 @@ function:
 ```
 
     ##             mean         sd 0.025quant 0.5quant 0.975quant     mode
-    ## std.dev 1.325270 0.02459720   1.278100 1.324840   1.374690 1.323680
-    ## range   0.169338 0.00778464   0.154011 0.169403   0.184548 0.169864
-    ## nu      0.701944 0.02699590   0.652507 0.700527   0.758250 0.695990
+    ## std.dev 1.325150 0.02544190   1.272490 1.326440   1.371960 1.331250
+    ## range   0.167912 0.00826268   0.149713 0.168899   0.181187 0.173334
+    ## nu      0.708543 0.02625250   0.668534 0.704609   0.768705 0.690036
 
 Let us compare with the true values of the parameters:
 
@@ -1285,9 +1285,9 @@ Let us compare with the true values of the parameters:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev 1.30 1.3252690 1.3236826
-    ## 2     range 0.15 0.1693380 0.1698636
-    ## 3        nu 0.80 0.7019436 0.6959898
+    ## 1   std.dev 1.30 1.3251498 1.3312463
+    ## 2     range 0.15 0.1679116 0.1733345
+    ## 3        nu 0.80 0.7085433 0.6900358
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
@@ -1509,19 +1509,19 @@ summary(fit)
     ## 
     ## Fixed effects:
     ##             Estimate Std.error z-value Pr(>|z|)    
-    ## (Intercept)   51.526     2.524   20.41   <2e-16 ***
+    ## (Intercept)   51.526     2.492   20.68   <2e-16 ***
     ## 
     ## Random effects:
     ##        Estimate Std.error z-value
-    ## nu      2.27550   0.08526  26.688
-    ## theta1  2.87528   0.32294   8.904
-    ## theta2  1.85945   0.20965   8.870
-    ## theta3  0.39400   1.88828   0.209
-    ## theta4  0.12797   0.84706   0.151
+    ## nu      2.27550   0.08519  26.710
+    ## theta1  2.87528   0.23846  12.058
+    ## theta2  1.85945   0.17770  10.464
+    ## theta3  0.39400   1.28364   0.307
+    ## theta4  0.12797   0.57730   0.222
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
-    ## std. dev   6.9554    0.3517   19.78
+    ## std. dev   6.9554    0.3518   19.77
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
@@ -1529,7 +1529,7 @@ summary(fit)
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  55.68221 secs
+    ## Time used to:     fit the model =  43.70248 secs
 
 Let us plot the range parameter along the mesh, so we can see how it is
 varying:
@@ -1638,8 +1638,8 @@ summary(fit_ns_fixed_theta1)
     ## nu             0.266500  0.004959  53.743
     ## theta1 (fixed) 0.500000        NA      NA
     ## theta2         2.087741  0.511435   4.082
-    ## theta3         2.481165  0.378906   6.548
-    ## theta4         0.924256  0.885353   1.044
+    ## theta3         2.481165  0.378907   6.548
+    ## theta4         0.924256  0.885356   1.044
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
@@ -1651,7 +1651,7 @@ summary(fit_ns_fixed_theta1)
     ## Number of function calls by 'optim' = 443
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  32.24226 secs
+    ## Time used to:     fit the model =  24.77229 secs
 
 Similarly, we can provide starting values for the entire theta vector
 with `start_theta`:
@@ -1691,11 +1691,11 @@ summary(fit_ns_start)
     ## 
     ## Random effects:
     ##        Estimate Std.error z-value
-    ## nu       1.4767    0.6954   2.123
+    ## nu       1.4767    0.6955   2.123
     ## theta1   3.0923    0.4429   6.982
     ## theta2   2.2318    0.5233   4.265
     ## theta3  -0.4515    1.0539  -0.428
-    ## theta4  -0.3982    0.8347  -0.477
+    ## theta4  -0.3982    0.8348  -0.477
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
@@ -1707,7 +1707,7 @@ summary(fit_ns_start)
     ## Number of function calls by 'optim' = 502
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  47.0822 secs
+    ## Time used to:     fit the model =  35.77483 secs
 
 ### Fitting the inlabru rSPDE model
 
@@ -1773,32 +1773,32 @@ summary(rspde_fit_nonstat)
     ##     Additive/Linear/Rowwise: TRUE/TRUE/TRUE
     ##     Used components: effect[Intercept, field], latent[] 
     ## Time used:
-    ##     Pre = 0.161, Running = 60.3, Post = 0.332, Total = 60.8 
+    ##     Pre = 0.113, Running = 54.6, Post = 0.295, Total = 55 
     ## Fixed effects:
-    ##             mean    sd 0.025quant 0.5quant 0.975quant  mode kld
-    ## Intercept 50.606 2.875     44.838   50.621     56.291 50.62   0
+    ##             mean     sd 0.025quant 0.5quant 0.975quant   mode kld
+    ## Intercept 34.606 18.957     -8.411   37.035     66.864 42.751   0
     ## 
     ## Random effects:
     ##   Name     Model
     ##     field CGeneric
     ## 
     ## Model hyperparameters:
-    ##                                         mean    sd 0.025quant 0.5quant
-    ## Precision for the Gaussian observations 0.02 0.002      0.016     0.02
-    ## Theta1 for field                        3.04 0.166      2.725     3.03
-    ## Theta2 for field                        2.02 0.179      1.677     2.01
-    ## Theta3 for field                        2.67 0.189      2.289     2.68
-    ## Theta4 for field                        1.66 0.154      1.342     1.67
-    ## Theta5 for field                        1.23 0.130      1.027     1.22
+    ##                                          mean    sd 0.025quant 0.5quant
+    ## Precision for the Gaussian observations 0.022 0.003      0.018    0.022
+    ## Theta1 for field                        3.251 0.102      3.052    3.250
+    ## Theta2 for field                        5.397 0.256      4.939    5.384
+    ## Theta3 for field                        4.408 0.071      4.269    4.408
+    ## Theta4 for field                        3.363 0.086      3.203    3.361
+    ## Theta5 for field                        0.617 0.067      0.478    0.619
     ##                                         0.975quant  mode
-    ## Precision for the Gaussian observations      0.025 0.019
-    ## Theta1 for field                             3.378 3.008
-    ## Theta2 for field                             2.380 1.993
-    ## Theta3 for field                             3.031 2.699
-    ## Theta4 for field                             1.948 1.691
-    ## Theta5 for field                             1.527 1.155
+    ## Precision for the Gaussian observations      0.028 0.022
+    ## Theta1 for field                             3.456 3.245
+    ## Theta2 for field                             5.942 5.318
+    ## Theta3 for field                             4.548 4.407
+    ## Theta4 for field                             3.539 3.349
+    ## Theta5 for field                             0.740 0.631
     ## 
-    ## Marginal log-Likelihood:  -1242.54 
+    ## Marginal log-Likelihood:  -1259.02 
     ##  is computed 
     ## Posterior summaries for the linear predictor and the fitted values are computed
     ## (Posterior marginals needs also 'control.compute=list(return.marginals.predictor=TRUE)')
@@ -1814,11 +1814,11 @@ summary(result_fit_nonstat)
 ```
 
     ##                  mean        sd 0.025quant 0.5quant 0.975quant    mode
-    ## Theta1.matern 3.03611 0.1661290    2.72466  3.03110    3.37801 3.00840
-    ## Theta2.matern 2.01598 0.1787190    1.67706  2.01176    2.38046 1.99289
-    ## Theta3.matern 2.67387 0.1885230    2.28897  2.67847    3.03091 2.69906
-    ## Theta4.matern 1.66129 0.1541420    1.34210  1.66655    1.94813 1.69082
-    ## nu            1.54736 0.0441706    1.47293  1.54312    1.64200 1.52303
+    ## Theta1.matern 3.25072 0.1024090    3.05233  3.24962    3.45561 3.24489
+    ## Theta2.matern 5.39741 0.2559390    4.93907  5.38383    5.94154 5.31805
+    ## Theta3.matern 4.40809 0.0707634    4.26925  4.40793    4.54788 4.40724
+    ## Theta4.matern 3.36308 0.0855069    3.20275  3.36051    3.53914 3.34876
+    ## nu            1.29873 0.0301449    1.23544  1.30049    1.35346 1.30608
 
 We can also plot the posterior densities. To this end we will use the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)

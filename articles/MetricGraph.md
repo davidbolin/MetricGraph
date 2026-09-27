@@ -640,7 +640,7 @@ summary(res)
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
-    ## std. dev 0.000306  0.078773   0.004
+    ## std. dev 0.000306  0.077610   0.004
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
@@ -648,7 +648,7 @@ summary(res)
     ## Number of function calls by 'optim' = 44
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  22.76137 secs
+    ## Time used to:     fit the model =  14.26908 secs
 
 We can obtain additional information by using
 [`glance()`](https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.md):
@@ -679,7 +679,7 @@ print(results)
 
     ##               sigma_e    sigma     range
     ## Truth    0.1000000000 2.000000 0.2000000
-    ## Estimate 0.0003060189 2.063444 0.1788075
+    ## Estimate 0.0003060112 2.063444 0.1788075
 
 Given these estimated parameters, we can now do kriging to estimate the
 field at locations in the graph. As an example, we now obtain
@@ -915,7 +915,7 @@ summary(res_exp)
     ## 
     ## Measurement error:
     ##           Estimate Std.error z-value
-    ## std. dev 0.0003456 0.0664006   0.005
+    ## std. dev 0.0003455 0.0664875   0.005
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
@@ -923,7 +923,7 @@ summary(res_exp)
     ## Number of function calls by 'optim' = 57
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  16.97656 secs
+    ## Time used to:     fit the model =  17.13071 secs
 
 We can also have a glance at the fitted model:
 
@@ -935,7 +935,7 @@ glance(res_exp)
     ## # A tibble: 1 × 9
     ##    nobs    sigma logLik   AIC   BIC deviance df.residual model  cov_function  
     ##   <int>    <dbl>  <dbl> <dbl> <dbl>    <dbl>       <dbl> <chr>  <chr>         
-    ## 1   500 0.000346  -872. 1756. 1782.    1744.         494 isoCov exp_covariance
+    ## 1   500 0.000345  -872. 1756. 1782.    1744.         494 isoCov exp_covariance
 
 Let us now compute the posterior mean for the field at the observation
 locations and plot the residuals between the field and the posterior
@@ -1035,7 +1035,7 @@ summary(res_gl)
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  3.43255 secs
+    ## Time used to:     fit the model =  2.9423 secs
 
 We can also have a glance at the fitted model:
 
@@ -1154,7 +1154,7 @@ summary(res_gl_pred)
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  4.09948 secs
+    ## Time used to:     fit the model =  3.44789 secs
 
 One should compare the estimates with the ones obtained in the model
 without the prediction locations.
@@ -1252,9 +1252,9 @@ spde_bru_result <- spde_metric_graph_result(spde_bru_fit,
 summary(spde_bru_result)
 ```
 
-    ##           mean       sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 2.096510 0.108678   1.890430 2.093240    2.31489 2.089020
-    ## range 0.187865 0.025785   0.142793 0.185922    0.24390 0.181743
+    ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 2.096980 0.1097000   1.893760 2.093760   2.327200 2.103170
+    ## range 0.187673 0.0257811   0.141731 0.186084   0.242838 0.183151
 
 Here we are showing the estimate of the practical correlation range
 ($`2/\kappa`$) instead of $`\kappa`$ since that is easier to interpret.
@@ -1278,8 +1278,8 @@ We now compare the means of the estimated values with the true values:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev  2.0 2.0965144 2.0890186
-    ## 2     range  0.2 0.1878648 0.1817428
+    ## 1   std.dev  2.0 2.0969779 2.1031683
+    ## 2     range  0.2 0.1876727 0.1831506
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)

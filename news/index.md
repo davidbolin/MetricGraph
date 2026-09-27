@@ -2,6 +2,40 @@
 
 ## MetricGraph (development version)
 
+- `add_observations()` is now much faster with many replicates. Row
+  indices are now built in one pass and the row-wise quantities computed
+  once. `process_data_add_obs()` also stopped identifying locations and
+  (location, group) pairs by pasted character keys, the same information
+  is now encoded as integers by sorting.
+
+- Fixed `add_observations()` failing with “has a different number of
+  elements than the number of coordinates” when the grouping variable
+  contained `NA`. Such rows are now kept, with `NA` as their group.
+
+- The likelihood functions no longer locate the rows of each replicate
+  with `repl_vec == curr_repl` inside the loop over replicates, which
+  rescanned every observation once per replicate.
+
+- Fixed the vertex-to-edge snapping in `metric_graph$new()`, which
+  decided whether to split an edge by comparing a position normalized to
+  \[0, 1\] against `tolerance$vertex_edge`, which is a length. The
+  verdict therefore depended on the edge length: junctions on long edges
+  were missed, and the same graph rebuilt from its own edges could gain
+  edges. `add_vertices()` now compares both quantities as lengths.
+
+- Fixed `add_vertices()` splitting the wrong edge. Splits were applied
+  one at a time, with each one chained off `self$nE`; if a split was
+  skipped, `self$nE` was an unrelated edge and that edge was split
+  instead. All positions accepted for an edge are now passed to
+  `split_edge()` in a single call.
+
+- Vertex-to-edge snapping is now repeated until it stops finding work
+  (at most `10` rounds). A single sweep builds its candidate set before
+  any edge is split, so the vertices and sub-edges the sweep itself
+  creates were never tested. Over 160 randomly generated graphs the
+  number of junctions within `vertex_edge` that should have been split
+  but were not fell from 532 to 23.
+
 - [`fetch_osm()`](https://davidbolin.github.io/MetricGraph/reference/fetch_osm.md)
   and
   [`metric_graph_from_osm()`](https://davidbolin.github.io/MetricGraph/reference/metric_graph_from_osm.md)
@@ -9,12 +43,14 @@
   with exponential backoff, controlled by the new `retries` argument,
   and `endpoint` may now be a vector of mirrors tried in order. A failed
   download no longer leaves the error page behind at `cache_path`.
+
 - [`posterior_crossvalidation()`](https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.graph_lme.md)
   is now the S3 generic from rSPDE, re-exported by MetricGraph, which
   provides the `graph_lme` method. Loading rSPDE after MetricGraph
   therefore no longer masks MetricGraph’s version, and a list of models
   may mix `graph_lme` and `rspde_lme` fits. Requires rSPDE \>=
   2.6.0.9001.
+
 - Graph construction no longer materializes dense point-by-edge
   matrices. `metric_graph$new()` used to densify the
   [`st_is_within_distance()`](https://r-spatial.github.io/sf/reference/geos_binary_pred.html)
@@ -27,9 +63,11 @@
   (`snap_points_to_edges_cpp()` and a grid-indexed
   `nearest_edge_cpp()`), which return the same graphs and the same
   snapped locations.
+
 - The edge-edge intersection search (`tolerance$edge_edge > 0`) also
   keeps its neighbour list sparse instead of building an
   `nEdges x nEdges` logical matrix.
+
 - Edge weights are no longer copied once per edge split.
   `add_vertices()` now records which weight row each new edge inherits
   and materializes the weight table once, instead of `rbind`-ing the
@@ -37,36 +75,44 @@
   builds the per-edge weight rows without a `[.data.frame` call per
   edge. The values are unchanged but row names of weight rows duplicated
   by a split are now e.g. `"990509915.1"` rather than `"9905099151"`.
+
 - `prune_vertices()` no longer pays a `[.data.frame` call per edge when
   rebuilding the edge attributes, and the serial fallback for
   closed-loop chains compacts the weight table once instead of once per
   removed vertex.
+
 - Added `metric_graph$get_largest()`, which returns only the largest
   connected component. It is equivalent to `get_components()[[1]]` but
   constructs just that component.
+
 - Added a mirrored closed-form directional OU covariance fast path for
   out-trees, including direction-reversed K1 continuity graphs. Reversed
   river networks now share the K1/K2 C++ pairwise kernel, using a cached
   Euler/RMQ LCA index and source-normalized transfers instead of
   allocating R objects or walking parent chains for every covariance
   pair.
+
 - Added C++-backed directional alpha-1 edge precision and closed-form
   directional OU covariance calculations. The C++ paths are now the
   default, with pure-R reference implementations retained for validation
   and fallback.
+
 - Added a packaged-data Mid-Columbia speed example covering K1, K2,
   reversed-continuity and covariance likelihood evaluation.
+
 - Fixed a sign-convention inconsistency in the exact α = 2 codes. The
   observation-/bridge-side covariance blocks treated the
   endpoint-derivative states as −u′, while the prior precision (`Q00` /
   `Qalpha2`) and the vertex constraints used +u′. Because both enter the
   same quadratic forms, α = 2 covariances, likelihoods, posteriors and
   exact samples were biased on graphs containing cycles.
+
 - Fixed the same α = 2 sign-convention bug in the profiled-likelihood
   (v2) code path (`profile_lik_core_alpha2` in
   `R/graph_likelihoods_v2.R`), which had reimplemented the affected
   S-matrix construction independently and was not covered by the fix
   above.
+
 - Added
   [`simulate.metric_graph()`](https://davidbolin.github.io/MetricGraph/reference/simulate.metric_graph.md)
   S3 method and
@@ -76,13 +122,16 @@
   O(m) per edge), and the extended method (`method = "extended"`, single
   sparse Cholesky on the graph with simulation locations promoted to
   vertices). Both α = 1 and α = 2 are supported.
+
 - C++ (Rcpp/Eigen) implementations of the per-edge bridge draws,
   `draw_edge_direct_cpp` and `draw_edge_kriging_cpp`, are now the
   default (`impl = "cpp"`); the pure-R reference implementations remain
   available via `impl = "R"`.
+
 - Updated `examples/fast_simulation/run_study.R` with warm-up
   iterations, `n_rep = 5` medians, extended `n_pts` sweep {8,…,2048},
   and all three simulation methods.
+
 - Added `examples/fast_simulation/benchmark.R` for per-edge R vs C++
   speedup and whole-field method comparison.
 

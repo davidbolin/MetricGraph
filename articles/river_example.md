@@ -253,7 +253,7 @@ pred_alpha1 %>% graph$plot(data = "Temprature", vertex_size = 0,
             type = "mapview")
 ```
 
-    ## Warning: Found less unique colors (100) than unique zcol values (2454)! 
+    ## Warning: Found less unique colors (100) than unique zcol values (2455)! 
     ## Interpolating color vector to match number of zcol values.
 
 Lets examine how things looks using the same residuals:
