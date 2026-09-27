@@ -170,7 +170,7 @@ summary(inla_fit)
 ```
 
     ## Time used:
-    ##     Pre = 0.107, Running = 0.468, Post = 0.0278, Total = 0.604 
+    ##     Pre = 0.154, Running = 0.813, Post = 0.0363, Total = 1 
     ## Fixed effects:
     ##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld
     ## Intercept -0.619 0.328     -1.275   -0.617      0.021 -0.616   0
@@ -203,8 +203,8 @@ summary(spde_result)
 ```
 
     ##             mean       sd 0.025quant 0.5quant 0.975quant     mode
-    ## std.dev 0.566934 0.155763   0.305471 0.553637   0.911242 0.526013
-    ## range   2.957470 2.062930   0.632182 2.432960   8.404240 1.564980
+    ## std.dev 0.566934 0.155763   0.305471 0.553637   0.911243 0.526013
+    ## range   2.957470 2.062920   0.632182 2.432960   8.404200 1.564990
 
 We will now compare the means of the estimated values with the true
 values:
@@ -226,9 +226,9 @@ values:
   print(result_df)
 ```
 
-    ##   parameter true     mean      mode
-    ## 1   std.dev  0.5 0.566934 0.5260129
-    ## 2     range  2.0 2.957473 1.5649829
+    ##   parameter true      mean      mode
+    ## 1   std.dev  0.5 0.5669341 0.5260127
+    ## 2     range  2.0 2.9574727 1.5649865
 
 If we have the actual values of the covariates at the integration
 points, we can pass them to the
@@ -252,7 +252,7 @@ summary(inla_fit)
 ```
 
     ## Time used:
-    ##     Pre = 0.1, Running = 0.483, Post = 0.0215, Total = 0.605 
+    ##     Pre = 0.142, Running = 0.775, Post = 0.0284, Total = 0.945 
     ## Fixed effects:
     ##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld
     ## Intercept -0.818 0.282     -1.387   -0.814     -0.277 -0.814   0
@@ -282,8 +282,8 @@ summary(spde_result)
 ```
 
     ##             mean       sd 0.025quant 0.5quant 0.975quant     mode
-    ## std.dev 0.457013 0.157056   0.201969 0.441544   0.808332 0.404739
-    ## range   3.074480 2.535790   0.429986 2.381990   9.844070 1.181580
+    ## std.dev 0.457014 0.157056   0.201970 0.441544   0.808332 0.404739
+    ## range   3.074480 2.535820   0.429978 2.381990   9.844170 1.181570
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
@@ -348,7 +348,7 @@ summary(inla_fit_spde)
 ```
 
     ## Time used:
-    ##     Pre = 0.114, Running = 0.504, Post = 0.0259, Total = 0.643 
+    ##     Pre = 0.157, Running = 0.86, Post = 0.0315, Total = 1.05 
     ## Fixed effects:
     ##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld
     ## Intercept -0.586 0.250     -1.076   -0.586     -0.097 -0.586   0
@@ -360,8 +360,8 @@ summary(inla_fit_spde)
     ## 
     ## Model hyperparameters:
     ##                   mean    sd 0.025quant 0.5quant 0.975quant  mode
-    ## Theta1 for field  1.24 0.796     -0.267     1.22       2.87  1.12
-    ## Theta2 for field -1.49 1.350     -4.260    -1.45       1.05 -1.27
+    ## Theta1 for field  1.24 0.797     -0.267     1.22       2.87  1.12
+    ## Theta2 for field -1.49 1.350     -4.262    -1.45       1.05 -1.27
     ## 
     ## Marginal log-Likelihood:  -102.38 
     ##  is computed 
@@ -378,8 +378,8 @@ summary(spde_result)
 ```
 
     ##           mean       sd 0.025quant 0.5quant 0.975quant      mode
-    ## sigma 2.139400 0.561439  1.2127800 2.090670    3.38248 2.0673000
-    ## range 0.519532 0.883108  0.0145246 0.238381    2.80281 0.0309107
+    ## sigma 2.139950 0.561637  1.2130400 2.091190    3.38352 2.0679700
+    ## range 0.519249 0.882930  0.0144946 0.238159    2.80191 0.0308571
 
 ## An example with replicates in our `INLA` interface
 
@@ -446,7 +446,7 @@ summary(inla_fit)
 ```
 
     ## Time used:
-    ##     Pre = 0.11, Running = 1.8, Post = 0.0933, Total = 2 
+    ##     Pre = 0.151, Running = 2.56, Post = 0.113, Total = 2.82 
     ## Fixed effects:
     ##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld
     ## Intercept -0.806 0.149     -1.100   -0.806     -0.515 -0.806   0
@@ -476,8 +476,8 @@ summary(spde_result)
 ```
 
     ##             mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## std.dev 0.541597 0.0795084   0.398111 0.537648   0.709556 0.531493
-    ## range   4.328110 1.5091100   2.106240 4.081340   7.972460 3.623470
+    ## std.dev 0.541597 0.0795085   0.398111 0.537648   0.709556 0.531493
+    ## range   4.328120 1.5091100   2.106240 4.081340   7.972470 3.623470
 
 As in the previous case, we can also supply the covariates manually:
 
@@ -501,7 +501,7 @@ summary(inla_fit)
 ```
 
     ## Time used:
-    ##     Pre = 0.109, Running = 1.59, Post = 0.0797, Total = 1.78 
+    ##     Pre = 0.145, Running = 2.43, Post = 0.102, Total = 2.67 
     ## Fixed effects:
     ##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld
     ## Intercept -0.988 0.124     -1.233   -0.987     -0.747 -0.987   0
@@ -530,9 +530,9 @@ spde_result <- spde_metric_graph_result(inla_fit, "field", rspde_model)
 summary(spde_result)
 ```
 
-    ##             mean       sd 0.025quant 0.5quant 0.975quant     mode
-    ## std.dev 0.430313 0.078658    0.29010 0.426074   0.597544 0.419663
-    ## range   4.721710 2.083600    1.87198 4.318340   9.920020 3.613590
+    ##             mean        sd 0.025quant 0.5quant 0.975quant     mode
+    ## std.dev 0.430313 0.0786579    0.29010 0.426074   0.597543 0.419663
+    ## range   4.721710 2.0835900    1.87198 4.318340   9.920010 3.613600
 
 We can also fit the model with replicates using the exact model:
 
@@ -551,7 +551,7 @@ summary(inla_fit_spde_rep)
 ```
 
     ## Time used:
-    ##     Pre = 0.12, Running = 2.34, Post = 0.132, Total = 2.59 
+    ##     Pre = 0.16, Running = 3.31, Post = 0.159, Total = 3.63 
     ## Fixed effects:
     ##             mean    sd 0.025quant 0.5quant 0.975quant   mode kld
     ## Intercept -0.805 0.154     -1.108   -0.805     -0.502 -0.804   0
@@ -582,7 +582,7 @@ summary(spde_result_rep)
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant    mode
     ## sigma 0.609965 0.0921866   0.441388  0.60662   0.801715 0.58510
-    ## range 6.075620 3.4547500   1.930180  5.24073  15.103500 3.93607
+    ## range 6.075610 3.4547100   1.930180  5.24073  15.103400 3.93607
 
 ## Fitting LGCP models without our `INLA` interface
 
@@ -702,8 +702,8 @@ summary(spde_result)
 ```
 
     ##             mean       sd 0.025quant 0.5quant 0.975quant     mode
-    ## std.dev 0.457013 0.157056   0.201970 0.441544   0.808332 0.404739
-    ## range   3.074480 2.535810   0.429983 2.381990   9.844120 1.181580
+    ## std.dev 0.457014 0.157056   0.201970 0.441544   0.808332 0.404739
+    ## range   3.074480 2.535790   0.429985 2.381990   9.844080 1.181580
 
 We will now compare the means of the estimated values with the true
 values:
@@ -726,8 +726,8 @@ values:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev  0.5 0.4570134 0.4047392
-    ## 2     range  2.0 3.0744803 1.1815758
+    ## 1   std.dev  0.5 0.4570135 0.4047394
+    ## 2     range  2.0 3.0744776 1.1815784
 
 ## An example with replicates
 
@@ -810,7 +810,7 @@ summary(spde_result)
 
     ##             mean       sd 0.025quant 0.5quant 0.975quant     mode
     ## std.dev 0.430313 0.078658    0.29010 0.426074   0.597544 0.419663
-    ## range   4.721710 2.083600    1.87198 4.318340   9.920020 3.613590
+    ## range   4.721710 2.083600    1.87198 4.318340   9.920010 3.613590
 
 ``` r
 
@@ -831,7 +831,7 @@ result_df <- data.frame(
 
     ##   parameter true      mean      mode
     ## 1   std.dev  0.5 0.4303133 0.4196633
-    ## 2     range  2.0 4.7217087 3.6135934
+    ## 2     range  2.0 4.7217079 3.6135942
 
 ## Using precomputed data for efficient model fitting
 
@@ -945,10 +945,10 @@ print(timing_single)
 ```
 
     ##                 Method Time_seconds
-    ## 1    Original (3 fits)        3.927
-    ## 2       Precomputation        0.656
-    ## 3 Precomputed (3 fits)        2.063
-    ## 4    Total precomputed        2.719
+    ## 1    Original (3 fits)        4.946
+    ## 2       Precomputation        0.665
+    ## 3 Precomputed (3 fits)        3.103
+    ## 4    Total precomputed        3.768
 
 Let’s verify that the results are equivalent by comparing the log
 marginal likelihoods:
@@ -961,7 +961,7 @@ marginal likelihoods:
 print(fit2_orig$mlik[1])
 ```
 
-    ## [1] -104.5084
+    ## [1] -104.5082
 
 ``` r
 
@@ -969,7 +969,7 @@ print(fit2_orig$mlik[1])
 print(fit2_precomp$mlik[1])
 ```
 
-    ## [1] -104.5082
+    ## [1] -104.5089
 
 ``` r
 
@@ -977,7 +977,7 @@ print(fit2_precomp$mlik[1])
 print(abs(fit2_orig$mlik[1] - fit2_precomp$mlik[1]))
 ```
 
-    ## [1] 0.0001807538
+    ## [1] 0.0006598276
 
 #### Using manual covariates with precomputation
 
@@ -1016,7 +1016,7 @@ time_manual <- system.time({
 print(time_manual[["elapsed"]])
 ```
 
-    ## [1] 8.191
+    ## [1] 15.756
 
 ``` r
 
@@ -1024,7 +1024,7 @@ print(time_manual[["elapsed"]])
 print(fit_manual$mlik[1])
 ```
 
-    ## [1] 36206.05
+    ## [1] 36308.56
 
 #### Performance optimization: avoiding graph cloning
 
@@ -1049,7 +1049,7 @@ time_without_clone <- system.time({
 print(time_with_clone[["elapsed"]])
 ```
 
-    ## [1] 1.356
+    ## [1] 1.751
 
 ``` r
 
@@ -1057,7 +1057,7 @@ print(time_with_clone[["elapsed"]])
 print(time_without_clone[["elapsed"]])
 ```
 
-    ## [1] 1.381
+    ## [1] 1.8
 
 ``` r
 
@@ -1065,7 +1065,7 @@ print(time_without_clone[["elapsed"]])
 print(paste(round(time_with_clone[["elapsed"]] / time_without_clone[["elapsed"]], 2), "x"))
 ```
 
-    ## [1] "0.98 x"
+    ## [1] "0.97 x"
 
 ``` r
 
@@ -1074,7 +1074,7 @@ print(paste(round(time_with_clone[["elapsed"]] / time_without_clone[["elapsed"]]
 print(abs(fit_clone$mlik[1] - fit_no_clone$mlik[1]))
 ```
 
-    ## [1] 0.0009385239
+    ## [1] 0.0009398962
 
 You can also use `clone_graph = FALSE` with precomputation for even
 better performance:
@@ -1104,7 +1104,7 @@ time_fit_no_clone <- system.time({
 print(time_precomp_no_clone[["elapsed"]])
 ```
 
-    ## [1] 0.692
+    ## [1] 0.703
 
 ``` r
 
@@ -1112,7 +1112,7 @@ print(time_precomp_no_clone[["elapsed"]])
 print(time_fit_no_clone[["elapsed"]])
 ```
 
-    ## [1] 0.654
+    ## [1] 1.063
 
 ### Example with replicates
 
@@ -1188,7 +1188,7 @@ time_manual_rep <- system.time({
 print(time_manual_rep[["elapsed"]])
 ```
 
-    ## [1] 1.746
+    ## [1] 2.705
 
 ``` r
 

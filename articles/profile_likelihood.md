@@ -189,7 +189,7 @@ cat("Joint at beta_hat:        ", round(lj, 6), "\n")
 cat("Difference (machine eps): ", format(abs(lp - lj), scientific = TRUE), "\n")
 ```
 
-    ## Difference (machine eps):  2.842171e-12
+    ## Difference (machine eps):  2.728484e-12
 
 ### Optimization and parameter recovery
 

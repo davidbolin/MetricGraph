@@ -2,6 +2,13 @@
 
 ## MetricGraph (development version)
 
+- Fixed `likelihood_graph_laplacian()` failing with “non-conformable
+  matrix dimensions” whenever the data had more than one replicate.
+
+- Removed the per-replicate scans in the likelihood, cross-validation
+  and INLA data paths, which located the rows of each replicate by
+  testing the group column against it inside the loop.
+
 - `add_observations()` is now much faster with many replicates. Row
   indices are now built in one pass and the row-wise quantities computed
   once. `process_data_add_obs()` also stopped identifying locations and
