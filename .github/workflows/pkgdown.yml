@@ -5,6 +5,12 @@ on:
 
 name: pkgdown
 
+# A new push to the same branch cancels a run that is still going. The site is
+# only deployed in the final step, so a cancelled run leaves it untouched.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pkgdown:
     runs-on: ubuntu-latest

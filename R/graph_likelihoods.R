@@ -342,6 +342,12 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   edge_lengths <- graph$edge_lengths
   n_edges <- nrow(graph$E)
 
+  # Row indices per replicate, built in one pass. Testing
+  # `repl_vec == curr_repl` inside the loop rescans every observation once
+  # per replicate, which is O(n_replicates * n_obs).
+  repl_rows <- split(seq_along(repl_vec),
+                     factor(match(repl_vec, u_repl),
+                            levels = seq_along(u_repl)))
   for(repl_y in seq_along(u_repl)) {
       loglik <- loglik + det_R
 
@@ -350,8 +356,7 @@ likelihood_alpha2 <- function(theta, graph, data_name = NULL, manual_y = NULL,
       Qpmu <- numeric(4 * n_edges)
 
       # Get data for this replicate only once
-      curr_repl <- u_repl[repl_y]
-      repl_indices <- (repl_vec == curr_repl)
+      repl_indices <- repl_rows[[repl_y]]
       y_rep <- y[repl_indices]
 
       # Build loc_idx for this replicate when expansion is needed
@@ -628,9 +633,14 @@ precompute_alpha2 <- function(graph, data_name = NULL, manual_y = NULL,
   )
   need_expand <- !is.null(loc_idx_all) && (length(y) > nrow(PtE))
 
+  # Row indices per replicate, built in one pass. Testing
+  # `repl_vec == curr_repl` inside the loop rescans every observation once
+  # per replicate, which is O(n_replicates * n_obs).
+  repl_rows <- split(seq_along(repl_vec),
+                     factor(match(repl_vec, u_repl),
+                            levels = seq_along(u_repl)))
   for(i in seq_along(u_repl)) {
-    curr_repl <- u_repl[i]
-    repl_indices <- (repl_vec == curr_repl)
+    repl_indices <- repl_rows[[i]]
     y_rep <- y[repl_indices]
     if (need_expand) loc_idx_repl <- loc_idx_all[repl_indices]
 
@@ -1074,14 +1084,19 @@ likelihood_alpha1 <- function(theta, graph, data_name = NULL, manual_y = NULL,
   # Cache some values used in the loop
   nV <- nrow(graph$V)
 
+  # Row indices per replicate, built in one pass. Testing
+  # `repl_vec == curr_repl` inside the loop rescans every observation once
+  # per replicate, which is O(n_replicates * n_obs).
+  repl_rows <- split(seq_along(repl_vec),
+                     factor(match(repl_vec, u_repl),
+                            levels = seq_along(u_repl)))
   for(repl_y in seq_along(u_repl)){
     loglik <- loglik + det_R
     count <- 0
     Qpmu <- numeric(nV)
 
     # Pre-compute replicate membership only once
-    curr_repl <- u_repl[repl_y]
-    ind_repl_curr <- (repl_vec == curr_repl)
+    ind_repl_curr <- repl_rows[[repl_y]]
     y_reply <- y_resp[ind_repl_curr]
     if(!is.null(X_cov)){
       n_cov <- ncol(X_cov)
@@ -1269,11 +1284,16 @@ precompute_alpha1 <- function(graph,data_name = NULL, manual_y = NULL,
                           n_cov = if(is.null(X_cov)) 0 else ncol(X_cov),
                           nV = nV)
 
+  # Row indices per replicate, built in one pass. Testing
+  # `repl_vec == curr_repl` inside the loop rescans every observation once
+  # per replicate, which is O(n_replicates * n_obs).
+  repl_rows <- split(seq_along(repl_vec),
+                     factor(match(repl_vec, u_repl),
+                            levels = seq_along(u_repl)))
   for(j in seq_along(u_repl)){
-    curr_repl <- u_repl[j]
 
     # Pre-compute replicate membership only once
-    ind_repl_curr <- (repl_vec == curr_repl)
+    ind_repl_curr <- repl_rows[[j]]
     y_reply <- y_resp[ind_repl_curr]
     if(!is.null(X_cov)){
       n_cov <- ncol(X_cov)
@@ -1565,14 +1585,19 @@ likelihood_randomwalk <- function(theta, graph, data_name = NULL, manual_y = NUL
   # Cache some values used in the loop
   nV <- nrow(graph$V)
 
+  # Row indices per replicate, built in one pass. Testing
+  # `repl_vec == curr_repl` inside the loop rescans every observation once
+  # per replicate, which is O(n_replicates * n_obs).
+  repl_rows <- split(seq_along(repl_vec),
+                     factor(match(repl_vec, u_repl),
+                            levels = seq_along(u_repl)))
   for(repl_y in seq_along(u_repl)){
     loglik <- loglik - 0.5 * (nV - 1) * log(reciprocal_tau) #det_R
     count <- 0
     Qpmu <- numeric(nV)
 
     # Pre-compute replicate membership only once
-    curr_repl <- u_repl[repl_y]
-    ind_repl_curr <- (repl_vec == curr_repl)
+    ind_repl_curr <- repl_rows[[repl_y]]
     y_reply <- y_resp[ind_repl_curr]
     if(!is.null(X_cov)){
       n_cov <- ncol(X_cov)
@@ -2475,12 +2500,18 @@ precompute_alpha1_directional <- function(graph, data_name = NULL, manual_y = NU
   precomputed$PtE_data <- list()
   precomputed$no_na_indices <- list() # Store indices of non-NA observations
 
+  # Row indices per replicate, built in one pass. Testing
+  # `repl_vec == curr_repl` inside the loop rescans every observation once
+  # per replicate, which is O(n_replicates * n_obs).
+  repl_rows <- split(seq_along(repl_vec),
+                     factor(match(repl_vec, u_repl),
+                            levels = seq_along(u_repl)))
   for(i in seq_along(u_repl)) {
     curr_repl <- u_repl[i]
     # Use character names for replicate indices
     repl_name <- paste0("repl_", curr_repl)
 
-    ind_repl <- (repl_vec == curr_repl)
+    ind_repl <- repl_rows[[i]]
     y_rep <- y_resp[ind_repl]
 
     precomputed$y_data[[repl_name]] <- list()

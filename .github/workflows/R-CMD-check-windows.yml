@@ -16,6 +16,11 @@ on:
 
 name: R-CMD-check-windows
 
+# A new push to the same branch cancels a run that is still going.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   R-CMD-check-windows:
     runs-on: ${{ matrix.config.os }}

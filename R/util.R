@@ -732,6 +732,36 @@ exp_covariance <- function(h, theta){
 
 #' Processing data to be used in add_observations
 #' @noRd
+#' Index each (edge, distance) pair among the sorted unique pairs
+#'
+#' Equivalent to matching a pasted `"edge|distance"` key against the sorted
+#' unique keys, but done by sorting instead of by building one character string
+#' per observation. The string form allocates an R string per row, which
+#' dominates memory when the data holds many replicates of a handful of
+#' locations. `NA` is treated as equal to `NA`, as `paste()` does.
+#' @noRd
+location_codes <- function(e, d) {
+  n <- length(e)
+  if (n == 0L) return(list(idx = integer(0), n_unique = 0L))
+  o <- order(e, d)
+  es <- e[o]; ds <- d[o]
+  if (n == 1L) {
+    idx <- integer(1L); idx[o] <- 1L
+    return(list(idx = idx, n_unique = 1L))
+  }
+  eq <- function(a, b) {
+    r <- (a == b)
+    r[is.na(a) & is.na(b)] <- TRUE
+    r[is.na(r)] <- FALSE
+    r
+  }
+  same <- eq(es[-1L], es[-n]) & eq(ds[-1L], ds[-n])
+  is_new <- c(TRUE, !same)
+  idx <- integer(n)
+  idx[o] <- cumsum(is_new)
+  list(idx = idx, n_unique = sum(is_new))
+}
+
 process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress_warnings) {
   new_data[[".edge_number"]] <- PtE[, 1]
   new_data[[".distance_on_edge"]] <- PtE[, 2]
@@ -789,16 +819,25 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
 
   # --- Sparse merge: store only actual (loc, group) pairs, no Cartesian expansion ---
   # New data takes priority; old entries at the same (loc, group) are dropped.
-  sep <- "|"
-  new_key <- paste(PtE[, 1], PtE[, 2], group_vector, sep = sep)
-
+  # The (location, group) identity is encoded as an integer rather than as a
+  # pasted string, so no per-observation strings are allocated.
   if (!is.null(old_data)) {
-    old_key <- paste(old_data[[".edge_number"]], old_data[[".distance_on_edge"]],
-                     old_data[[".group"]], sep = sep)
-    if (!suppress_warnings && any(old_key %in% new_key)) {
+    n_new_rows <- nrow(PtE)
+    e_cat <- c(PtE[, 1], old_data[[".edge_number"]])
+    d_cat <- c(PtE[, 2], old_data[[".distance_on_edge"]])
+    g_cat <- c(group_vector, old_data[[".group"]])
+
+    lc <- location_codes(e_cat, d_cat)
+    g_code <- match(g_cat, unique(g_cat))
+    key_code <- lc$idx + lc$n_unique * (g_code - 1L)
+
+    new_code <- key_code[seq_len(n_new_rows)]
+    old_code <- key_code[-seq_len(n_new_rows)]
+
+    if (!suppress_warnings && any(old_code %in% new_code)) {
       warning("Conflicting data detected. New data may overwrite existing data.")
     }
-    keep_old <- !old_key %in% new_key
+    keep_old <- !old_code %in% new_code
   } else {
     keep_old <- logical(0)
   }
@@ -820,13 +859,10 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
   all_dists  <- all_dists[ord]
   all_groups <- all_groups[ord]
 
-  # .loc_idx: each row maps to its sorted unique-(edge,dist) position
-  # Unique locations sorted numerically for stable downstream use.
-  uloc_df  <- unique(data.frame(e = all_edges, d = all_dists))
-  uloc_df  <- uloc_df[order(uloc_df$e, uloc_df$d), , drop = FALSE]
-  uloc_key <- paste(uloc_df$e, uloc_df$d, sep = sep)
-  row_key  <- paste(all_edges, all_dists, sep = sep)
-  loc_idx  <- match(row_key, uloc_key)
+  # .loc_idx: each row maps to its sorted unique-(edge,dist) position.
+  # `unique(data.frame(...))` pastes every row into a string internally, so it
+  # is replaced here by the same sort-based coding.
+  loc_idx <- location_codes(all_edges, all_dists)$idx
 
   n_result <- length(all_edges)
 
@@ -2095,29 +2131,57 @@ filter_spatial_obs_groups <- function(graph, PtE, point_coords, grp_dat,
   n_grps      <- length(unique_grps)
   n_total     <- nrow(PtE)
 
-  PtE_list     <- vector("list", n_grps)
-  norm_list    <- vector("list", n_grps)
-  far_list     <- vector("list", n_grps)
-  closest_list <- vector("list", n_grps)
+  # Row indices for every group, in one pass. Looking them up inside the loop
+  # with `which(grp_dat == grp)` rescans all rows once per group, which is
+  # O(n_groups * n_rows) and dominates the cost as soon as the data has many
+  # replicates. `match()` keeps the groups in order of first appearance, which
+  # is the order `unique()` returns and the order the masks below are
+  # concatenated in.
+  idx_by_grp <- split(seq_along(grp_dat),
+                      factor(match(grp_dat, unique_grps),
+                             levels = seq_len(n_grps)))
+
+  # Results are written into preallocated vectors rather than collected as one
+  # small object per group and combined with `do.call(rbind, ...)` at the end.
+  # With many replicates that built tens of thousands of small matrices and
+  # then copied them all again, which dominated the transient memory use.
+  PtE_out      <- matrix(NA_real_, nrow = n_total, ncol = ncol(PtE))
+  norm_out     <- numeric(n_total)
+  far_out      <- logical(n_total)
+  closest_out  <- logical(n_total)
+  n_out        <- 0L   # rows written to PtE_out / norm_out
+  n_far        <- 0L   # entries written to far_out
+  n_closest    <- 0L   # entries written to closest_out
   has_dup      <- FALSE
 
+  # Projecting the observations back onto the graph and measuring how far they
+  # moved are both row-wise: neither depends on which group a row belongs to.
+  # Doing them once for all rows and subsetting afterwards gives the same
+  # numbers as doing them group by group, but does not repeat identical work
+  # for every replicate (with replicated designs every group holds the same
+  # locations).
+  XY_new_all <- graph$coordinates(PtE = PtE, normalized = TRUE)
+  norm_XY_all <- compute_aux_distances(
+    lines = point_coords, points = XY_new_all,
+    crs = crs, longlat = longlat, proj4string = proj4string,
+    fact = fact, which_longlat = which_longlat,
+    length_unit = length_unit, transform = transform
+  )
+  far_all <- norm_XY_all > tolerance
+
+
   for (gi in seq_along(unique_grps)) {
-    grp     <- unique_grps[gi]
-    idx_grp <- which(grp_dat == grp)
+    idx_grp <- idx_by_grp[[gi]]
 
     PtE_grp         <- PtE[idx_grp, , drop = FALSE]
     point_coords_grp <- point_coords[idx_grp, , drop = FALSE]
-    XY_new_grp      <- graph$coordinates(PtE = PtE_grp, normalized = TRUE)
+    XY_new_grp      <- XY_new_all[idx_grp, , drop = FALSE]
 
-    norm_XY_grp <- compute_aux_distances(
-      lines = point_coords_grp, points = XY_new_grp,
-      crs = crs, longlat = longlat, proj4string = proj4string,
-      fact = fact, which_longlat = which_longlat,
-      length_unit = length_unit, transform = transform
-    )
+    norm_XY_grp <- norm_XY_all[idx_grp]
 
-    far_grp <- norm_XY_grp > tolerance
-    far_list[[gi]] <- far_grp  # original group size
+    far_grp <- far_all[idx_grp]
+    far_out[n_far + seq_along(far_grp)] <- far_grp  # original group size
+    n_far <- n_far + length(far_grp)
 
     # Filter far points
     ok           <- !far_grp
@@ -2171,16 +2235,23 @@ filter_spatial_obs_groups <- function(graph, PtE, point_coords, grp_dat,
     }
 
     keep_final       <- !closest_grp
-    PtE_list[[gi]]   <- PtE_grp[keep_final, , drop = FALSE]
-    norm_list[[gi]]  <- norm_XY_grp[keep_final]
-    closest_list[[gi]] <- closest_grp
+    closest_out[n_closest + seq_along(closest_grp)] <- closest_grp
+    n_closest <- n_closest + length(closest_grp)
+
+    n_keep <- sum(keep_final)
+    if (n_keep > 0L) {
+      slot <- n_out + seq_len(n_keep)
+      PtE_out[slot, ]  <- PtE_grp[keep_final, , drop = FALSE]
+      norm_out[slot]   <- norm_XY_grp[keep_final]
+      n_out <- n_out + n_keep
+    }
   }
 
   list(
-    PtE          = do.call(rbind, PtE_list),
-    far_mask     = unlist(far_list),           # length = n_total
-    norm_XY      = unlist(norm_list),           # length = sum(!far & !closest)
-    closest_mask = unlist(closest_list),        # length = sum(!far)
+    PtE          = PtE_out[seq_len(n_out), , drop = FALSE],
+    far_mask     = far_out[seq_len(n_far)],          # length = n_total
+    norm_XY      = norm_out[seq_len(n_out)],         # length = sum(!far & !closest)
+    closest_mask = closest_out[seq_len(n_closest)],  # length = sum(!far)
     has_dup      = has_dup
   )
 }

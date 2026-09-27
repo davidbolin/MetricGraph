@@ -666,6 +666,11 @@ metric_graph <-  R6Class("metric_graph",
                         tolerance$vertex_edge,
                         tolerance$edge_edge))
 
+       # Upper bound on the vertex-to-edge snapping rounds (see below). Two
+       # rounds are enough in practice; the cap only guards against a
+       # pathological input that never settles.
+       max_snap_rounds <- 10L
+
        private$tolerance <- tolerance
 
        PtE_tmp_edge_edge <- NULL
@@ -862,42 +867,53 @@ metric_graph <-  R6Class("metric_graph",
                message("Snap vertices to close edges")
              }
 
-             t <- system.time(
-               PtE_tmp <- private$coordinates_multiple_snaps(XY = self$V,
-                                                             tolerance = tolerance$vertex_edge,
-                                                             verbose = verbose,
-                                                             crs=private$crs,
-                                                             proj4string = private$proj4string,
-                                                             longlat=private$longlat,
-                                                             fact = factor_unit,
-                                                             which_longlat = which_longlat)
-             )
+             # Snapping is repeated until it stops finding work. A single sweep
+             # is not enough: the candidate set is built before any edge is
+             # split, so the vertices the sweep itself creates, and the
+             # sub-edges it produces, are never tested against each other.
+             # Without this the result depends on how many times the pipeline
+             # happens to be run over the same graph.
+             for (snap_round in seq_len(max_snap_rounds)) {
+               t <- system.time(
+                 PtE_tmp <- private$coordinates_multiple_snaps(XY = self$V,
+                                                               tolerance = tolerance$vertex_edge,
+                                                               verbose = verbose,
+                                                               crs=private$crs,
+                                                               proj4string = private$proj4string,
+                                                               longlat=private$longlat,
+                                                               fact = factor_unit,
+                                                               which_longlat = which_longlat)
+               )
 
-             if(verbose == 2){
-               message(sprintf("time: %.3f s", t[["elapsed"]]))
-             }
-             edge_length_filter <- self$edge_lengths[PtE_tmp[,1]]
-
-             filter_tol <- ((PtE_tmp[,2] > max_tol/edge_length_filter) &
-                              (PtE_tmp[,2] < 1- max_tol/edge_length_filter))
-
-             PtE_tmp <- PtE_tmp[filter_tol,,drop = FALSE]
-             PtE_tmp <- unique(PtE_tmp)
-             PtE_tmp <- PtE_tmp[order(PtE_tmp[,1], PtE_tmp[,2]),,drop = FALSE]
-
-             if(!is.null(PtE_tmp)){
-               if(nrow(PtE_tmp) == 0){
-                 PtE_tmp <- NULL
+               if(verbose == 2){
+                 message(sprintf("time: %.3f s", t[["elapsed"]]))
                }
-             }
+               edge_length_filter <- self$edge_lengths[PtE_tmp[,1]]
 
-             if(!is.null(PtE_tmp)){
+               filter_tol <- ((PtE_tmp[,2] > max_tol/edge_length_filter) &
+                                (PtE_tmp[,2] < 1- max_tol/edge_length_filter))
+
+               PtE_tmp <- PtE_tmp[filter_tol,,drop = FALSE]
+               PtE_tmp <- unique(PtE_tmp)
+               PtE_tmp <- PtE_tmp[order(PtE_tmp[,1], PtE_tmp[,2]),,drop = FALSE]
+
+               if(!is.null(PtE_tmp)){
+                 if(nrow(PtE_tmp) == 0){
+                   PtE_tmp <- NULL
+                 }
+               }
+
+               if(is.null(PtE_tmp)){
+                 break
+               }
+
                if(verbose == 2){
                  message(sprintf("Add %d new vertices", nrow(PtE_tmp)))
                }
 
                PtE_tmp <- na.omit(PtE_tmp)
 
+               nE_before <- self$nE
                t <- system.time(
                  private$add_vertices(PtE_tmp, tolerance = tolerance$vertex_edge,
                                       verbose=verbose)
@@ -905,6 +921,18 @@ metric_graph <-  R6Class("metric_graph",
 
                if(verbose == 2){
                  message(sprintf("time: %.3f s", t[["elapsed"]]))
+               }
+
+               private$clear_initial_info()
+
+               if(self$nE == nE_before){
+                 break
+               }
+               if(snap_round == max_snap_rounds){
+                 warning(paste("Snapping vertices to edges did not stabilize after",
+                               max_snap_rounds,
+                               "rounds. The graph may still contain vertices lying within",
+                               "'vertex_edge' of an edge they are not connected to."))
                }
              }
              private$clear_initial_info()
@@ -7539,17 +7567,35 @@ larger than 1")
          }
          return(Points)
        } else {
-         SP <- snapPointsToLines(XY, self$edges, longlat = private$longlat, crs = private$crs)
-         # coords.old <- XY
-         # colnames(coords.old) <- paste(colnames(coords.old), '_old', sep="")
-         XY = t(SP[["coords"]])
+         XY <- as.matrix(XY)
+         # Snapping depends only on the coordinates, so repeated locations are
+         # snapped once and the answer copied back. Data with replicates holds
+         # the same locations once per replicate, and snapping each copy again
+         # is the dominant cost there.
+         XY_codes <- location_codes(XY[, 1], XY[, 2])$idx
+         first_of <- !duplicated(XY_codes)
+         if (any(duplicated(XY_codes))) {
+           XY_unique <- XY[first_of, , drop = FALSE]
+           expand <- match(XY_codes, XY_codes[first_of])
+         } else {
+           XY_unique <- XY
+           expand <- NULL
+         }
+
+         SP <- snapPointsToLines(XY_unique, self$edges, longlat = private$longlat,
+                                 crs = private$crs)
+         XY_snapped <- t(SP[["coords"]])
          PtE <- cbind(match(SP[["df"]][["nearest_line_index"]], 1:length(self$edges)), 0)
 
          for (ind in unique(PtE[, 1])) {
            index.p <- PtE[, 1] == ind
-           PtE[index.p,2]=projectVecLine2(self$edges[[ind]], XY[index.p, , drop=FALSE],
+           PtE[index.p,2]=projectVecLine2(self$edges[[ind]], XY_snapped[index.p, , drop=FALSE],
                                           normalized=TRUE)
 
+         }
+
+         if (!is.null(expand)) {
+           PtE <- PtE[expand, , drop = FALSE]
          }
 
          if (!normalized) {
@@ -9539,19 +9585,28 @@ turned to vertices and the A matrix will then be computed")
            bar_eu$increment()
          }
          dists <- sort(PtE[which(PtE[,1]==e.u[i]),2])
-         if(length(dists) > 0){
-           if(dists[1] > tolerance){
-             private$split_edge(e.u[i], dists[1])
+         if(length(dists) == 0){
+           next
+         }
+         # `dists` holds positions normalized to [0, 1], while `tolerance` is a
+         # length, so the two have to be brought to the same units before being
+         # compared. The edge length is read before the edge is split, since
+         # splitting rewrites `edge_lengths[e.u[i]]`.
+         edge_len_i <- as.numeric(self$edge_lengths[e.u[i]])
+         keep <- logical(length(dists))
+         last_kept <- 0
+         for (j in seq_along(dists)) {
+           if ((dists[j] - last_kept) * edge_len_i > tolerance) {
+             keep[j] <- TRUE
+             last_kept <- dists[j]
            }
          }
-         if(length(dists)>1) {
-           dists_up <- dists
-           for(j in 2:length(dists)){
-             dists_up[j] <- (dists[j] - dists[j-1])/(1 - dists[j-1])
-             if(dists_up[j] > tolerance){
-               private$split_edge(self$nE, dists_up[j])
-             }
-           }
+         if (any(keep)) {
+           # `split_edge()` takes all the positions at once. Splitting one at a
+           # time and chaining the next split off `self$nE` breaks as soon as a
+           # position is dropped above, because `self$nE` is then an unrelated
+           # edge rather than the remainder of this one.
+           private$split_edge(e.u[i], dists[keep])
          }
        }
        return(self)

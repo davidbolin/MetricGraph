@@ -1,5 +1,32 @@
 # MetricGraph (development version)
 
+* `add_observations()` is now much faster with many replicates. Row indices are 
+  now built in one pass and the row-wise quantities computed once. 
+  `process_data_add_obs()` also stopped identifying locations and (location, group) 
+  pairs by pasted character keys, the same information is now encoded as integers 
+  by sorting. 
+* Fixed `add_observations()` failing with "has a different number of elements
+  than the number of coordinates" when the grouping variable contained `NA`.
+  Such rows are now kept, with `NA` as their group.
+* The likelihood functions no longer locate the rows of each replicate with
+  `repl_vec == curr_repl` inside the loop over replicates, which rescanned
+  every observation once per replicate. 
+* Fixed the vertex-to-edge snapping in `metric_graph$new()`, which decided
+  whether to split an edge by comparing a position normalized to \[0, 1\]
+  against `tolerance$vertex_edge`, which is a length. The verdict therefore
+  depended on the edge length: junctions on long edges were missed, and the
+  same graph rebuilt from its own edges could gain edges. `add_vertices()` now
+  compares both quantities as lengths.
+* Fixed `add_vertices()` splitting the wrong edge. Splits were applied one at a
+  time, with each one chained off `self$nE`; if a split was skipped, `self$nE`
+  was an unrelated edge and that edge was split instead. All positions accepted
+  for an edge are now passed to `split_edge()` in a single call.
+* Vertex-to-edge snapping is now repeated until it stops finding work (at most
+  `10` rounds). A single sweep builds its candidate set before any edge is
+  split, so the vertices and sub-edges the sweep itself creates were never
+  tested. Over 160 randomly generated graphs the number of junctions within
+  `vertex_edge` that should have been split but were not fell from 532 to 23.
+
 * `fetch_osm()` and `metric_graph_from_osm()` retry transient Overpass failures
   (HTTP 429/5xx and connection errors) with exponential backoff, controlled by
   the new `retries` argument, and `endpoint` may now be a vector of mirrors
