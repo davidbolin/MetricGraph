@@ -37,7 +37,7 @@ void set_diff(std::vector<int> &A, std::vector<int> &B, std::vector<int> &C) {
 //' @noRd
 //'
 // [[Rcpp::export]]
-Rcpp::List c_basis2_old(Eigen::MappedSparseMatrix<double> A,
+Rcpp::List c_basis2_old(Eigen::Map<Eigen::SparseMatrix<double>> A,
                         double eps_limit = 1e-10) {
 
   Eigen::PermutationMatrix<Eigen::Dynamic, Eigen::Dynamic> P(A.cols());
@@ -45,7 +45,7 @@ Rcpp::List c_basis2_old(Eigen::MappedSparseMatrix<double> A,
   std::vector<int> index(0);
   int counter = 0;
   for (int k = 0; k < A.outerSize(); ++k) {
-    for (Eigen::MappedSparseMatrix<double>::InnerIterator it(A, k); it; ++it) {
+    for (Eigen::Map<Eigen::SparseMatrix<double>>::InnerIterator it(A, k); it; ++it) {
       index.push_back(k);
       std::swap(P.indices()[counter], P.indices()[k]);
       counter++;

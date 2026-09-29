@@ -790,16 +790,16 @@ Rcpp::List c_basis2_directional_graph(
 //   cluster.n       – sizes of all subclusters
 //
 // [[Rcpp::export]]
-Rcpp::List c_basis2(Eigen::MappedSparseMatrix<double> A,
+Rcpp::List c_basis2(Eigen::Map<Eigen::SparseMatrix<double>> A,
                     double eps_limit = 1e-10) {
     int nC    = A.rows();
     int n_dof = A.cols();
 
     // ---- Build row_entries (col, val) for each row  ----
-    // A is column-major MappedSparseMatrix; iterate by outer (= columns).
+    // A is column-major Map<SparseMatrix>; iterate by outer (= columns).
     std::vector<std::vector<std::pair<int,double>>> row_entries(nC);
     for (int col = 0; col < A.outerSize(); ++col) {
-        for (Eigen::MappedSparseMatrix<double>::InnerIterator it(A, col);
+        for (Eigen::Map<Eigen::SparseMatrix<double>>::InnerIterator it(A, col);
              it; ++it) {
             row_entries[it.row()].push_back({col, it.value()});
         }
