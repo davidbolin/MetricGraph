@@ -38,7 +38,7 @@ The **restricted likelihood** (REML) further penalises by $-\frac{1}{2}\log|H_\t
 removing the contribution of $\hat\beta$ to the curvature.
 
 This vignette uses the Middle Fork river network from the `SSN2` package
-[@Peterson2010] (introduced in the [River graph example](river_example.html))
+[@SSN2JOSS] (introduced in the [River graph example](river_example.html))
 with **simulated covariates and response** to demonstrate the profile-likelihood
 API at realistic scales ($n \in \{200, 400\}$, $p \in \{5, 10\}$) using the
 directional $\alpha = 1$ Whittle--Matérn model.

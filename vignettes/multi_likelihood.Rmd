@@ -245,11 +245,11 @@ We begin by loading `inlabru` library and setting up the likelihoods. To this en
 ```{r}
 library(inlabru)
 
-lik1 <- like(formula = y ~ intercept_1 + field,
-            data=data_spde_bru[[1]][["data"]])
+lik1 <- inlabru::bru_obs(formula = y ~ intercept_1 + field,
+            data=data_spde_bru[[1]][["data"]], is_rowwise = TRUE)
 
-lik2 <- like(formula = y ~ intercept_2 + field,
-            data=data_spde_bru[[2]][["data"]])            
+lik2 <- inlabru::bru_obs(formula = y ~ intercept_2 + field,
+            data=data_spde_bru[[2]][["data"]], is_rowwise = TRUE)
 ```
 
 Now, we create the model component:
@@ -538,11 +538,11 @@ repl <- data_spde_bru_repl[["repl"]]
 
 Let us now construct the likelihoods:
 ```{r}
-lik1_repl <- like(formula = y ~ intercept_1 + field,
-            data=data_spde_bru_repl[[1]][["data"]])
+lik1_repl <- inlabru::bru_obs(formula = y ~ intercept_1 + field,
+            data=data_spde_bru_repl[[1]][["data"]], is_rowwise = TRUE)
 
-lik2_repl <- like(formula = y ~ intercept_2 + field,
-            data=data_spde_bru_repl[[2]][["data"]])            
+lik2_repl <- inlabru::bru_obs(formula = y ~ intercept_2 + field,
+            data=data_spde_bru_repl[[2]][["data"]], is_rowwise = TRUE)
 ```
 
 Now, we create the model component, using the replicates index we obtained above:

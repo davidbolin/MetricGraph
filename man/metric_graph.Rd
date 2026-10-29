@@ -767,8 +767,8 @@ distances are stored in the \code{geo_dist} element of the \code{metric_graph} o
 \if{html}{\out{<a id="method-metric_graph-compute_geodist_PtE"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-compute_geodist_PtE}{}}}
 \subsection{\code{metric_graph$compute_geodist_PtE()}}{
-  Computes shortest path distances between the vertices in the
-graph.
+  Computes shortest path distances among points on graph
+edges, preserving the input order and duplicate points.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{metric_graph$compute_geodist_PtE(
@@ -782,8 +782,8 @@ graph.
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{PtE}}{Points to compute the metric for.}
-      \item{\code{normalized}}{are the locations in PtE in normalized distance?}
+      \item{\code{PtE}}{Two-column matrix of edge numbers and positions on edges.}
+      \item{\code{normalized}}{Are edge positions fractions of edge length?}
       \item{\code{include_vertices}}{Should the original vertices be included in the
 distance matrix?}
       \item{\code{verbose}}{Print progress of the computation of the geodesic distances.
@@ -795,7 +795,8 @@ The default is 1.}
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    A matrix containing the geodesic distances.
+    A distance matrix with one row and column per input point, plus one
+per graph vertex at the beginning if \code{include_vertices} is TRUE.
   }
 }
 

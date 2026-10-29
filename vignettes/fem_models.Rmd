@@ -370,7 +370,7 @@ Let us create the model object:
   rspde_model <- rspde.metric_graph(graph)
 ```
 
-By default, the order of the rational approximation is 2.
+By default, the order of the rational approximation is 1.
 
 We can now create the auxiliary quantities that will be needed with the `graph_data_rspde()` function:
 ```{r}

@@ -132,31 +132,27 @@ test_that("geodist_PtE: triangle inequality holds", {
 
 # ---- duplicate handling --------------------------------------------------- #
 
-test_that("geodist_PtE: true duplicates produce warning and reduced matrix", {
+test_that("geodist_PtE: true duplicates retain input rows", {
   g <- shared_L_graph()
   PtE <- cbind(c(1, 1, 2), c(0.3, 0.3, 0.6))
-  expect_warning(
-    D <- g$compute_geodist_PtE(PtE, normalized = TRUE,
-                                include_vertices = FALSE, verbose = 0),
-    "Duplicated locations"
-  )
-  expect_equal(dim(D), c(2, 2))
+  D <- g$compute_geodist_PtE(PtE, normalized = TRUE,
+                              include_vertices = FALSE, verbose = 0)
+  expect_equal(dim(D), c(3, 3))
+  expect_equal(D[1, 2], 0)
 })
 
 # ---- boundary duplicate regression --------------------------------------- #
 # Points that are unique in PtE but map to the same vertex after
 # standardize_df_positions().
 
-test_that("geodist_PtE: boundary points at shared vertex detected as duplicates", {
+test_that("geodist_PtE: shared boundary points retain input rows", {
   g <- shared_L_graph()
   # Vertex 2 = (1,0) is the end of edge 1 (pos=1) and start of edge 2 (pos=0).
   PtE <- cbind(c(1, 2, 1), c(1.0, 0.0, 0.5))
-  expect_warning(
-    D <- g$compute_geodist_PtE(PtE, normalized = TRUE,
-                                include_vertices = FALSE, verbose = 0),
-    "Duplicated locations"
-  )
-  expect_equal(dim(D), c(2, 2))
+  D <- g$compute_geodist_PtE(PtE, normalized = TRUE,
+                              include_vertices = FALSE, verbose = 0)
+  expect_equal(dim(D), c(3, 3))
+  expect_equal(D[1, 2], 0)
 })
 
 test_that("geodist_PtE: unique boundary points at different vertices give full matrix", {
@@ -178,20 +174,18 @@ test_that("geodist_PtE: star tips are truly unique boundary points", {
   expect_equal(dim(D), c(g$nE, g$nE))
 })
 
-test_that("geodist_PtE: star center duplicates are collapsed", {
+test_that("geodist_PtE: star center duplicates retain input rows", {
   g <- metric_graph$new(edges = make_star(5), perform_merges = TRUE,
                         check_connected = FALSE, verbose = 0)
   # 5 points all at the center vertex (pos=0 on each edge) + 1 at a tip
   PtE <- cbind(c(seq_len(g$nE), 1), c(rep(0.0, g$nE), 0.5))
-  expect_warning(
-    D <- g$compute_geodist_PtE(PtE, normalized = TRUE,
-                                include_vertices = FALSE, verbose = 0),
-    "Duplicated locations"
-  )
-  expect_equal(dim(D), c(2, 2))
+  D <- g$compute_geodist_PtE(PtE, normalized = TRUE,
+                              include_vertices = FALSE, verbose = 0)
+  expect_equal(dim(D), c(g$nE + 1L, g$nE + 1L))
+  expect_equal(D[1:g$nE, 1:g$nE], matrix(0, g$nE, g$nE))
 })
 
-test_that("geodist_PtE: nrow equals unique standardized points", {
+test_that("geodist_PtE: nrow equals number of input points", {
   g <- metric_graph$new(edges = make_triangle(), perform_merges = TRUE,
                         check_connected = FALSE, verbose = 0)
   set.seed(123)
@@ -206,14 +200,10 @@ test_that("geodist_PtE: nrow equals unique standardized points", {
     c(1, 0, 1, 0, 1, 0)
   )
   PtE <- rbind(PtE_interior, PtE_boundary)
-  expect_warning(
-    D <- g$compute_geodist_PtE(PtE, normalized = TRUE,
-                                include_vertices = FALSE, verbose = 0),
-    "Duplicated locations"
-  )
-  # 20 interior + 6 boundary that collapse to 3 unique vertices = 23
-  expect_equal(nrow(D), n + 3)
-  expect_equal(ncol(D), n + 3)
+  D <- g$compute_geodist_PtE(PtE, normalized = TRUE,
+                              include_vertices = FALSE, verbose = 0)
+  expect_equal(nrow(D), n + 6)
+  expect_equal(ncol(D), n + 6)
 })
 
 # ---- single point -------------------------------------------------------- #
@@ -317,15 +307,12 @@ test_that("compute_geodist handles boundary duplicates across edges", {
   # Place observations at the shared vertex via different edges
   PtE <- cbind(c(1, 2, 1), c(1.0, 0.0, 0.5))
   add_obs_to_graph(g, PtE)
-  # After standardization inside compute_geodist_PtE, (1,1.0) and (2,0.0)
-  # both map to vertex 2; only 2 unique locations remain.
-  expect_warning(
-    g$compute_geodist(obs = TRUE, all_groups = TRUE,
-                      include_vertices = FALSE, verbose = 0),
-    "Duplicated locations"
-  )
+  # Both representations of the shared vertex remain in the result.
+  g$compute_geodist(obs = TRUE, all_groups = TRUE,
+                    include_vertices = FALSE, verbose = 0)
   D <- g$geo_dist[[".complete"]]
-  expect_equal(dim(D), c(2, 2))
+  expect_equal(dim(D), c(3, 3))
+  expect_true(any(D[upper.tri(D)] == 0))
 })
 
 # ============================================================================ #

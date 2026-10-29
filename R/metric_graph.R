@@ -2112,10 +2112,10 @@ metric_graph <-  R6Class("metric_graph",
          }
        }
      },
-     #' @description Computes shortest path distances between the vertices in the
-     #' graph.
-     #' @param PtE Points to compute the metric for.
-     #' @param normalized are the locations in PtE in normalized distance?
+     #' @description Computes shortest path distances among points on graph
+     #' edges, preserving the input order and duplicate points.
+     #' @param PtE Two-column matrix of edge numbers and positions on edges.
+     #' @param normalized Are edge positions fractions of edge length?
      #' @param include_vertices Should the original vertices be included in the
      #' distance matrix?
      #' @param verbose Print progress of the computation of the geodesic distances.
@@ -2123,118 +2123,72 @@ metric_graph <-  R6Class("metric_graph",
      #' are printed. In level 1, only messages regarding important steps are printed.
      #' Finally, in level 2, messages detailing all the steps are printed.
      #' The default is 1.
-     #' @return A matrix containing the geodesic distances.
+     #' @return A distance matrix with one row and column per input point,
+     #' plus one per graph vertex at the beginning if include_vertices is TRUE.
      compute_geodist_PtE = function(PtE,
                                     normalized = TRUE,
-                                    include_vertices = TRUE, verbose = 0){
-       if(verbose == 2){
-         message("Processing the graph locations...")
+                                    include_vertices = TRUE, verbose = 0) {
+       PtE <- as.matrix(PtE)
+       if (!is.numeric(PtE) || ncol(PtE) != 2L || anyNA(PtE) ||
+           any(!is.finite(PtE))) {
+         stop("PtE must be a finite two-column numeric matrix.")
        }
-       t <- system.time({
-         graph.temp <- self$clone()
-         graph.temp$clear_observations()
-         df_temp <- data.frame(y = rep(0, dim(PtE)[1]),
-                               edge_number = PtE[,1],
-                               distance_on_edge = PtE[,2])
+       edge <- PtE[, 1]
+       if (any(edge != as.integer(edge)) || any(edge < 1L) ||
+           any(edge > nrow(self$E))) {
+         stop("PtE contains an invalid edge number.")
+       }
+       edge <- as.integer(edge)
+       edge_length <- self$edge_lengths[edge]
+       position <- PtE[, 2]
+       if (normalized) position <- position * edge_length
+       if (any(position < -1e-10) ||
+           any(position > edge_length + 1e-10)) {
+         stop("PtE contains a position outside its edge.")
+       }
+       position <- pmax(0, pmin(position, edge_length))
 
-         df_temp <- standardize_df_positions(df_temp, self)
-
-         if(sum(duplicated(df_temp))>0){
-           warning("Duplicated locations were found when computing geodist. The returned values are given for unique locations.")
-           df_temp <- unique(df_temp)
-         }
-
-         graph.temp$build_mesh(h = 10000)
-
-         df_temp2 <- data.frame(y = 0,
-                                edge_number = graph.temp$mesh$VtE[1:nrow(self$V),1],
-                                distance_on_edge = graph.temp$mesh$VtE[1:nrow(self$V),2])
-
-         df_temp2 <- standardize_df_positions(df_temp2, self)
-
-         df_temp$included <- TRUE
-         temp_merge <- merge(df_temp, df_temp2, all = TRUE)
-
-         df_temp$included <- NULL
-
-         df_temp2 <- temp_merge[is.na(temp_merge["included"]),]
-
-         nV_new <- sum(is.na(temp_merge["included"]))
-
-         df_temp2$included <- NULL
-
-         df_temp <- rbind(df_temp2, df_temp)
-
-         df_temp[["__dummy"]] <- 1:nrow(df_temp)
-
-         graph.temp$add_observations(data = df_temp,
-                                     normalized = normalized,
-                                     verbose=0,
-                                     suppress_warnings = TRUE)
-
-       })
-
-       if(verbose == 2){
-         message(sprintf("time: %.3f s", t[["elapsed"]]))
+       if (verbose > 0) message("Computing geodesic distances...")
+       g <- make_graph(edges = c(t(self$E)), directed = FALSE)
+       E(g)$weight <- self$edge_lengths
+       if (igraph::vcount(g) < nrow(self$V)) {
+         g <- igraph::add_vertices(g, nrow(self$V) - igraph::vcount(g))
+       }
+       vertex_dist <- distances(g)
+       n <- nrow(PtE)
+       if (n == 0L) {
+         out <- if (include_vertices) vertex_dist else matrix(numeric(0), 0, 0)
+         attr(out, "unit") <- private$length_unit
+         return(out)
        }
 
-       if(verbose == 2){
-         message("Turning observations of the auxiliary graph to vertices...")
+       from <- self$E[edge, 1]
+       to <- self$E[edge, 2]
+       remaining <- edge_length - position
+       point_dist <- matrix(0, n, n)
+       for (i in seq_len(n)) {
+         point_dist[i, ] <- pmin(
+           vertex_dist[from[i], from] + position[i] + position,
+           vertex_dist[from[i], to] + position[i] + remaining,
+           vertex_dist[to[i], from] + remaining[i] + position,
+           vertex_dist[to[i], to] + remaining[i] + remaining
+         )
+         same_edge <- edge == edge[i]
+         point_dist[i, same_edge] <- pmin(point_dist[i, same_edge],
+                                          abs(position[i] - position[same_edge]))
        }
-       t <- system.time(
-         graph.temp$observation_to_vertex(mesh_warning = FALSE)
-       )
-       if(verbose == 2){
-         message(sprintf("time: %.3f s", t[["elapsed"]]))
+       if (include_vertices) {
+         vertex_to_point <- pmin(
+           sweep(vertex_dist[, from, drop = FALSE], 2, position, "+"),
+           sweep(vertex_dist[, to, drop = FALSE], 2, remaining, "+")
+         )
+         out <- rbind(cbind(vertex_dist, vertex_to_point),
+                      cbind(t(vertex_to_point), point_dist))
+       } else {
+         out <- point_dist
        }
-       if(verbose == 2){
-         message("Creating auxiliary graph...")
-       }
-       t <- system.time({
-         g <- make_graph(edges = c(t(graph.temp$E)), directed = FALSE)
-         E(g)$weight <- graph.temp$edge_lengths
-       })
-       if(verbose == 2){
-         message(sprintf("time: %.3f s", t[["elapsed"]]))
-       }
-       if(verbose>0){
-         message("Computing geodesic distances...")
-       }
-       t <- system.time(
-         geodist_temp <- distances(g)
-       )
-       if(verbose == 2){
-         message(sprintf("time: %.3f s", t[["elapsed"]]))
-       }
-
-       if(length(graph.temp$PtV)[1]!=nrow(geodist_temp)){
-         un_PtV <- unique(graph.temp$PtV)
-         un_coords <- !duplicated(graph.temp$PtV)
-
-         geodist_temp <- geodist_temp[un_PtV, un_PtV]
-
-         tmp_vec <- graph.temp$.__enclos_env__$private$data[["__dummy"]][un_coords]
-
-         un_ord <- order(tmp_vec)
-
-         tmp_vec[un_ord] <- 1:length(tmp_vec)
-         #Ordering back in the input order
-         geodist_temp[tmp_vec,tmp_vec] <- geodist_temp
-       } else{
-         geodist_temp <- geodist_temp[graph.temp$PtV, graph.temp$PtV]
-         #Ordering back in the input order
-         geodist_temp[graph.temp$.__enclos_env__$private$data[["__dummy"]],
-                      graph.temp$.__enclos_env__$private$data[["__dummy"]]] <- geodist_temp
-       }
-
-       if(!include_vertices){
-         geodist_temp <- geodist_temp[(nV_new+1):nrow(geodist_temp),
-                                      (nV_new+1):nrow(geodist_temp)]
-       }
-
-       attr(geodist_temp, "unit") <- private$length_unit
-
-       return(geodist_temp)
+       attr(out, "unit") <- private$length_unit
+       out
      },
 
      #' @description Computes shortest path distances between the vertices in the

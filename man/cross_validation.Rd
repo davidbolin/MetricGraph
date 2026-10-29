@@ -73,8 +73,9 @@ or \verb{Model 1}, \verb{Model 2}, ... if absent.}
 
 \item{n_cores_RP}{Number of cores for \code{parallelize_RP}.}
 
-\item{true_CV}{If \code{TRUE}, refit the model on each training fold; if \code{FALSE},
-sample directly from the supplied fit without refitting.}
+\item{true_CV}{If \code{TRUE}, re-estimate hyperparameters on each training fold; if \code{FALSE},
+update the latent posterior on the training fold with the original
+hyperparameters fixed.}
 
 \item{save_settings}{If \code{TRUE}, return the CV settings used.}
 
@@ -97,4 +98,8 @@ the latent posterior is updated; when \code{TRUE}, theta is re-estimated. Poster
 response samples are then drawn at the held-out locations via \code{inlabru::generate()}.
 Works with the exact, non-FEM SPDE models in \pkg{MetricGraph}
 (\code{inla_metric_graph_spde}) and FEM-based rSPDE models alike.
+A fit containing an rSPDE component and no exact MetricGraph SPDE is
+delegated to \code{\link[rSPDE:cross_validation]{rSPDE::cross_validation()}}. Mixed exact/rSPDE model lists
+use this implementation. Fits without a recognizable package-specific
+component continue to use the function explicitly called.
 }

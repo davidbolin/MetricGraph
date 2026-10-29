@@ -46,10 +46,10 @@ $\Gamma$.
 In [Gaussian random fields on metric graphs](random_fields.html) we have
 studied the symmetric Whittle--Matérn field which is the solution to $$
   (\kappa^2 - \Delta)^{\alpha/2} \tau u = \mathcal{W}.
-$$ Here we instead we instead looking for solution on the form $$
+$$ The directional model instead solves $$
   (\kappa - d_s)^{\alpha} \tau u = \mathcal{W}.
-$$ We only consider the case $\alpha=1$. The only difference between the
-process is how the boundary conditions are constructed. For the
+$$ We only consider the case $\alpha=1$. The differential operators and
+their vertex boundary conditions both differ between these processes. For the
 symmetric field we impose the boundary condition for a vertex $v$ $$
 \mathcal{K} = \left\{ \forall e,\tilde{e} \in \mathcal{E}_v : 
         u_e(v) =  u_{\tilde{e}}
@@ -117,7 +117,7 @@ Here one can see that the with directional model creates independence between ed
 
 # Special boundary condition
 
-When imposing the boundary condition $\mathcal{K}$ or $\mathcal{K}_1$ the variance of the field is non-istorpic. Where the symmetric boundary conditions the variance around vertex of degree three has a smaller variability, while for the directional only the outward direction creates a smaller variability.
+When imposing the boundary condition $\mathcal{K}$ or $\mathcal{K}_1$ the variance of the field is non-isotropic. With the symmetric boundary conditions the variance around a vertex of degree three is smaller, while for the directional model only the outward direction creates smaller variability.
 
 ```{r, echo=T}
 kappa = 1 #change to larger value for better figures
