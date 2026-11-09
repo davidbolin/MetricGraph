@@ -19,6 +19,19 @@ library(sp)
 set.seed(1)
 ```
 
+```{r inla_call, include = FALSE}
+# inlabru <= 2.15.0 expects INLA's 'inla.call' option to hold the path to the
+# INLA executable, but INLA >= 26.11 leaves that option unset. Set it here so
+# that the inlabru examples below work with every INLA version.
+if (requireNamespace("INLA", quietly = TRUE) &&
+    is.null(INLA::inla.getOption("inla.call")) &&
+    exists("inla.binary.path", envir = asNamespace("INLA"))) {
+  try(INLA::inla.setOption(
+    inla.call = get("inla.binary.path", envir = asNamespace("INLA"))(check = TRUE)
+  ), silent = TRUE)
+}
+```
+
 # Introduction
 
 There has lately been much interest in statistical modeling of data on compact metric graphs such as street or river networks based on Gaussian random fields.
