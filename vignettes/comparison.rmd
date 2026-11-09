@@ -367,10 +367,10 @@ p <- fitted_aug %>% ggplot(aes(sample = .std_resid)) +
 p          
 ```
 
-We will now do a parametric bootstrap procedure to obtain confidence bands (simulated envelopes) for the above QQ plot. We will consider $B=100$ bootstrap samples. We start by generating $B$ samples. This can be done by using the `simulate()` method:
+We will now do a parametric bootstrap procedure to obtain confidence bands (simulated envelopes) for the above QQ plot. We will consider $B=20$ bootstrap samples to keep the computational cost of this vignette low; in practice, a larger number of samples (for instance, $B=100$ or more) should be used. We start by generating $B$ samples. This can be done by using the `simulate()` method:
 
 ```{r}
-B <- 100
+B <- 20
 samples_alpha2_bc <- simulate(fit_alpha2_bc, nsim = B)
 ```
 

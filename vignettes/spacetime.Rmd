@@ -67,7 +67,7 @@ graph <- metric_graph$new(edges = lines)
 graph$plot(direction = TRUE)
 
 # Create finite element mesh and compute matrices
-h <- 0.01
+h <- 0.05
 graph$build_mesh(h = h)
 graph$compute_fem()
 
