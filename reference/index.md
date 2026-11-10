@@ -198,6 +198,8 @@
 
 - [`spde_precision()`](https://davidbolin.github.io/MetricGraph/reference/spde_precision.md)
   : Precision matrix for Whittle-Matérn fields
+- [`weighted_stiffness()`](https://davidbolin.github.io/MetricGraph/reference/weighted_stiffness.md)
+  : Assemble a weighted stiffness matrix on a graph mesh
 
 ## Covariance functions
 

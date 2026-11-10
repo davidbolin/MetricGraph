@@ -14,7 +14,13 @@ re-estimated. Posterior response samples are then drawn at the held-out
 locations via
 [`inlabru::generate()`](https://generics.r-lib.org/reference/generate.html).
 Works with the exact, non-FEM SPDE models in MetricGraph
-(`inla_metric_graph_spde`) and FEM-based rSPDE models alike.
+(`inla_metric_graph_spde`) and FEM-based rSPDE models alike. A fit
+containing an rSPDE component and no exact MetricGraph SPDE is delegated
+to
+[`rSPDE::cross_validation()`](https://davidbolin.github.io/rSPDE/reference/cross_validation.html).
+Mixed exact/rSPDE model lists use this implementation. Fits without a
+recognizable package-specific component continue to use the function
+explicitly called.
 
 ## Usage
 
@@ -130,8 +136,9 @@ cross_validation(
 
 - true_CV:
 
-  If `TRUE`, refit the model on each training fold; if `FALSE`, sample
-  directly from the supplied fit without refitting.
+  If `TRUE`, re-estimate hyperparameters on each training fold; if
+  `FALSE`, update the latent posterior on the training fold with the
+  original hyperparameters fixed.
 
 - save_settings:
 

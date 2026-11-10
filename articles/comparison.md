@@ -94,7 +94,7 @@ summary(fit_alpha1)
 #> Number of function calls by 'optim' = 245
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  13.1854 secs
+#> Time used to:     fit the model =  10.00012 secs
 ```
 
 Now, we will fit a Whittle-Matérn field with `alpha = 2`:
@@ -123,13 +123,13 @@ summary(fit_alpha2)
 #> 
 #> Random effects:
 #>       Estimate Std.error z-value
-#> tau    0.09205   0.01596   5.767
-#> kappa  0.43173   0.07254   5.952
+#> tau    0.09205   0.01597   5.765
+#> kappa  0.43173   0.07256   5.950
 #> 
 #> Random effects (Matern parameterization):
 #>       Estimate Std.error z-value
-#> sigma   19.147     2.572   7.446
-#> range    8.024     1.314   6.105
+#> sigma   19.147     2.572   7.445
+#> range    8.024     1.315   6.104
 #> 
 #> Measurement error:
 #>          Estimate Std.error z-value
@@ -141,7 +141,7 @@ summary(fit_alpha2)
 #> Number of function calls by 'optim' = 227
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  14.13597 secs
+#> Time used to:     fit the model =  10.37363 secs
 ```
 
 We will now fit Whittle-Matérn fields with `alpha = 1` and `alpha=2`,
@@ -193,7 +193,7 @@ summary(fit_alpha1_bc)
 #> Number of function calls by 'optim' = 193
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  11.24158 secs
+#> Time used to:     fit the model =  7.95156 secs
 ```
 
 and
@@ -214,13 +214,13 @@ summary(fit_alpha2_bc)
 #> 
 #> Random effects:
 #>       Estimate Std.error z-value
-#> tau    0.09286   0.01610   5.768
-#> kappa  0.42028   0.07258   5.791
+#> tau    0.09286   0.01610   5.766
+#> kappa  0.42028   0.07260   5.789
 #> 
 #> Random effects (Matern parameterization):
 #>       Estimate Std.error z-value
-#> sigma   19.762     2.764   7.150
-#> range    8.242     1.388   5.937
+#> sigma   19.762     2.764   7.149
+#> range    8.242     1.389   5.936
 #> 
 #> Measurement error:
 #>          Estimate Std.error z-value
@@ -232,7 +232,7 @@ summary(fit_alpha2_bc)
 #> Number of function calls by 'optim' = 257
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  17.27769 secs
+#> Time used to:     fit the model =  12.93188 secs
 ```
 
 Similarly, let us now fit a Matérn Gaussian model based on the graph
@@ -287,7 +287,7 @@ summary(fit_GL1)
 #> Number of function calls by 'optim' = 143
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  1.22144 secs
+#> Time used to:     fit the model =  0.87246 secs
 ```
 
 and
@@ -304,7 +304,7 @@ summary(fit_GL2)
 #> 
 #> Fixed effects:
 #>             Estimate Std.error z-value Pr(>|z|)    
-#> (Intercept)   50.903     2.867   17.75   <2e-16 ***
+#> (Intercept)   50.903     2.866   17.76   <2e-16 ***
 #> 
 #> Random effects:
 #>       Estimate Std.error z-value
@@ -326,7 +326,7 @@ summary(fit_GL2)
 #> Number of function calls by 'optim' = 181
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  1.72051 secs
+#> Time used to:     fit the model =  1.25671 secs
 ```
 
 Observe that the default optimizer (L-BFGS-B) failed to converge, thus
@@ -367,7 +367,7 @@ summary(fit_isoexp)
 #> 
 #> Random effects:
 #>       Estimate Std.error z-value
-#> tau   31.53081  20.79698   1.516
+#> tau   31.53081  20.79674   1.516
 #> kappa  0.04528   0.06234   0.726
 #> 
 #> Measurement error:
@@ -380,7 +380,7 @@ summary(fit_isoexp)
 #> Number of function calls by 'optim' = 299
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  4.5526 secs
+#> Time used to:     fit the model =  4.79116 secs
 ```
 
 Observe the warning, message. This message tells us that we did not
@@ -750,13 +750,15 @@ p
 
 We will now do a parametric bootstrap procedure to obtain confidence
 bands (simulated envelopes) for the above QQ plot. We will consider
-$`B=100`$ bootstrap samples. We start by generating $`B`$ samples. This
-can be done by using the
+$`B=20`$ bootstrap samples to keep the computational cost of this
+vignette low; in practice, a larger number of samples (for instance,
+$`B=100`$ or more) should be used. We start by generating $`B`$ samples.
+This can be done by using the
 [`simulate()`](https://rdrr.io/r/stats/simulate.html) method:
 
 ``` r
 
-B <- 100
+B <- 20
 samples_alpha2_bc <- simulate(fit_alpha2_bc, nsim = B)
 ```
 

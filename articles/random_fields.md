@@ -273,7 +273,7 @@ summary(res)
     ## Number of function calls by 'optim' = 19
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  0.70931 secs
+    ## Time used to:     fit the model =  0.40052 secs
 
 We can also take a glance at `res`:
 
@@ -531,7 +531,7 @@ summary(res_exp)
     ## Number of function calls by 'optim' = 21
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  0.28262 secs
+    ## Time used to:     fit the model =  0.2139 secs
 
 ``` r
 
@@ -697,7 +697,7 @@ print(results)
 ## A comparison using cross-validation
 
 Let us now compare the different models in terms of predictive ability.
-We start by simulating some data frome a Whittle–Matérn field with
+We start by simulating some data from a Whittle–Matérn field with
 $`\alpha = 2`$, fit all different models that we have discussed, and
 then compare their predictive ability through leave-one-out
 crossvalidation. To change things up a bit, let us consider a different
@@ -795,8 +795,8 @@ fit_GL1 <- graph_lme(y ~ -1, graph=graph, model = list(type = "graphLaplacian", 
 fit_GL2 <- graph_lme(y ~ -1, graph=graph, model = list(type = "graphLaplacian", alpha = 2))
 ```
 
-Finally, we use the function
-[`posterior_crossvalidation()`](https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation.graph_lme.md)
+Finally, we use the specialized function
+[`posterior_crossvalidation_loo()`](https://davidbolin.github.io/MetricGraph/reference/posterior_crossvalidation_loo.md)
 to perform leave-one-out cross validation based on the estimated
 parameters and compare the results:
 
@@ -980,7 +980,7 @@ summary(fit_repl_isoexp)
     ## Number of function calls by 'optim' = 22
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  4.00341 secs
+    ## Time used to:     fit the model =  4.18273 secs
 
 To do kriging, we proceed in an identical way, by providing a
 `data.frame` with the locations we want to obtain predictions.

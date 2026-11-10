@@ -54,7 +54,7 @@ $`\mathcal{E}=\{e_j\}`$ of edges connecting the vertices. Each edge
 $`e`$ is defined by a pair of vertices $`(v_i,v_k)`$ and a finite length
 $`l_e \in (0,\infty)`$. An edge in the graph is a curve parametrized by
 arc-length, and a location $`s\in \Gamma`$ is a position on an edge, and
-can thus be represented as a touple $`(e,t)`$ where $`t\in[0,l_e]`$.
+can thus be represented as a tuple $`(e,t)`$ where $`t\in[0,l_e]`$.
 
 ### Basic constructions
 
@@ -232,7 +232,7 @@ The locations of the vertices are specified in Euclidean coordinates.
 However, when specifying a position on the graph, it is not practical to
 work with Euclidean coordinates since not all locations in Euclidean
 space are locations on the graph. It is instead better to specify a
-location on the graph by the touple $`(i, t)`$, where $`i`$ denotes the
+location on the graph by the tuple $`(i, t)`$, where $`i`$ denotes the
 number of the edge and $`t`$ is the location on the edge. The location
 $`t`$ can either be specified as the distance from the start of the edge
 (and then takes values between 0 and the length of the edge) or as the
@@ -640,7 +640,7 @@ summary(res)
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
-    ## std. dev 0.000306  0.078773   0.004
+    ## std. dev 0.000306  0.078111   0.004
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
@@ -648,7 +648,7 @@ summary(res)
     ## Number of function calls by 'optim' = 44
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  22.12294 secs
+    ## Time used to:     fit the model =  16.38014 secs
 
 We can obtain additional information by using
 [`glance()`](https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.md):
@@ -679,7 +679,7 @@ print(results)
 
     ##               sigma_e    sigma     range
     ## Truth    0.1000000000 2.000000 0.2000000
-    ## Estimate 0.0003060189 2.063444 0.1788075
+    ## Estimate 0.0003060091 2.063444 0.1788075
 
 Given these estimated parameters, we can now do kriging to estimate the
 field at locations in the graph. As an example, we now obtain
@@ -911,11 +911,11 @@ summary(res_exp)
     ## Random effects:
     ##       Estimate Std.error z-value
     ## tau    1.86516   0.08361  22.307
-    ## kappa 14.95548   1.89735   7.882
+    ## kappa 14.95549   1.89736   7.882
     ## 
     ## Measurement error:
     ##           Estimate Std.error z-value
-    ## std. dev 0.0003456 0.0664006   0.005
+    ## std. dev 0.0003458 0.0664152   0.005
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
@@ -923,7 +923,7 @@ summary(res_exp)
     ## Number of function calls by 'optim' = 57
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  17.0165 secs
+    ## Time used to:     fit the model =  6.9611 secs
 
 We can also have a glance at the fitted model:
 
@@ -1035,7 +1035,7 @@ summary(res_gl)
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  3.47244 secs
+    ## Time used to:     fit the model =  3.85693 secs
 
 We can also have a glance at the fitted model:
 
@@ -1154,7 +1154,7 @@ summary(res_gl_pred)
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  4.13319 secs
+    ## Time used to:     fit the model =  3.45042 secs
 
 One should compare the estimates with the ones obtained in the model
 without the prediction locations.
@@ -1252,9 +1252,9 @@ spde_bru_result <- spde_metric_graph_result(spde_bru_fit,
 summary(spde_bru_result)
 ```
 
-    ##           mean       sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 2.096510 0.108678   1.890430 2.093240    2.31489 2.089020
-    ## range 0.187865 0.025785   0.142793 0.185922    0.24390 0.181743
+    ##           mean        sd 0.025quant 0.5quant 0.975quant    mode
+    ## sigma 2.095080 0.1069460    1.89455 2.091810   2.311640 2.06504
+    ## range 0.187858 0.0257659    0.14282 0.185916   0.243852 0.18174
 
 Here we are showing the estimate of the practical correlation range
 ($`2/\kappa`$) instead of $`\kappa`$ since that is easier to interpret.
@@ -1277,9 +1277,9 @@ We now compare the means of the estimated values with the true values:
   print(result_df_bru)
 ```
 
-    ##   parameter true      mean      mode
-    ## 1   std.dev  2.0 2.0965144 2.0890186
-    ## 2     range  0.2 0.1878648 0.1817428
+    ##   parameter true     mean      mode
+    ## 1   std.dev  2.0 2.095077 2.0650421
+    ## 2     range  0.2 0.187858 0.1817403
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)

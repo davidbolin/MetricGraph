@@ -218,8 +218,8 @@ summary(spde_result)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant      mode
-    ## sigma 1.812800 0.1510890  1.5360600  1.80451   2.132420 1.7624000
-    ## range 0.105945 0.0193815  0.0738416  0.10383   0.149726 0.0995234
+    ## sigma 1.812710 0.1506170  1.5369100 1.804460   2.131410 1.7610200
+    ## range 0.105698 0.0192786  0.0737665 0.103593   0.149247 0.0993092
 
 We will now compare the means of the estimated values with the true
 values:
@@ -242,8 +242,8 @@ values:
 ```
 
     ##   parameter true      mean       mode
-    ## 1   std.dev 2.00 1.8127993 1.76240230
-    ## 2     range 0.15 0.1059449 0.09952343
+    ## 1   std.dev 2.00 1.8127106 1.76101631
+    ## 2     range 0.15 0.1056979 0.09930924
 
 Let us now look at the estimates of the measurement errors and compare
 with the true ones:
@@ -260,8 +260,8 @@ print(meas_err_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1  sigma1.e  0.2 0.1375579 0.1566120
-    ## 2  sigma2.e  0.5 0.5263777 0.5280995
+    ## 1  sigma1.e  0.2 0.1375744 0.1556973
+    ## 2  sigma2.e  0.5 0.5266589 0.5286535
 
 Finally, let us look at the estimates of the intercepts:
 
@@ -277,8 +277,8 @@ print(intercept_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1     beta1    2  2.112189  2.112305
-    ## 2     beta2   -2 -1.890970 -1.890856
+    ## 1     beta1    2  2.112216  2.112331
+    ## 2     beta2   -2 -1.890943 -1.890829
 
 ## Fitting models with multiple likelihoods in `inlabru`
 
@@ -302,27 +302,12 @@ for the second likelihood.
 
 library(inlabru)
 
-lik1 <- like(formula = y ~ intercept_1 + field,
-            data=data_spde_bru[[1]][["data"]])
+lik1 <- inlabru::bru_obs(formula = y ~ intercept_1 + field,
+            data=data_spde_bru[[1]][["data"]], is_rowwise = TRUE)
+
+lik2 <- inlabru::bru_obs(formula = y ~ intercept_2 + field,
+            data=data_spde_bru[[2]][["data"]], is_rowwise = TRUE)
 ```
-
-    ## Warning: `like()` was deprecated in inlabru 2.12.0.
-    ## ℹ Please use `bru_obs()` instead.
-    ## This warning is displayed once per session.
-    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-    ## generated.
-
-    ## Warning in bru_log_warn(paste0("Non data-frame list-like data supplied; ", : Non data-frame list-like data supplied; guessing is_rowwise=FALSE.
-    ##   Specify is_rowwise explicitly to avoid this warning.
-
-``` r
-
-lik2 <- like(formula = y ~ intercept_2 + field,
-            data=data_spde_bru[[2]][["data"]])            
-```
-
-    ## Warning in bru_log_warn(paste0("Non data-frame list-like data supplied; ", : Non data-frame list-like data supplied; guessing is_rowwise=FALSE.
-    ##   Specify is_rowwise explicitly to avoid this warning.
 
 Now, we create the model component:
 
@@ -354,8 +339,8 @@ summary(spde_bru_result)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant      mode
-    ## sigma 1.814510 0.1474400  1.5469600  1.80626   2.122300 1.7807800
-    ## range 0.105945 0.0193815  0.0738416  0.10383   0.149726 0.0995234
+    ## sigma 1.814280 0.1470760  1.5476700 1.805950   2.121850 1.7812300
+    ## range 0.105698 0.0192786  0.0737665 0.103593   0.149247 0.0993092
 
 We will now compare the means of the estimated values with the true
 values:
@@ -378,8 +363,8 @@ values:
 ```
 
     ##   parameter true      mean       mode
-    ## 1   std.dev 2.00 1.8145122 1.78077719
-    ## 2     range 0.15 0.1059449 0.09952343
+    ## 1   std.dev 2.00 1.8142783 1.78122559
+    ## 2     range 0.15 0.1056979 0.09930924
 
 Let us now look at the estimates of the measurement errors and compare
 with the true ones:
@@ -396,8 +381,8 @@ print(meas_err_bru_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1  sigma1.e  0.2 0.1375579 0.1566120
-    ## 2  sigma2.e  0.5 0.5263777 0.5280995
+    ## 1  sigma1.e  0.2 0.1375744 0.1556973
+    ## 2  sigma2.e  0.5 0.5266589 0.5286535
 
 Finally, let us look at the estimates of the intercepts:
 
@@ -413,8 +398,8 @@ print(intercept_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1     beta1    2  2.112189  2.112305
-    ## 2     beta2   -2 -1.890970 -1.890856
+    ## 1     beta1    2  2.112216  2.112331
+    ## 2     beta2   -2 -1.890943 -1.890829
 
 ## A toy dataset with multiple likelihoods and replicates
 
@@ -601,8 +586,8 @@ summary(spde_result_rep)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 1.362700 0.0623305   1.245220 1.361500   1.488520 1.362930
-    ## range 0.180101 0.0181445   0.147774 0.178888   0.218924 0.176235
+    ## sigma 1.362720 0.0623030   1.245230 1.361530   1.488490 1.362940
+    ## range 0.180096 0.0181417   0.147779 0.178885   0.218917 0.176228
 
 Let us compare with the true values:
 
@@ -623,9 +608,9 @@ Let us compare with the true values:
   print(result_df_rep)
 ```
 
-    ##   parameter true      mean      mode
-    ## 1   std.dev  1.5 1.3627009 1.3629291
-    ## 2     range  0.2 0.1801012 0.1762345
+    ##   parameter true      mean     mode
+    ## 1   std.dev  1.5 1.3627185 1.362943
+    ## 2     range  0.2 0.1800959 0.176228
 
 Let us now look at the estimates of the measurement errors and compare
 with the true ones:
@@ -642,8 +627,8 @@ print(meas_err_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1  sigma1.e  0.2 0.2009013 0.2020180
-    ## 2  sigma2.e  0.5 0.4954356 0.4957988
+    ## 1  sigma1.e  0.2 0.2009005 0.2020252
+    ## 2  sigma2.e  0.5 0.4954331 0.4958043
 
 Finally, let us look at the estimates of the intercepts:
 
@@ -659,8 +644,8 @@ print(intercept_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1     beta1    2  1.873588  1.873741
-    ## 2     beta2   -2 -2.114199 -2.114048
+    ## 1     beta1    2  1.873589  1.873742
+    ## 2     beta2   -2 -2.114198 -2.114047
 
 ## Fitting models with multiple likelihoods and replicates in `inlabru`
 
@@ -686,21 +671,12 @@ Let us now construct the likelihoods:
 
 ``` r
 
-lik1_repl <- like(formula = y ~ intercept_1 + field,
-            data=data_spde_bru_repl[[1]][["data"]])
+lik1_repl <- inlabru::bru_obs(formula = y ~ intercept_1 + field,
+            data=data_spde_bru_repl[[1]][["data"]], is_rowwise = TRUE)
+
+lik2_repl <- inlabru::bru_obs(formula = y ~ intercept_2 + field,
+            data=data_spde_bru_repl[[2]][["data"]], is_rowwise = TRUE)
 ```
-
-    ## Warning in bru_log_warn(paste0("Non data-frame list-like data supplied; ", : Non data-frame list-like data supplied; guessing is_rowwise=FALSE.
-    ##   Specify is_rowwise explicitly to avoid this warning.
-
-``` r
-
-lik2_repl <- like(formula = y ~ intercept_2 + field,
-            data=data_spde_bru_repl[[2]][["data"]])            
-```
-
-    ## Warning in bru_log_warn(paste0("Non data-frame list-like data supplied; ", : Non data-frame list-like data supplied; guessing is_rowwise=FALSE.
-    ##   Specify is_rowwise explicitly to avoid this warning.
 
 Now, we create the model component, using the replicates index we
 obtained above:
@@ -733,8 +709,8 @@ summary(spde_bru_result_repl)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 1.362110 0.0628507   1.242670 1.359700   1.488580 1.347750
-    ## range 0.180101 0.0181445   0.147774 0.178888   0.218924 0.176235
+    ## sigma 1.362110 0.0628258   1.242690 1.359690   1.488540 1.347330
+    ## range 0.180096 0.0181417   0.147779 0.178885   0.218917 0.176228
 
 We will now compare the means of the estimated values with the true
 values:
@@ -756,9 +732,9 @@ values:
   print(result_bru_repl_df)
 ```
 
-    ##   parameter true      mean      mode
-    ## 1   std.dev  1.5 1.3621085 1.3477545
-    ## 2     range  0.2 0.1801012 0.1762345
+    ##   parameter true      mean     mode
+    ## 1   std.dev  1.5 1.3621146 1.347329
+    ## 2     range  0.2 0.1800959 0.176228
 
 Let us now look at the estimates of the measurement errors and compare
 with the true ones:
@@ -775,8 +751,8 @@ print(meas_err_bru_repl_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1  sigma1.e  0.2 0.2009013 0.2020180
-    ## 2  sigma2.e  0.5 0.4954356 0.4957988
+    ## 1  sigma1.e  0.2 0.2009005 0.2020252
+    ## 2  sigma2.e  0.5 0.4954331 0.4958043
 
 Finally, let us look at the estimbates of the intercepts:
 
@@ -792,5 +768,5 @@ print(intercept_repl_df)
 ```
 
     ##   parameter true      mean      mode
-    ## 1     beta1    2  1.873588  1.873741
-    ## 2     beta2   -2 -2.114199 -2.114048
+    ## 1     beta1    2  1.873589  1.873742
+    ## 2     beta2   -2 -2.114198 -2.114047

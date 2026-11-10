@@ -9,7 +9,7 @@ $`\mathcal{E}=\{e_j\}`$ of edges connecting the vertices. Each edge
 $`e`$ is a curve of finite length $`l_e`$ that connects two vertices.
 These curves are parameterized by arc length and a location
 $`s\in \Gamma`$ is a position on an edge, and can thus be represented as
-a touple $`(e,t)`$ where $`t\in[0,l_e]`$. Compared to regular graphs,
+a tuple $`(e,t)`$ where $`t\in[0,l_e]`$. Compared to regular graphs,
 where one typically defines functions on the vertices, we are for metric
 graphs interested in function that are defined on both the vertices and
 the edges.
@@ -167,7 +167,7 @@ graph2 <- metric_graph$new(V = V, E = E)
 
     ## Merging close vertices
 
-    ## Total construction time: 0.21 secs
+    ## Total construction time: 0.27 secs
 
     ## Creating and updating vertices...
 
@@ -929,7 +929,7 @@ The locations of the vertices are specified in Euclidean coordinates.
 However, when specifying a position on the graph, it is not practical to
 work with Euclidean coordinates since not all locations in Euclidean
 space are locations on the graph. It is instead better to specify a
-location on the graph by the touple $`(i, t)`$, where $`i`$ denotes the
+location on the graph by the tuple $`(i, t)`$, where $`i`$ denotes the
 number of the edge and $`t`$ is the location on the edge. The location
 $`t`$ can either be specified as the distance from the start of the edge
 (and then takes values between 0 and the length of the edge) or as the

@@ -985,7 +985,8 @@ object.
 
 ### `metric_graph$compute_geodist_PtE()`
 
-Computes shortest path distances between the vertices in the graph.
+Computes shortest path distances among points on graph edges, preserving
+the input order and duplicate points.
 
 #### Usage
 
@@ -1000,11 +1001,11 @@ Computes shortest path distances between the vertices in the graph.
 
 - `PtE`:
 
-  Points to compute the metric for.
+  Two-column matrix of edge numbers and positions on edges.
 
 - `normalized`:
 
-  are the locations in PtE in normalized distance?
+  Are edge positions fractions of edge length?
 
 - `include_vertices`:
 
@@ -1016,11 +1017,12 @@ Computes shortest path distances between the vertices in the graph.
   3 levels of verbose, level 0, 1 and 2. In level 0, no messages are
   printed. In level 1, only messages regarding important steps are
   printed. Finally, in level 2, messages detailing all the steps are
-  printed. The default is 1.
+  printed. The default is 0.
 
 #### Returns
 
-A matrix containing the geodesic distances.
+A distance matrix with one row and column per input point, plus one per
+graph vertex at the beginning if `include_vertices` is TRUE.
 
 ------------------------------------------------------------------------
 
@@ -3486,7 +3488,7 @@ graph <- metric_graph$new(edges)
 #> Computing bounding box...
 #> Setting up edges
 #> Merging close vertices
-#> Total construction time: 0.28 secs
+#> Total construction time: 0.30 secs
 #> Creating and updating vertices...
 #> Storing the initial graph...
 #> Computing the relative positions of the edges...

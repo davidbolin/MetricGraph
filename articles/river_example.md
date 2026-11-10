@@ -106,7 +106,7 @@ graph$add_observations(graph$mutate(netID = as.factor(netID)), clear_obs=TRUE)
 
     ## The unit for edge lengths is km
 
-    ## The current tolerance for removing distant observations is (in km): 3.16483618132507
+    ## The current tolerance for removing distant observations is (in km): 3.16483618132391
 
 We can now visualize the river and the data
 
@@ -253,7 +253,7 @@ pred_alpha1 %>% graph$plot(data = "Temprature", vertex_size = 0,
             type = "mapview")
 ```
 
-    ## Warning: Found less unique colors (100) than unique zcol values (2454)! 
+    ## Warning: Found less unique colors (100) than unique zcol values (2455)! 
     ## Interpolating color vector to match number of zcol values.
 
 Lets examine how things looks using the same residuals:

@@ -13,15 +13,15 @@
 Source:
 [`inst/CITATION`](https://github.com/davidbolin/MetricGraph/blob/devel/inst/CITATION)
 
-Bolin D, Simas A, Wallin J (2023). *MetricGraph: Random fields on metric
-graphs*. R package version 1.4.0,
+Bolin D, Simas A, Wallin J (2026). *MetricGraph: Random fields on metric
+graphs*. R package version 1.7.0,
 <https://CRAN.R-project.org/package=MetricGraph>.
 
     @Manual{,
       title = {MetricGraph: Random fields on metric graphs},
       author = {David Bolin and Alexandre B. Simas and Jonas Wallin},
-      year = {2023},
-      note = {R package version 1.4.0},
+      year = {2026},
+      note = {R package version 1.7.0},
       url = {https://CRAN.R-project.org/package=MetricGraph},
     }
 

@@ -2,6 +2,16 @@
 
 ## MetricGraph (development version)
 
+## MetricGraph 1.7.0
+
+- Fixed `compute_geodist_PtE()` failing with “subscript out of bounds”
+  when the points contained duplicates or locations that coincide on the
+  graph (for instance, the end of one edge and the start of the next).
+  The distances are now computed directly, and the returned matrix has
+  one row and column per input point, in the input order, duplicates
+  included
+  ([\#20](https://github.com/davidbolin/MetricGraph/issues/20)).
+
 - Fixed `likelihood_graph_laplacian()` failing with “non-conformable
   matrix dimensions” whenever the data had more than one replicate.
 

@@ -24,7 +24,7 @@ $`-\frac{1}{2}\log|H_\theta|`$, removing the contribution of
 $`\hat\beta`$ to the curvature.
 
 This vignette uses the Middle Fork river network from the `SSN2` package
-(**Peterson2010?**) (introduced in the [River graph
+(Dumelle et al. 2024) (introduced in the [River graph
 example](https://davidbolin.github.io/MetricGraph/articles/river_example.md))
 with **simulated covariates and response** to demonstrate the
 profile-likelihood API at realistic scales ($`n \in \{200, 400\}`$,
@@ -143,7 +143,7 @@ graph$add_observations(
 
     ## The unit for edge lengths is km
 
-    ## The current tolerance for removing distant observations is (in km): 3.16483618132507
+    ## The current tolerance for removing distant observations is (in km): 3.16483618132391
 
 ``` r
 
@@ -189,7 +189,7 @@ cat("Joint at beta_hat:        ", round(lj, 6), "\n")
 cat("Difference (machine eps): ", format(abs(lp - lj), scientific = TRUE), "\n")
 ```
 
-    ## Difference (machine eps):  2.728484e-12
+    ## Difference (machine eps):  9.094947e-13
 
 ### Optimization and parameter recovery
 
@@ -269,7 +269,7 @@ graph$add_observations(
 
     ## The unit for edge lengths is km
 
-    ## The current tolerance for removing distant observations is (in km): 3.16483618132507
+    ## The current tolerance for removing distant observations is (in km): 3.16483618132391
 
 ``` r
 
@@ -333,7 +333,7 @@ graph$add_observations(
 
     ## The unit for edge lengths is km
 
-    ## The current tolerance for removing distant observations is (in km): 3.16483618132507
+    ## The current tolerance for removing distant observations is (in km): 3.16483618132391
 
 ``` r
 
@@ -368,7 +368,7 @@ graph$add_observations(
 
     ## The unit for edge lengths is km
 
-    ## The current tolerance for removing distant observations is (in km): 3.16483618132507
+    ## The current tolerance for removing distant observations is (in km): 3.16483618132391
 
 ``` r
 
@@ -566,3 +566,8 @@ print(round(reml_cov, 3))
     ## REML    1.058 1.137 1.058
 
 ## References
+
+Dumelle, Michael, Erin E. Peterson, Jay M. Ver Hoef, Alan Pearse, and
+Daniel J. Isaak. 2024. “SSN2: The Next Generation of Spatial Stream
+Network Modeling in R.” *Journal of Open Source Software* 9 (99): 6389.
+<https://doi.org/10.21105/joss.06389>.

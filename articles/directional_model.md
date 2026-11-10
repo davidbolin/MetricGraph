@@ -30,13 +30,14 @@ to
 ``` math
   (\kappa^2 - \Delta)^{\alpha/2} \tau u = \mathcal{W}.
 ```
-Here we instead we instead looking for solution on the form
+The directional model instead solves
 ``` math
   (\kappa - d_s)^{\alpha} \tau u = \mathcal{W}.
 ```
-We only consider the case $`\alpha=1`$. The only difference between the
-process is how the boundary conditions are constructed. For the
-symmetric field we impose the boundary condition for a vertex $`v`$
+We only consider the case $`\alpha=1`$. The differential operators and
+their vertex boundary conditions both differ between these processes.
+For the symmetric field we impose the boundary condition for a vertex
+$`v`$
 ``` math
 \mathcal{K} = \left\{ \forall e,\tilde{e} \in \mathcal{E}_v : 
         u_e(v) =  u_{\tilde{e}}
@@ -110,10 +111,10 @@ between edges that are meeting by inwards direction.
 ## Special boundary condition
 
 When imposing the boundary condition $`\mathcal{K}`$ or
-$`\mathcal{K}_1`$ the variance of the field is non-istorpic. Where the
-symmetric boundary conditions the variance around vertex of degree three
-has a smaller variability, while for the directional only the outward
-direction creates a smaller variability.
+$`\mathcal{K}_1`$ the variance of the field is non-isotropic. With the
+symmetric boundary conditions the variance around a vertex of degree
+three is smaller, while for the directional model only the outward
+direction creates smaller variability.
 
 ``` r
 
