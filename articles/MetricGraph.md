@@ -640,7 +640,7 @@ summary(res)
     ## 
     ## Measurement error:
     ##          Estimate Std.error z-value
-    ## std. dev 0.000306  0.078111   0.004
+    ## std. dev 0.000306  0.078989   0.004
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
@@ -648,7 +648,7 @@ summary(res)
     ## Number of function calls by 'optim' = 44
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  16.38014 secs
+    ## Time used to:     fit the model =  23.26702 secs
 
 We can obtain additional information by using
 [`glance()`](https://davidbolin.github.io/MetricGraph/reference/glance.graph_lme.md):
@@ -679,7 +679,7 @@ print(results)
 
     ##               sigma_e    sigma     range
     ## Truth    0.1000000000 2.000000 0.2000000
-    ## Estimate 0.0003060091 2.063444 0.1788075
+    ## Estimate 0.0003059898 2.063444 0.1788075
 
 Given these estimated parameters, we can now do kriging to estimate the
 field at locations in the graph. As an example, we now obtain
@@ -905,17 +905,17 @@ summary(res_exp)
     ## Fixed effects:
     ##             Estimate Std.error z-value Pr(>|z|)    
     ## (Intercept)  -1.1095    0.1786  -6.211 5.25e-10 ***
-    ## lon           0.9191    0.1423   6.461 1.04e-10 ***
+    ## lon           0.9191    0.1423   6.460 1.04e-10 ***
     ## lat           1.8377    0.1560  11.783  < 2e-16 ***
     ## 
     ## Random effects:
     ##       Estimate Std.error z-value
     ## tau    1.86516   0.08361  22.307
-    ## kappa 14.95549   1.89736   7.882
+    ## kappa 14.95546   1.89735   7.882
     ## 
     ## Measurement error:
     ##           Estimate Std.error z-value
-    ## std. dev 0.0003458 0.0664152   0.005
+    ## std. dev 0.0003441 0.0664054   0.005
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
@@ -923,7 +923,7 @@ summary(res_exp)
     ## Number of function calls by 'optim' = 57
     ## Optimization method used in 'optim' = L-BFGS-B
     ## 
-    ## Time used to:     fit the model =  6.9611 secs
+    ## Time used to:     fit the model =  17.02005 secs
 
 We can also have a glance at the fitted model:
 
@@ -935,7 +935,7 @@ glance(res_exp)
     ## # A tibble: 1 × 9
     ##    nobs    sigma logLik   AIC   BIC deviance df.residual model  cov_function  
     ##   <int>    <dbl>  <dbl> <dbl> <dbl>    <dbl>       <dbl> <chr>  <chr>         
-    ## 1   500 0.000346  -872. 1756. 1782.    1744.         494 isoCov exp_covariance
+    ## 1   500 0.000344  -872. 1756. 1782.    1744.         494 isoCov exp_covariance
 
 Let us now compute the posterior mean for the field at the observation
 locations and plot the residuals between the field and the posterior
@@ -1035,7 +1035,7 @@ summary(res_gl)
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  3.85693 secs
+    ## Time used to:     fit the model =  3.41927 secs
 
 We can also have a glance at the fitted model:
 
@@ -1154,7 +1154,7 @@ summary(res_gl_pred)
     ## Number of function calls by 'optim' = 501
     ## Optimization method used in 'optim' = Nelder-Mead
     ## 
-    ## Time used to:     fit the model =  3.45042 secs
+    ## Time used to:     fit the model =  4.06235 secs
 
 One should compare the estimates with the ones obtained in the model
 without the prediction locations.
@@ -1252,9 +1252,9 @@ spde_bru_result <- spde_metric_graph_result(spde_bru_fit,
 summary(spde_bru_result)
 ```
 
-    ##           mean        sd 0.025quant 0.5quant 0.975quant    mode
-    ## sigma 2.095080 0.1069460    1.89455 2.091810   2.311640 2.06504
-    ## range 0.187858 0.0257659    0.14282 0.185916   0.243852 0.18174
+    ##           mean       sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 2.095000 0.106971   1.894530 2.091720   2.311670 2.065070
+    ## range 0.187861 0.025776   0.142805 0.185918   0.243877 0.181741
 
 Here we are showing the estimate of the practical correlation range
 ($`2/\kappa`$) instead of $`\kappa`$ since that is easier to interpret.
@@ -1277,9 +1277,9 @@ We now compare the means of the estimated values with the true values:
   print(result_df_bru)
 ```
 
-    ##   parameter true     mean      mode
-    ## 1   std.dev  2.0 2.095077 2.0650421
-    ## 2     range  0.2 0.187858 0.1817403
+    ##   parameter true      mean      mode
+    ## 1   std.dev  2.0 2.0950002 2.0650731
+    ## 2     range  0.2 0.1878608 0.1817406
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)

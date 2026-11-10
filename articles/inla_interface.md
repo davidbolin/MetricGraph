@@ -194,8 +194,8 @@ summary(spde_result)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 2.116410 0.2227790   1.716070 2.102440   2.599230 2.098620
-    ## range 0.167278 0.0399091   0.104595 0.161773   0.260497 0.150634
+    ## sigma 2.116230 0.2226940   1.716490 2.102090   2.598860 2.098840
+    ## range 0.167256 0.0399021   0.104689 0.161739   0.260671 0.150525
 
 We will now compare the means of the estimated values with the true
 values:
@@ -218,8 +218,8 @@ values:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev 2.00 2.1164135 2.0986160
-    ## 2     range 0.15 0.1672781 0.1506337
+    ## 1   std.dev 2.00 2.1162336 2.0988365
+    ## 2     range 0.15 0.1672562 0.1505251
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
@@ -452,8 +452,8 @@ summary(spde_result_alpha2)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 2.425020 0.3006700   1.891550 2.406960   3.065650 2.410360
-    ## range 0.183765 0.0200162   0.147759 0.182644   0.226288 0.180304
+    ## sigma 2.425070 0.3004560   1.892600 2.406950   3.065330 2.410920
+    ## range 0.183765 0.0199828   0.147823 0.182645   0.226221 0.180308
 
 We will now compare the means of the estimated values with the true
 values:
@@ -476,8 +476,8 @@ values:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev 2.00 2.4250155 2.4103587
-    ## 2     range 0.15 0.1837648 0.1803036
+    ## 1   std.dev 2.00 2.4250677 2.4109229
+    ## 2     range 0.15 0.1837654 0.1803082
 
 We can also plot the posterior marginal densities with the help of the
 [`gg_df()`](https://davidbolin.github.io/MetricGraph/reference/gg_df.metric_graph_spde_result.md)
@@ -665,8 +665,8 @@ summary(spde_result_rep)
 ```
 
     ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 1.410360 0.0648736   1.289720 1.408030   1.544080 1.402040
-    ## range 0.165537 0.0170396   0.134461 0.164754   0.201331 0.163099
+    ## sigma 1.434780 0.0737077  1.3018700  1.43153   1.587250 1.430840
+    ## range 0.145028 0.0323423  0.0831306  0.14556   0.206273 0.148285
 
 Let us compare with the true values:
 
@@ -687,9 +687,9 @@ Let us compare with the true values:
   print(result_df_rep)
 ```
 
-    ##   parameter true      mean     mode
-    ## 1   std.dev  1.5 1.4103623 1.402038
-    ## 2     range  0.2 0.1655367 0.163099
+    ##   parameter true      mean      mode
+    ## 1   std.dev  1.5 1.4347791 1.4308377
+    ## 2     range  0.2 0.1450278 0.1482853
 
 Now, let us consider the case with all replicates. We create a new data
 object by using the
@@ -751,9 +751,9 @@ spde_result_rep <- spde_metric_graph_result(spde_fit_rep,
 summary(spde_result_rep)
 ```
 
-    ##           mean         sd 0.025quant 0.5quant 0.975quant     mode
-    ## sigma 1.504890 0.03167300   1.442800 1.504900   1.566320 1.502740
-    ## range 0.207751 0.00968442   0.189491 0.207462   0.227541 0.206825
+    ##           mean        sd 0.025quant 0.5quant 0.975quant     mode
+    ## sigma 1.489510 0.0376284   1.411560  1.49171   1.556330 1.495520
+    ## range 0.207204 0.0102582   0.185737  0.20790   0.225516 0.210883
 
 Let us compare with the true values:
 
@@ -775,8 +775,8 @@ Let us compare with the true values:
 ```
 
     ##   parameter true      mean      mode
-    ## 1   std.dev  1.5 1.5048911 1.5027384
-    ## 2     range  0.2 0.2077514 0.2068248
+    ## 1   std.dev  1.5 1.4895140 1.4955158
+    ## 2     range  0.2 0.2072038 0.2108827
 
 Bolin, David, Alexandre B. Simas, and Jonas Wallin. 2023. “Statistical
 Properties of Gaussian Whittle–Matérn Fields on Metric Graphs.”
