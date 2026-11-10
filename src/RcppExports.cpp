@@ -12,12 +12,12 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // c_basis2_old
-Rcpp::List c_basis2_old(Eigen::MappedSparseMatrix<double> A, double eps_limit);
+Rcpp::List c_basis2_old(Eigen::Map<Eigen::SparseMatrix<double>> A, double eps_limit);
 RcppExport SEXP _MetricGraph_c_basis2_old(SEXP ASEXP, SEXP eps_limitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MappedSparseMatrix<double> >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::SparseMatrix<double>> >::type A(ASEXP);
     Rcpp::traits::input_parameter< double >::type eps_limit(eps_limitSEXP);
     rcpp_result_gen = Rcpp::wrap(c_basis2_old(A, eps_limit));
     return rcpp_result_gen;
@@ -113,12 +113,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // c_basis2
-Rcpp::List c_basis2(Eigen::MappedSparseMatrix<double> A, double eps_limit);
+Rcpp::List c_basis2(Eigen::Map<Eigen::SparseMatrix<double>> A, double eps_limit);
 RcppExport SEXP _MetricGraph_c_basis2(SEXP ASEXP, SEXP eps_limitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MappedSparseMatrix<double> >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::SparseMatrix<double>> >::type A(ASEXP);
     Rcpp::traits::input_parameter< double >::type eps_limit(eps_limitSEXP);
     rcpp_result_gen = Rcpp::wrap(c_basis2(A, eps_limit));
     return rcpp_result_gen;
