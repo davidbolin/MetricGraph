@@ -1010,13 +1010,15 @@ summary(fit_ns_start)
 
 ### Fitting the inlabru rSPDE model
 
-Let us then fit the same model using `inlabru` now. We start by defing the `rSPDE` model with the `rspde.metric_graph()` function:
+Let us then fit the same model using `inlabru` now. We start by defing the `rSPDE` model with the `rspde.metric_graph()` function. Since the smoothness estimated by `graph_lme()` is above 2, we increase the upper bound for $\nu$ with the `nu.upper.bound` argument. We also use a slightly more informative prior for the coefficients of the non-stationary parameters (`theta.prior.prec = 1`) to stabilize the estimation:
 
 ```{r}
 rspde_model_nonstat <- rspde.metric_graph(pems_graph,
   B.sigma = B.sigma,
   B.range = B.range,
-  parameterization = "matern") 
+  parameterization = "matern",
+  nu.upper.bound = 4,
+  theta.prior.prec = 1)
 ```
 
 Let us now create the `data.frame()` and the vector with the replicates indexes:
