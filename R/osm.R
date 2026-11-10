@@ -73,6 +73,11 @@ fetch_osm <- function(bbox,
          "Install with install.packages(\"osmdata\").",
          call. = FALSE)
   }
+  if (!requireNamespace("curl", quietly = TRUE)) {
+    stop("Package 'curl' is required for fetch_osm(). ",
+         "Install with install.packages(\"curl\").",
+         call. = FALSE)
+  }
 
   query <- osmdata::opq(bbox = bbox, timeout = timeout)
   if (!is.null(key)) {
