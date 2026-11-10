@@ -12,12 +12,12 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // c_basis2_old
-Rcpp::List c_basis2_old(Eigen::MappedSparseMatrix<double> A, double eps_limit);
+Rcpp::List c_basis2_old(Eigen::Map<Eigen::SparseMatrix<double>> A, double eps_limit);
 RcppExport SEXP _MetricGraph_c_basis2_old(SEXP ASEXP, SEXP eps_limitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MappedSparseMatrix<double> >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::SparseMatrix<double>> >::type A(ASEXP);
     Rcpp::traits::input_parameter< double >::type eps_limit(eps_limitSEXP);
     rcpp_result_gen = Rcpp::wrap(c_basis2_old(A, eps_limit));
     return rcpp_result_gen;
@@ -113,12 +113,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // c_basis2
-Rcpp::List c_basis2(Eigen::MappedSparseMatrix<double> A, double eps_limit);
+Rcpp::List c_basis2(Eigen::Map<Eigen::SparseMatrix<double>> A, double eps_limit);
 RcppExport SEXP _MetricGraph_c_basis2(SEXP ASEXP, SEXP eps_limitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Eigen::MappedSparseMatrix<double> >::type A(ASEXP);
+    Rcpp::traits::input_parameter< Eigen::Map<Eigen::SparseMatrix<double>> >::type A(ASEXP);
     Rcpp::traits::input_parameter< double >::type eps_limit(eps_limitSEXP);
     rcpp_result_gen = Rcpp::wrap(c_basis2(A, eps_limit));
     return rcpp_result_gen;
@@ -222,6 +222,137 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// snap_points_to_edges_cpp
+Rcpp::List snap_points_to_edges_cpp(Rcpp::List edges, const Rcpp::NumericMatrix& XY, const Rcpp::IntegerVector& edge_id, const Rcpp::IntegerVector& group_start, const Rcpp::IntegerVector& group_end, const Rcpp::IntegerVector& pt_idx, double tolerance);
+RcppExport SEXP _MetricGraph_snap_points_to_edges_cpp(SEXP edgesSEXP, SEXP XYSEXP, SEXP edge_idSEXP, SEXP group_startSEXP, SEXP group_endSEXP, SEXP pt_idxSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type edges(edgesSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type XY(XYSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type edge_id(edge_idSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type group_start(group_startSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type group_end(group_endSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type pt_idx(pt_idxSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(snap_points_to_edges_cpp(edges, XY, edge_id, group_start, group_end, pt_idx, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cv_loo_selinv_cpp
+List cv_loo_selinv_cpp(List precomputed_data, IntegerMatrix edge_endpoints, List Q_list, double sigma_e, double reciprocal_tau, double kappa);
+RcppExport SEXP _MetricGraph_cv_loo_selinv_cpp(SEXP precomputed_dataSEXP, SEXP edge_endpointsSEXP, SEXP Q_listSEXP, SEXP sigma_eSEXP, SEXP reciprocal_tauSEXP, SEXP kappaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type precomputed_data(precomputed_dataSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type edge_endpoints(edge_endpointsSEXP);
+    Rcpp::traits::input_parameter< List >::type Q_list(Q_listSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma_e(sigma_eSEXP);
+    Rcpp::traits::input_parameter< double >::type reciprocal_tau(reciprocal_tauSEXP);
+    Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
+    rcpp_result_gen = Rcpp::wrap(cv_loo_selinv_cpp(precomputed_data, edge_endpoints, Q_list, sigma_e, reciprocal_tau, kappa));
+    return rcpp_result_gen;
+END_RCPP
+}
+// directional_edge_precision_triplets_cpp
+List directional_edge_precision_triplets_cpp(const NumericVector& edge_lengths, const IntegerVector& stationary_edges, double tau, double kappa, double w);
+RcppExport SEXP _MetricGraph_directional_edge_precision_triplets_cpp(SEXP edge_lengthsSEXP, SEXP stationary_edgesSEXP, SEXP tauSEXP, SEXP kappaSEXP, SEXP wSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type edge_lengths(edge_lengthsSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type stationary_edges(stationary_edgesSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
+    Rcpp::traits::input_parameter< double >::type w(wSEXP);
+    rcpp_result_gen = Rcpp::wrap(directional_edge_precision_triplets_cpp(edge_lengths, stationary_edges, tau, kappa, w));
+    return rcpp_result_gen;
+END_RCPP
+}
+// directional_ou_setup_numeric_cpp
+List directional_ou_setup_numeric_cpp(List skeleton, double kappa, double tau, NumericVector source_var_by_vertex);
+RcppExport SEXP _MetricGraph_directional_ou_setup_numeric_cpp(SEXP skeletonSEXP, SEXP kappaSEXP, SEXP tauSEXP, SEXP source_var_by_vertexSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type skeleton(skeletonSEXP);
+    Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type source_var_by_vertex(source_var_by_vertexSEXP);
+    rcpp_result_gen = Rcpp::wrap(directional_ou_setup_numeric_cpp(skeleton, kappa, tau, source_var_by_vertex));
+    return rcpp_result_gen;
+END_RCPP
+}
+// directional_ou_out_tree_lca_index_cpp
+List directional_ou_out_tree_lca_index_cpp(IntegerVector parent_edge, IntegerVector depth);
+RcppExport SEXP _MetricGraph_directional_ou_out_tree_lca_index_cpp(SEXP parent_edgeSEXP, SEXP depthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type parent_edge(parent_edgeSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type depth(depthSEXP);
+    rcpp_result_gen = Rcpp::wrap(directional_ou_out_tree_lca_index_cpp(parent_edge, depth));
+    return rcpp_result_gen;
+END_RCPP
+}
+// directional_ou_covariance_oriented_tree_cpp
+NumericMatrix directional_ou_covariance_oriented_tree_cpp(NumericMatrix E, NumericVector edge_lengths, std::string tree_orientation, double kappa, double sigma_stationary, NumericVector var_tail, NumericVector logG_tail, NumericVector signG_tail, IntegerVector enter, IntegerVector exit, IntegerVector depth, List out_tree_lca_index, NumericMatrix PtE_abs, NumericMatrix PtE2_abs, bool same_point_set);
+RcppExport SEXP _MetricGraph_directional_ou_covariance_oriented_tree_cpp(SEXP ESEXP, SEXP edge_lengthsSEXP, SEXP tree_orientationSEXP, SEXP kappaSEXP, SEXP sigma_stationarySEXP, SEXP var_tailSEXP, SEXP logG_tailSEXP, SEXP signG_tailSEXP, SEXP enterSEXP, SEXP exitSEXP, SEXP depthSEXP, SEXP out_tree_lca_indexSEXP, SEXP PtE_absSEXP, SEXP PtE2_absSEXP, SEXP same_point_setSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type E(ESEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type edge_lengths(edge_lengthsSEXP);
+    Rcpp::traits::input_parameter< std::string >::type tree_orientation(tree_orientationSEXP);
+    Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
+    Rcpp::traits::input_parameter< double >::type sigma_stationary(sigma_stationarySEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type var_tail(var_tailSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type logG_tail(logG_tailSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type signG_tail(signG_tailSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type enter(enterSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type exit(exitSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type depth(depthSEXP);
+    Rcpp::traits::input_parameter< List >::type out_tree_lca_index(out_tree_lca_indexSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type PtE_abs(PtE_absSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type PtE2_abs(PtE2_absSEXP);
+    Rcpp::traits::input_parameter< bool >::type same_point_set(same_point_setSEXP);
+    rcpp_result_gen = Rcpp::wrap(directional_ou_covariance_oriented_tree_cpp(E, edge_lengths, tree_orientation, kappa, sigma_stationary, var_tail, logG_tail, signG_tail, enter, exit, depth, out_tree_lca_index, PtE_abs, PtE2_abs, same_point_set));
+    return rcpp_result_gen;
+END_RCPP
+}
+// draw_edge_direct_cpp
+Eigen::VectorXd draw_edge_direct_cpp(double kappa, double tau, const Eigen::VectorXd& b_e, double l_e, const Eigen::VectorXd& t_abs, int alpha);
+RcppExport SEXP _MetricGraph_draw_edge_direct_cpp(SEXP kappaSEXP, SEXP tauSEXP, SEXP b_eSEXP, SEXP l_eSEXP, SEXP t_absSEXP, SEXP alphaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type b_e(b_eSEXP);
+    Rcpp::traits::input_parameter< double >::type l_e(l_eSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type t_abs(t_absSEXP);
+    Rcpp::traits::input_parameter< int >::type alpha(alphaSEXP);
+    rcpp_result_gen = Rcpp::wrap(draw_edge_direct_cpp(kappa, tau, b_e, l_e, t_abs, alpha));
+    return rcpp_result_gen;
+END_RCPP
+}
+// draw_edge_kriging_cpp
+Eigen::VectorXd draw_edge_kriging_cpp(double kappa, double tau, const Eigen::VectorXd& b_e, double l_e, const Eigen::VectorXd& t_abs, int alpha);
+RcppExport SEXP _MetricGraph_draw_edge_kriging_cpp(SEXP kappaSEXP, SEXP tauSEXP, SEXP b_eSEXP, SEXP l_eSEXP, SEXP t_absSEXP, SEXP alphaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type kappa(kappaSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type b_e(b_eSEXP);
+    Rcpp::traits::input_parameter< double >::type l_e(l_eSEXP);
+    Rcpp::traits::input_parameter< const Eigen::VectorXd& >::type t_abs(t_absSEXP);
+    Rcpp::traits::input_parameter< int >::type alpha(alphaSEXP);
+    rcpp_result_gen = Rcpp::wrap(draw_edge_kriging_cpp(kappa, tau, b_e, l_e, t_abs, alpha));
+    return rcpp_result_gen;
+END_RCPP
+}
 // compute_PtE_edges_cpp
 List compute_PtE_edges_cpp(List edges, bool longlat);
 RcppExport SEXP _MetricGraph_compute_PtE_edges_cpp(SEXP edgesSEXP, SEXP longlatSEXP) {
@@ -303,6 +434,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// nearest_edge_cpp
+List nearest_edge_cpp(List edges, NumericMatrix XY);
+RcppExport SEXP _MetricGraph_nearest_edge_cpp(SEXP edgesSEXP, SEXP XYSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type edges(edgesSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type XY(XYSEXP);
+    rcpp_result_gen = Rcpp::wrap(nearest_edge_cpp(edges, XY));
+    return rcpp_result_gen;
+END_RCPP
+}
 // selected_inv_cpp
 Eigen::SparseMatrix<double> selected_inv_cpp(const Eigen::SparseMatrix<double>& Q);
 RcppExport SEXP _MetricGraph_selected_inv_cpp(SEXP QSEXP) {
@@ -331,12 +474,21 @@ static const R_CallMethodDef CallEntries[] = {
     {"_MetricGraph_compute_length", (DL_FUNC) &_MetricGraph_compute_length, 1},
     {"_MetricGraph_generate_mesh", (DL_FUNC) &_MetricGraph_generate_mesh, 6},
     {"_MetricGraph_PtE_to_mesh_cpp", (DL_FUNC) &_MetricGraph_PtE_to_mesh_cpp, 8},
+    {"_MetricGraph_snap_points_to_edges_cpp", (DL_FUNC) &_MetricGraph_snap_points_to_edges_cpp, 7},
+    {"_MetricGraph_cv_loo_selinv_cpp", (DL_FUNC) &_MetricGraph_cv_loo_selinv_cpp, 6},
+    {"_MetricGraph_directional_edge_precision_triplets_cpp", (DL_FUNC) &_MetricGraph_directional_edge_precision_triplets_cpp, 5},
+    {"_MetricGraph_directional_ou_setup_numeric_cpp", (DL_FUNC) &_MetricGraph_directional_ou_setup_numeric_cpp, 4},
+    {"_MetricGraph_directional_ou_out_tree_lca_index_cpp", (DL_FUNC) &_MetricGraph_directional_ou_out_tree_lca_index_cpp, 2},
+    {"_MetricGraph_directional_ou_covariance_oriented_tree_cpp", (DL_FUNC) &_MetricGraph_directional_ou_covariance_oriented_tree_cpp, 15},
+    {"_MetricGraph_draw_edge_direct_cpp", (DL_FUNC) &_MetricGraph_draw_edge_direct_cpp, 6},
+    {"_MetricGraph_draw_edge_kriging_cpp", (DL_FUNC) &_MetricGraph_draw_edge_kriging_cpp, 6},
     {"_MetricGraph_compute_PtE_edges_cpp", (DL_FUNC) &_MetricGraph_compute_PtE_edges_cpp, 2},
     {"_MetricGraph_compute_edge_lengths_cpp", (DL_FUNC) &_MetricGraph_compute_edge_lengths_cpp, 2},
     {"_MetricGraph_postprocess_edges_cpp", (DL_FUNC) &_MetricGraph_postprocess_edges_cpp, 1},
     {"_MetricGraph_aeqd_project_cpp", (DL_FUNC) &_MetricGraph_aeqd_project_cpp, 3},
     {"_MetricGraph_split_one_edge_cpp", (DL_FUNC) &_MetricGraph_split_one_edge_cpp, 6},
     {"_MetricGraph_split_edges_batch_cpp", (DL_FUNC) &_MetricGraph_split_edges_batch_cpp, 7},
+    {"_MetricGraph_nearest_edge_cpp", (DL_FUNC) &_MetricGraph_nearest_edge_cpp, 2},
     {"_MetricGraph_selected_inv_cpp", (DL_FUNC) &_MetricGraph_selected_inv_cpp, 1},
     {NULL, NULL, 0}
 };

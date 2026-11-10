@@ -23,42 +23,63 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git rm -rf --ignore-unmatch vignettes
           git rm -rf --ignore-unmatch pkgdown/
           git rm -f --ignore-unmatch index.md
           git rm -rf --ignore-unmatch examples
           git rm -rf --ignore-unmatch inst/shared
 
-          git rm -f --ignore-unmatch tests/testthat/test_inla_inlabru_interfaces.R
-          git rm -f --ignore-unmatch tests/testthat/test_inlabru_predict.R
-          git rm -f --ignore-unmatch tests/testthat/test_cgeneric.R
-          git rm -f --ignore-unmatch tests/testthat/test_cross_validation.R
-          git rm -f --ignore-unmatch tests/testthat/test-prune-vertices-perf.R
-          git rm -f --ignore-unmatch tests/testthat/test-disconnected-models.R
-          git rm -f --ignore-unmatch tests/testthat/test-compute-distances.R
-          git rm -f --ignore-unmatch tests/testthat/test-cpp-helpers.R
-          git rm -f --ignore-unmatch tests/testthat/test-metric-graph-components.R
-          git rm -f --ignore-unmatch tests/testthat/test-coverage-gaps.R
-          git rm -f --ignore-unmatch tests/testthat/test_random_fields_vignette.R
-          git rm -f --ignore-unmatch tests/testthat/test-observation-to-vertex.R
-          git rm -f --ignore-unmatch tests/testthat/test_crossval.R
-          git rm -f --ignore-unmatch tests/testthat/test_directional.R
-          git rm -f --ignore-unmatch tests/testthat/test_exp.R
-          git rm -f --ignore-unmatch tests/testthat/test_isoExp.R
-          git rm -f --ignore-unmatch tests/testthat/test_obs_improvements.R
-          git rm -f --ignore-unmatch tests/testthat/test_precomputed_likelihood.R
-          git rm -f --ignore-unmatch tests/testthat/test_split_line.R
-          git rm -f --ignore-unmatch tests/testthat/test.alpha2.R
-          git rm -f --ignore-unmatch tests/testthat/test.alpha2.constraints.R
+          # Tests are removed only to keep the CRAN check time short. The INLA
+          # and inlabru tests skip safely when INLA is not available, so they
+          # do not need to be removed for that reason. The files below are the
+          # slowest ones under CRAN settings (NOT_CRAN=false); each took about
+          # 10 seconds or more, which together is about 6.5 of the 8.3 minutes
+          # of the whole test suite with INLA installed.
+          slow_tests="
+            test_cross_validation.R
+            test_fem_predict_manual.R
+            test_posterior_crossvalidation.R
+            test_inlabru_predict.R
+            test-compute-distances.R
+            test-laplacian-replicates.R
+            test-coverage-gaps.R
+            test_directional_ou_likelihood_basic.R
+            test-metric-graph-components.R
+            test_inla_inlabru_interfaces.R
+            test_random_fields_vignette.R
+          "
+          for f in $slow_tests; do
+            git rm -f --ignore-unmatch "tests/testthat/$f"
+          done
 
-          rm -rf vignettes
-          mkdir -p vignettes
+          # The Columbia river dataset (about 10 MB) is too large for CRAN.
+          # Its tests skip when the dataset is not available.
+          git rm -f --ignore-unmatch \
+            data/columbia_main_component.rda \
+            man/columbia_main_component.Rd \
+            R/data_columbia.R \
+            data-raw/columbia_main_component.R
+          perl -0pi -e 's/\n*Data: data\/columbia_main_component\.rda\n.*?(?=\n\n|\z)//s' inst/COPYRIGHTS
+          git add inst/COPYRIGHTS
 
-          cp cran_vignettes/* vignettes/
-
-          git rm -rf --ignore-unmatch cran_vignettes
-
-          git add vignettes
+          # The CRAN package only ships the vignettes in cran_vignettes/.
+          # After the first setup, cran_vignettes/ is gone, so keep only the
+          # vignettes that are already in place and drop any new ones.
+          cran_vignettes="MetricGraph_pkg.Rmd"
+          if [ -d cran_vignettes ]; then
+            git rm -rf --ignore-unmatch vignettes
+            rm -rf vignettes
+            mkdir -p vignettes
+            cp cran_vignettes/* vignettes/
+            git rm -rf --ignore-unmatch cran_vignettes
+            git add vignettes
+          else
+            git ls-files vignettes | while read -r f; do
+              case " $cran_vignettes " in
+                *" $(basename "$f") "*) ;;
+                *) git rm -f -q "$f" ;;
+              esac
+            done
+          fi
 
           git commit -m "Doing the setup" || echo "No changes to commit"
           git push

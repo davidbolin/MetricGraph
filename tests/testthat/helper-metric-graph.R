@@ -83,3 +83,12 @@ polyline_length <- function(coords) {
   d <- coords[-1, , drop = FALSE] - coords[-nrow(coords), , drop = FALSE]
   sum(sqrt(rowSums(d * d)))
 }
+
+# The Columbia river dataset is removed from the CRAN build because of its size.
+skip_if_no_columbia_data <- function() {
+  available <- utils::data(package = "MetricGraph")$results[, "Item"]
+  testthat::skip_if_not(
+    "columbia_main_component" %in% available,
+    "The Columbia dataset is not included in this build."
+  )
+}

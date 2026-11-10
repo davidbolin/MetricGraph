@@ -83,8 +83,11 @@ spde_variance <- function( kappa,
         graph$buildDirectionalConstraints(alpha = 1)
       }
       n_const <- length(graph$CoB$S)
-      ind.const <- c(1:n_const)
-      Tc <- graph$CoB$T[-ind.const,]
+      if (n_const > 0) {
+        Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+      } else {
+        Tc <- graph$CoB$T
+      }
       Q <- Tc %*% Q %*% t(Tc)
       Sigma = t(Tc) %*% Matrix::solve(Q,Tc,sparse=F)
     }
@@ -236,8 +239,11 @@ spde_covariance <- function(P,
         graph$buildDirectionalConstraints(alpha = 1)
       }
       n_const <- length(graph$CoB$S)
-      ind.const <- c(1:n_const)
-      Tc <- graph$CoB$T[-ind.const,]
+      if (n_const > 0) {
+        Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+      } else {
+        Tc <- graph$CoB$T
+      }
       Q <- Tc %*% Q %*% t(Tc)
       R <- Cholesky(Q, LDL = FALSE, perm = TRUE)
       Z <- matrix(0, nrow = 2*dim(graph$E)[1], ncol = 2)
@@ -325,8 +331,11 @@ spde_covariance <- function(P,
     graph$buildC(2, FALSE)
 
   n_const <- length(graph$CoB$S)
-  ind.const <- c(1:n_const)
-  Tc <- graph$CoB$T[-ind.const, ]
+  if (n_const > 0) {
+    Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+  } else {
+    Tc <- graph$CoB$T
+  }
   Q_mod <- Tc %*% Q %*% t(Tc)
   R <- Cholesky(Q_mod, LDL = FALSE, perm = TRUE)
   Vs <- graph$E[P[1], ]
@@ -358,7 +367,7 @@ spde_covariance <- function(P,
   Sigma[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
                                   kappa = kappa, tau = tau,
                                   deriv = 2)
-  Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa,
+  Sigma[d.index, -d.index] <- r_2(D[3:4-2,], kappa = kappa,
                                    tau = tau, deriv = 1)
   Sigma[-d.index, d.index] <- t(Sigma[d.index, -d.index])
 
@@ -384,7 +393,7 @@ spde_covariance <- function(P,
       Sigma[d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
                                       kappa = kappa, tau = tau,
                                       deriv = 2)
-      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, tau = tau,
+      Sigma[d.index, -d.index] <- r_2(D[3:4-2,], kappa = kappa, tau = tau,
                                        deriv = 1)
       Sigma[-d.index, d.index] <- t(Sigma[d.index,  -d.index])
 
@@ -405,7 +414,7 @@ spde_covariance <- function(P,
       Sigma[ d.index, d.index] <- -r_2(as.matrix(dist(c(0,l))),
                                        kappa = kappa, tau = tau,
                                        deriv = 2)
-      Sigma[d.index, -d.index] <- -r_2(D[3:4-2,], kappa = kappa, tau = tau,
+      Sigma[d.index, -d.index] <- r_2(D[3:4-2,], kappa = kappa, tau = tau,
                                        deriv = 1)
       Sigma[-d.index, d.index] <- t(Sigma[d.index, -d.index])
 

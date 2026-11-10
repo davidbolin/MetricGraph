@@ -329,10 +329,10 @@ graph_starting_values <- function(graph,
 
   check_graph(graph)
 
-  type_start_range_bbox <- match.arg(type_start_range_bbox, 
+  type_start_range_bbox <- match.arg(type_start_range_bbox,
                                    choices = c("diag", "max", "min"))
 
-  
+
 
 
   model <- model[[1]]
@@ -428,7 +428,7 @@ graph_starting_values <- function(graph,
 
   if(!is.null(model_options$start_sigma)){
       start_sigma <- model_options$start_sigma
-  }       
+  }
 
   if(!is.null(model_options[["fix_sigma"]])){
     start_sigma <- model_options[["fix_sigma"]]
@@ -453,13 +453,13 @@ graph_starting_values <- function(graph,
       } else{
         start_sigma <- 1
       }
-    } 
+    }
     nu_tmp <- 0.5
     start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))
 
   if(!is.null(model_options$start_tau)){
       start_tau <- model_options$start_tau
-  }       
+  }
 
   if(!is.null(model_options$fix_tau)){
     start_tau <- model_options$fix_tau
@@ -467,7 +467,7 @@ graph_starting_values <- function(graph,
 
   if(!is.null(model_options$start_kappa)){
       start_kappa <- model_options$start_kappa
-  }       
+  }
 
   if(!is.null(model_options$fix_kappa)){
     start_kappa <- model_options$fix_kappa
@@ -485,11 +485,11 @@ graph_starting_values <- function(graph,
       }
     }
     nu_tmp <- 1.5
-    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))   
+    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))
 
   if(!is.null(model_options$start_tau)){
       start_tau <- model_options$start_tau
-  }       
+  }
 
   if(!is.null(model_options$fix_tau)){
     start_tau <- model_options$fix_tau
@@ -497,11 +497,11 @@ graph_starting_values <- function(graph,
 
   if(!is.null(model_options$start_kappa)){
       start_kappa <- model_options$start_kappa
-  }       
+  }
 
   if(!is.null(model_options$fix_kappa)){
     start_kappa <- model_options$fix_kappa
-  }  
+  }
 
   } else if (model == "isoExp") {
     start_kappa <- sqrt(8 * 0.5) / prior.range.nominal
@@ -513,11 +513,11 @@ graph_starting_values <- function(graph,
       }
     }
     nu_tmp <- 0.5
-    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))    
+    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))
 
   if(!is.null(model_options$start_tau)){
       start_tau <- model_options$start_tau
-  }       
+  }
 
   if(!is.null(model_options$fix_tau)){
     start_tau <- model_options$fix_tau
@@ -525,11 +525,11 @@ graph_starting_values <- function(graph,
 
   if(!is.null(model_options$start_kappa)){
       start_kappa <- model_options$start_kappa
-  }       
+  }
 
   if(!is.null(model_options$fix_kappa)){
     start_kappa <- model_options$fix_kappa
-  }  
+  }
 
 
   } else if (model == "GL1") {
@@ -552,11 +552,11 @@ graph_starting_values <- function(graph,
       }
     }
     nu_tmp <- 0.5
-    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))    
+    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))
 
   if(!is.null(model_options$start_tau)){
       start_tau <- model_options$start_tau
-  }       
+  }
 
   if(!is.null(model_options$fix_tau)){
     start_tau <- model_options$fix_tau
@@ -564,11 +564,11 @@ graph_starting_values <- function(graph,
 
   if(!is.null(model_options$start_kappa)){
       start_kappa <- model_options$start_kappa
-  }       
+  }
 
   if(!is.null(model_options$fix_kappa)){
     start_kappa <- model_options$fix_kappa
-  }  
+  }
 
 
   } else if (model == "GL2") {
@@ -590,11 +590,11 @@ graph_starting_values <- function(graph,
       }
     }
     nu_tmp <- 1.5
-    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))    
+    start_tau <- sqrt(gamma(nu_tmp) / (start_sigma^2 * start_kappa^(2 * nu_tmp) * (4 * pi)^(1 / 2) * gamma(nu_tmp + 1 / 2)))
 
   if(!is.null(model_options$start_tau)){
       start_tau <- model_options$start_tau
-  }       
+  }
 
   if(!is.null(model_options$fix_tau)){
     start_tau <- model_options$fix_tau
@@ -602,20 +602,20 @@ graph_starting_values <- function(graph,
 
   if(!is.null(model_options$start_kappa)){
       start_kappa <- model_options$start_kappa
-  }       
+  }
 
   if(!is.null(model_options$fix_kappa)){
     start_kappa <- model_options$fix_kappa
-  }  
+  }
 
 
   } else {
     stop("wrong model choice")
-  } 
+  }
 
   out_vec <- c()
 
-  # reciprocal tau 
+  # reciprocal tau
 
   if(like_format){
       if(is.null(model_options[["fix_sigma"]]) && is.null(model_options$fix_tau)){
@@ -639,7 +639,7 @@ graph_starting_values <- function(graph,
           out_vec <- c(out_vec,start_nu)
         }
       }
-      
+
       if(is.null(model_options[["fix_sigma_e"]])){
         if(is.null(model_options$start_sigma_e)){
           out_vec <- c(out_vec, 0.1 * data_std)
@@ -701,7 +701,7 @@ graph_starting_values <- function(graph,
     if(length(out_vec)>1){
       out_vec <- log(out_vec)
     }
-    out_fixed <- lapply(out_fixed, log)  
+    out_fixed <- lapply(out_fixed, log)
   }
 
   out_list <- list(start_values = out_vec, fixed_values = out_fixed)
@@ -730,6 +730,36 @@ exp_covariance <- function(h, theta){
 }
 
 
+#' Index each (edge, distance) pair among the sorted unique pairs
+#'
+#' Equivalent to matching a pasted `"edge|distance"` key against the sorted
+#' unique keys, but done by sorting instead of by building one character string
+#' per observation. The string form allocates an R string per row, which
+#' dominates memory when the data holds many replicates of a handful of
+#' locations. `NA` is treated as equal to `NA`, as `paste()` does.
+#' @noRd
+location_codes <- function(e, d) {
+  n <- length(e)
+  if (n == 0L) return(list(idx = integer(0), n_unique = 0L))
+  o <- order(e, d)
+  es <- e[o]; ds <- d[o]
+  if (n == 1L) {
+    idx <- integer(1L); idx[o] <- 1L
+    return(list(idx = idx, n_unique = 1L))
+  }
+  eq <- function(a, b) {
+    r <- (a == b)
+    r[is.na(a) & is.na(b)] <- TRUE
+    r[is.na(r)] <- FALSE
+    r
+  }
+  same <- eq(es[-1L], es[-n]) & eq(ds[-1L], ds[-n])
+  is_new <- c(TRUE, !same)
+  idx <- integer(n)
+  idx[o] <- cumsum(is_new)
+  list(idx = idx, n_unique = sum(is_new))
+}
+
 #' Processing data to be used in add_observations
 #' @noRd
 process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress_warnings) {
@@ -739,7 +769,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
   # Store factor and datetime metadata
   factor_metadata <- list()
   datetime_columns <- c()
-  
+
   # Collect factor and datetime info from new_data
   for (col in names(new_data)) {
     if (is.factor(new_data[[col]])) {
@@ -758,7 +788,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
       }
     }
   }
-  
+
   # Collect factor and datetime info from old_data too
   if (!is.null(old_data)) {
     for (col in names(old_data)) {
@@ -768,7 +798,7 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
         )
         # Convert to character for merging
         old_data[[col]] <- as.character(old_data[[col]])
-      } else if (inherits(old_data[[col]], c("POSIXlt", "POSIXt", "POSIXct")) && 
+      } else if (inherits(old_data[[col]], c("POSIXlt", "POSIXt", "POSIXct")) &&
                 !(col %in% datetime_columns)) {
         datetime_columns <- c(datetime_columns, col)
         if (inherits(old_data[[col]], "POSIXlt")) {
@@ -789,16 +819,25 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
 
   # --- Sparse merge: store only actual (loc, group) pairs, no Cartesian expansion ---
   # New data takes priority; old entries at the same (loc, group) are dropped.
-  sep <- "|"
-  new_key <- paste(PtE[, 1], PtE[, 2], group_vector, sep = sep)
-
+  # The (location, group) identity is encoded as an integer rather than as a
+  # pasted string, so no per-observation strings are allocated.
   if (!is.null(old_data)) {
-    old_key <- paste(old_data[[".edge_number"]], old_data[[".distance_on_edge"]],
-                     old_data[[".group"]], sep = sep)
-    if (!suppress_warnings && any(old_key %in% new_key)) {
+    n_new_rows <- nrow(PtE)
+    e_cat <- c(PtE[, 1], old_data[[".edge_number"]])
+    d_cat <- c(PtE[, 2], old_data[[".distance_on_edge"]])
+    g_cat <- c(group_vector, old_data[[".group"]])
+
+    lc <- location_codes(e_cat, d_cat)
+    g_code <- match(g_cat, unique(g_cat))
+    key_code <- lc$idx + lc$n_unique * (g_code - 1L)
+
+    new_code <- key_code[seq_len(n_new_rows)]
+    old_code <- key_code[-seq_len(n_new_rows)]
+
+    if (!suppress_warnings && any(old_code %in% new_code)) {
       warning("Conflicting data detected. New data may overwrite existing data.")
     }
-    keep_old <- !old_key %in% new_key
+    keep_old <- !old_code %in% new_code
   } else {
     keep_old <- logical(0)
   }
@@ -820,13 +859,10 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
   all_dists  <- all_dists[ord]
   all_groups <- all_groups[ord]
 
-  # .loc_idx: each row maps to its sorted unique-(edge,dist) position
-  # Unique locations sorted numerically for stable downstream use.
-  uloc_df  <- unique(data.frame(e = all_edges, d = all_dists))
-  uloc_df  <- uloc_df[order(uloc_df$e, uloc_df$d), , drop = FALSE]
-  uloc_key <- paste(uloc_df$e, uloc_df$d, sep = sep)
-  row_key  <- paste(all_edges, all_dists, sep = sep)
-  loc_idx  <- match(row_key, uloc_key)
+  # .loc_idx: each row maps to its sorted unique-(edge,dist) position.
+  # `unique(data.frame(...))` pastes every row into a string internally, so it
+  # is replaced here by the same sort-based coding.
+  loc_idx <- location_codes(all_edges, all_dists)$idx
 
   n_result <- length(all_edges)
 
@@ -861,24 +897,24 @@ process_data_add_obs <- function(PtE, new_data, old_data, group_vector, suppress
   for (col_name in names(factor_metadata)) {
     if (col_name %in% names(list_result)) {
       original_levels <- factor_metadata[[col_name]]$levels
-      
+
       # Get current values in the result
       current_values <- unique(as.character(list_result[[col_name]][!is.na(list_result[[col_name]])]))
-      
+
       # Check for new values not in original levels
       new_values <- setdiff(current_values, original_levels)
-      
+
       if (length(new_values) > 0 && !suppress_warnings) {
         warning(sprintf("Column '%s' contains values not in original factor levels: %s. These have been added as new levels.",
                       col_name, paste(new_values, collapse = ", ")))
       }
-      
+
       # Create factor with all necessary levels, preserving original order
       all_levels <- c(original_levels, new_values)
       list_result[[col_name]] <- factor(list_result[[col_name]], levels = all_levels)
     }
   }
-  
+
   # Restore datetime columns to their proper type
   for (col_name in datetime_columns) {
     if (col_name %in% names(list_result)) {
@@ -1140,7 +1176,7 @@ make_Aprd <- function(graph, edge_number, distance_on_edge){
 
 #' @noRd
 
-change_parameterization_graphlme <- function(#likelihood, 
+change_parameterization_graphlme <- function(#likelihood,
 nu, par, hessian, fix_vec
 ){
   tau <- par[1]
@@ -1178,7 +1214,7 @@ nu, par, hessian, fix_vec
   return(list(coeff = c(sigma, range), std_random = std_err_tmp))
 }
 
-#' @noRd 
+#' @noRd
 
 process_factor_unit <- function(vertex_unit, length_unit){
   if(is.null(vertex_unit) && is.null(length_unit)){
@@ -1196,36 +1232,36 @@ process_factor_unit <- function(vertex_unit, length_unit){
   } else if(vertex_unit == "km"){
     fact <- switch(length_unit, "km" = 1,
                         "m" = 1000,
-                        "miles" = 0.621371192) 
-    return(fact) 
+                        "miles" = 0.621371192)
+    return(fact)
   } else if(vertex_unit == "m"){
     fact <- switch(length_unit, "km" = 1e-3,
                         "m" = 1,
-                        "miles" = 0.621371192*1e-3) 
+                        "miles" = 0.621371192*1e-3)
     return(fact)
   } else if(vertex_unit == "miles"){
     fact <- switch(length_unit, "km" = 1.609344,
                         "m" = 1.609344*1e3,
-                        "miles" = 1) 
+                        "miles" = 1)
     return(fact)
   }
 }
 
 
 #' code from https://gist.github.com/MansMeg/1ec56b54e1d9d238b4fd
-#' 
+#'
 #' Message progress bar
-#' 
-#' @description 
+#'
+#' @description
 #' A simple progress bar to use in R packages where messages are prefered to console output.
-#' 
+#'
 #' @field iter Total number of iterations
 #' @field i Current iteration
 #' @field width Width of the R console
 #' @field width_bar Width of the progress bar
 #' @field progress The number of character printed (continous)
 #' @field progress_step Addition to progress per iteration
-#' 
+#'
 #' @examples
 #' test_bar <- function(i = 10){
 #'  bar <- msg_progress_bar(i)
@@ -1235,20 +1271,20 @@ process_factor_unit <- function(vertex_unit, length_unit){
 #'    }
 #'  }
 #'  test_bar(100)
-#'   
+#'
 #' @author Mans Magnusson (MansMeg @ github)
-#'   
-#' @noRd 
-msg_progress_bar <- 
+#'
+#' @noRd
+msg_progress_bar <-
   setRefClass(
-    Class = "msg_progress_bar", 
+    Class = "msg_progress_bar",
     fields = list(iter = "numeric",
                   i = "numeric",
                   progress = "numeric",
                   progress_step = "numeric",
                   width = "numeric",
                   width_bar = "numeric"),
-    
+
     methods = list(
       initialize = function(iter){
         'Initialize a messagebar object'
@@ -1263,7 +1299,7 @@ msg_progress_bar <-
         .self$progress_step <- .self$width_bar / .self$iter
         message(paste(white_init, "|", white_part, "25%", white_part, "50%", white_part, "75%", white_part, "|","\n", white_init, "|", sep=""), appendLF = FALSE)
       },
-      
+
       increment = function(){
         'A messagebar object.'
         if(.self$i > .self$iter) return(invisible(NULL))
@@ -1272,18 +1308,18 @@ msg_progress_bar <-
         if(diff_in_char > 0) {
           message(paste(rep("=", diff_in_char),collapse=""), appendLF = FALSE)
         }
-        
+
         .self$progress <- new_progress
         .self$i <- .self$i + 1
         if(.self$i == .self$iter) message("|\n", appendLF = FALSE)
-        
+
       }
     )
   )
 
   #' @noRd
-  #' 
-  
+  #'
+
   get_rel_pos_prune <- function(which_line_starts, Line_1, Line_2, start_1, end_1, start_2, end_2, length_line1, length_line2){
 
       if(Line_1 != Line_2){
@@ -1325,16 +1361,16 @@ msg_progress_bar <-
 
 
 
-#' @noRd 
-#' 
+#' @noRd
+#'
 
 get_vertex_pos_in_line <- function(V, coords_line){
     return(which.min(sapply(1:nrow(coords_line), function(i){norm(as.matrix(V - coords_line[i,]))})))
 }
 
 
-#' @noRd 
-#' 
+#' @noRd
+#'
 
 check_lines_input <- function(lines){
   is_matrix <- sapply(lines, function(i){is.matrix(i)})
@@ -1350,8 +1386,8 @@ check_lines_input <- function(lines){
   return(lines)
 }
 
-#' @noRd 
-#' 
+#' @noRd
+#'
 
 compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_longlat, vertex_unit, project_data, transform){
   if(!is.null(edge)){
@@ -1366,7 +1402,7 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
           fact <- 1
         }
         linestring <- sf::st_sfc(sf::st_linestring(edge), crs = crs)
-        # linestring <- sf::st_transform(linestring,  crs = 4326)        
+        # linestring <- sf::st_transform(linestring,  crs = 4326)
         length <- sf::st_length(linestring)
         units(length) <- unit
         units(length) <- NULL
@@ -1385,7 +1421,7 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
       } else{
         Line <- sf::st_as_sf(as.data.frame(edge), coords = 1:2, crs = crs)
         Line <- sf::st_transform(Line, crs = 4326)
-        Line <- sf::st_coordinates(Line) 
+        Line <- sf::st_coordinates(Line)
         length <- sp::LineLength(Line, longlat = longlat)
         units(length) <- "km"
         fact <- 1
@@ -1400,8 +1436,8 @@ compute_line_lengths <- function(edge, longlat, unit, crs, proj4string, which_lo
 }
 
 
-#' @noRd 
-#' 
+#' @noRd
+#'
 
 compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NULL, fact, which_longlat, length_unit, transform){
   if(!is.null(points)){
@@ -1429,6 +1465,13 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
         if(is.null(points)){
           dists <- sf::st_distance(sf_points, which = "Great Circle")
         } else{
+          ## Broadcast a single point to match `lines` so we can use
+          ## by_element = TRUE; this matches the non-longlat branch
+          ## above and the callers' one-to-many distance pattern.
+          if(nrow(points) == 1L && nrow(lines) > 1L){
+            points <- matrix(rep(points, each = nrow(lines)),
+                             nrow = nrow(lines), ncol = ncol(points))
+          }
           sf_p_points <- sf::st_as_sf(as.data.frame(points), coords = 1:2, crs = crs)
           if(transform){
             sf_p_points <- sf::st_transform(sf_p_points,  crs = 4326)
@@ -1439,16 +1482,23 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
         units(dists) <- length_unit
         units(dists) <- NULL
     } else{
-        sp_points <- sp::SpatialPoints(coords = lines, proj4string = proj4string) 
+        sp_points <- sp::SpatialPoints(coords = lines, proj4string = proj4string)
         if(transform){
           sp_points <- sp::spTransform(sp_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))
         }
         if(is.null(points)){
           dists <- sp::spDists(sp_points, longlat = TRUE) #* fact
         } else{
-          sp_p_points <- sp::SpatialPoints(coords = points, proj4string = proj4string) 
+          ## Broadcast a single point to match `lines` so we can use
+          ## diagonal = TRUE; same one-to-many pattern as the
+          ## non-longlat branch above.
+          if(nrow(points) == 1L && nrow(lines) > 1L){
+            points <- matrix(rep(points, each = nrow(lines)),
+                             nrow = nrow(lines), ncol = ncol(points))
+          }
+          sp_p_points <- sp::SpatialPoints(coords = points, proj4string = proj4string)
           if(transform){
-            sp_p_points <- sp::spTransform(sp_p_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))          
+            sp_p_points <- sp::spTransform(sp_p_points, CRSobj = sp::CRS("+proj=longlat +datum=WGS84"))
           }
           dists <- sp::spDists(x = sp_points, y=sp_p_points, longlat = TRUE, diagonal = TRUE) #* fact
         }
@@ -1473,24 +1523,24 @@ compute_aux_distances <- function(lines, crs, longlat, proj4string, points = NUL
 #' @return A `tidyr::tibble` with the resulting selected columns.
 #' @method select metric_graph_data
 #' @export
-#' 
+#'
 select.metric_graph_data <- function(.data, ...){
     bkp <- list()
-    bkp[[".group"]] <- .data[[".group"]] 
+    bkp[[".group"]] <- .data[[".group"]]
     bkp[[".edge_number"]] <- .data[[".edge_number"]]
     bkp[[".distance_on_edge"]] <- .data[[".distance_on_edge"]]
     bkp[[".coord_x"]] <- .data[[".coord_x"]]
     bkp[[".coord_y"]] <- .data[[".coord_y"]]
 
     data_res <- dplyr::select(.data = tidyr::as_tibble(.data), ...)
-    data_res[[".group"]] <- bkp[[".group"]] 
+    data_res[[".group"]] <- bkp[[".group"]]
     data_res[[".edge_number"]] <- bkp[[".edge_number"]]
     data_res[[".distance_on_edge"]] <- bkp[[".distance_on_edge"]]
     data_res[[".coord_x"]] <- bkp[[".coord_x"]]
     data_res[[".coord_y"]] <- bkp[[".coord_y"]]
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
-    }    
+    }
     return(data_res)
 }
 
@@ -1504,12 +1554,12 @@ select.metric_graph_data <- function(.data, ...){
 #' @return A `tidyr::tibble` with the resulting selected columns.
 #' @method mutate metric_graph_data
 #' @export
-#' 
+#'
 mutate.metric_graph_data <- function(.data, ...){
     data_res <- dplyr::mutate(.data = tidyr::as_tibble(.data), ...)
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
-    }    
+    }
     return(data_res)
 }
 
@@ -1524,12 +1574,12 @@ mutate.metric_graph_data <- function(.data, ...){
 #' @return A `tidyr::tibble` with the resulting selected columns.
 #' @method drop_na metric_graph_data
 #' @export
-#' 
+#'
 drop_na.metric_graph_data <- function(data, ...){
     data_res <- tidyr::drop_na(data = tidyr::as_tibble(data), ...)
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
-    }    
+    }
     return(data_res)
 }
 
@@ -1544,13 +1594,13 @@ drop_na.metric_graph_data <- function(data, ...){
 #' @return A `tidyr::tibble` with the resulting selected columns.
 #' @method filter metric_graph_data
 #' @export
-#' 
+#'
 filter.metric_graph_data <- function(.data, ...){
     data_res <- dplyr::filter(.data = tidyr::as_tibble(.data), ...)
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
-    }    
-    return(data_res)   
+    }
+    return(data_res)
 }
 
 
@@ -1566,7 +1616,7 @@ filter.metric_graph_data <- function(.data, ...){
 #' @return A `tidyr::tibble` with the resulting selected columns.
 #' @method summarise metric_graph_data
 #' @export
-#' 
+#'
 summarise.metric_graph_data <- function(.data, ..., .include_graph_groups = FALSE, .groups = NULL){
     group_vars <- c(".edge_number", ".distance_on_edge", ".coord_x", ".coord_y")
     if(.include_graph_groups){
@@ -1589,7 +1639,7 @@ summarise.metric_graph_data <- function(.data, ..., .include_graph_groups = FALS
 
     if(!inherits(data_res, "metric_graph_data")){
       class(data_res) <- c("metric_graph_data", class(data_res))
-    }        
+    }
     return(data_res)
 }
 
@@ -1692,7 +1742,7 @@ print.metric_graph_edges <- function(x, n = 4, ...) {
     lab_x <- "x"
     lab_y <- "y"
   }
-  edge_lengths <- 
+  edge_lengths <-
   cat("\nSummary: \n\n")
   for(i in 1:min(n,length(x))){
     edge <- x[[i]]
@@ -1724,7 +1774,7 @@ print.metric_graph_edges <- function(x, n = 4, ...) {
         cat("Kirchhoff weight:", w_tmp,"\n\n")
       }
     }
-    
+
     if(!is.null(attr(x[[i]], "directional_weight"))){
       dw <- attr(x[[i]], "directional_weight")
       w_tmp <- attr(x[[i]], "weight")
@@ -1765,9 +1815,9 @@ print.metric_graph_edge <- function(x, n = 4, ...) {
     lab_x <- "x"
     lab_y <- "y"
   }
-  edge_lengths <- 
+  edge_lengths <-
   cat("\nCoordinates of the vertices of the edge: \n")
-  edge_df <- data.frame(a = x[,1], b = x[,2]) 
+  edge_df <- data.frame(a = x[,1], b = x[,2])
   n_edge_df <- nrow(edge_df)
   edge_df <- edge_df[c(1,n_edge_df),]
   colnames(edge_df) <- c(lab_x,lab_y)
@@ -1776,14 +1826,14 @@ print.metric_graph_edge <- function(x, n = 4, ...) {
   cat("\n")
 
   cat("Coordinates of the edge:\n")
-  edge_df <- data.frame(a = x[,1], b = x[,2]) 
+  edge_df <- data.frame(a = x[,1], b = x[,2])
   colnames(edge_df) <- c(lab_x,lab_y)
   print(edge_df[1:min(n,nrow(edge_df)),], row.names=FALSE)
   if(n < nrow(edge_df)){
     message(paste("#", nrow(x)-n,"more coordinates"))
     message("# Use `print(n=...)` to see more coordinates")
   }
-  
+
   cat("\n")
 
   if(is.null(attr(x, "PtE"))){
@@ -1793,7 +1843,7 @@ print.metric_graph_edge <- function(x, n = 4, ...) {
   cat("Relative positions of the edge:\n")
   PtE <- attr(x, "PtE")
   PtE <- cbind(attr(x, "id"), PtE)
-  PtE_df <- data.frame(a = PtE[,1], b = PtE[,2]) 
+  PtE_df <- data.frame(a = PtE[,1], b = PtE[,2])
   colnames(PtE_df) <- c("Edge number","Distance on edge")
   print(PtE_df[1:min(n,nrow(edge_df)),], row.names=FALSE)
   if(n < nrow(PtE_df)){
@@ -1801,7 +1851,7 @@ print.metric_graph_edge <- function(x, n = 4, ...) {
     message("# Use `print(n=...)` to see more relative positions")
   }
   }
-  
+
   cat("\n")
   cat("Total number of coordinates:",nrow(edge_df),"\n")
     if(!is.null(attr(attr(x,"length"),"units"))){
@@ -1824,7 +1874,7 @@ print.metric_graph_edge <- function(x, n = 4, ...) {
       } else{
         cat("Kirchhoff weight:", w_tmp,"\n\n")
       }
-    }    
+    }
     if(!is.null(attr(x, "directional_weight"))){
       dw <- attr(x, "directional_weight")
       w_tmp <- attr(x, "weight")
@@ -1871,7 +1921,7 @@ print.metric_graph_vertex <- function(x, n = 10, ...) {
   print(coord_tmp, row.names = FALSE)
 }
 
-#' @noRd 
+#' @noRd
 
 strip_units_if_present <- function(x) {
   if (inherits(x, "units")) {
@@ -1881,7 +1931,7 @@ strip_units_if_present <- function(x) {
 }
 
 
-#' @noRd 
+#' @noRd
 
 # na.const <- function(x){
 #   if(!any(is.na(x))){
@@ -1904,30 +1954,30 @@ na.const <- function(x) {
   if(!any(is.na(x))) {
     return(x)
   }
-  
+
   # Check if all values are NA
   if(all(is.na(x))) {
     return(x)  # or return a default value depending on your needs
   }
-  
+
   not_na <- which(!is.na(x))
   min_nonna <- min(not_na)
   max_nonna <- max(not_na)
-  
+
   # Safety check for vector creation
   if(min_nonna > 1 && (min_nonna - 1) < .Machine$integer.max) {
     x[1:(min_nonna-1)] <- x[min_nonna]
   }
-  
+
   if(max_nonna < length(x)) {
     x[(max_nonna+1):length(x)] <- x[max_nonna]
   }
-  
+
   return(x)
 }
 
 
-#' @noRd 
+#' @noRd
 
 # Function factory to fix some variables, and return a new function to be passed to the likelihood
 # func -> original function
@@ -1947,7 +1997,7 @@ function_factory_fix_var <- function(func, fix_vec, num_var, fix_val, n_cov) {
   return(ret_fun)
 }
 
-#' @noRd 
+#' @noRd
 
 # Get the starting values to be passed to optim when fixing variables
 
@@ -1959,7 +2009,7 @@ start_values_fix <- function(start_values, fix_vec, n_cov){
   return(start_values[!fix_vec_latent])
 }
 
-#' @noRd 
+#' @noRd
 
 get_fixed_values <- function(start_values, fix_vec, n_cov){
   fix_vec_latent <- c(fix_vec, rep(FALSE,n_cov))
@@ -1967,7 +2017,7 @@ get_fixed_values <- function(start_values, fix_vec, n_cov){
 }
 
 
-#' @noRd 
+#' @noRd
 
 create_fix_vec_val <- function(fixed_values){
     if(is.null(fixed_values$fixed_sigma_e)){
@@ -1998,7 +2048,7 @@ create_fix_vec_val <- function(fixed_values){
 }
 
 
-#' @noRd 
+#' @noRd
 
 check_model_options <- function(model_options){
   if(length(model_options[["fix_tau"]]) > 1){
@@ -2012,7 +2062,7 @@ check_model_options <- function(model_options){
   }
   if(length(model_options[["fix_kappa"]]) > 1){
     stop("'fix_kappa' must have length 1!")
-  }  
+  }
   if(length(model_options[["fix_range"]]) > 1){
     stop("'fix_range' must have length 1!")
   }
@@ -2028,7 +2078,7 @@ check_model_options <- function(model_options){
     if(model_options[["fix_tau"]] <= 0){
       stop("'fix_tau' must be positive!")
     }
-  }  
+  }
   if(!is.null(model_options[["fix_kappa"]])){
     if(model_options[["fix_kappa"]] <= 0){
       stop("'fix_kappa' must be positive!")
@@ -2043,7 +2093,7 @@ check_model_options <- function(model_options){
     if(model_options[["fix_nu"]] <= 0){
       stop("'fix_nu' must be positive!")
     }
-  }  
+  }
   if(!is.null(model_options[["fix_sigma_e"]])){
     if(model_options[["fix_sigma_e"]] < 0){
       stop("'fix_sigma_e' must be non-negative!")
@@ -2051,7 +2101,7 @@ check_model_options <- function(model_options){
   }
 }
 
-#' @noRd 
+#' @noRd
 
 get_only_first <- function(vec){
   idx <- which(vec)
@@ -2081,29 +2131,57 @@ filter_spatial_obs_groups <- function(graph, PtE, point_coords, grp_dat,
   n_grps      <- length(unique_grps)
   n_total     <- nrow(PtE)
 
-  PtE_list     <- vector("list", n_grps)
-  norm_list    <- vector("list", n_grps)
-  far_list     <- vector("list", n_grps)
-  closest_list <- vector("list", n_grps)
+  # Row indices for every group, in one pass. Looking them up inside the loop
+  # with `which(grp_dat == grp)` rescans all rows once per group, which is
+  # O(n_groups * n_rows) and dominates the cost as soon as the data has many
+  # replicates. `match()` keeps the groups in order of first appearance, which
+  # is the order `unique()` returns and the order the masks below are
+  # concatenated in.
+  idx_by_grp <- split(seq_along(grp_dat),
+                      factor(match(grp_dat, unique_grps),
+                             levels = seq_len(n_grps)))
+
+  # Results are written into preallocated vectors rather than collected as one
+  # small object per group and combined with `do.call(rbind, ...)` at the end.
+  # With many replicates that built tens of thousands of small matrices and
+  # then copied them all again, which dominated the transient memory use.
+  PtE_out      <- matrix(NA_real_, nrow = n_total, ncol = ncol(PtE))
+  norm_out     <- numeric(n_total)
+  far_out      <- logical(n_total)
+  closest_out  <- logical(n_total)
+  n_out        <- 0L   # rows written to PtE_out / norm_out
+  n_far        <- 0L   # entries written to far_out
+  n_closest    <- 0L   # entries written to closest_out
   has_dup      <- FALSE
 
+  # Projecting the observations back onto the graph and measuring how far they
+  # moved are both row-wise: neither depends on which group a row belongs to.
+  # Doing them once for all rows and subsetting afterwards gives the same
+  # numbers as doing them group by group, but does not repeat identical work
+  # for every replicate (with replicated designs every group holds the same
+  # locations).
+  XY_new_all <- graph$coordinates(PtE = PtE, normalized = TRUE)
+  norm_XY_all <- compute_aux_distances(
+    lines = point_coords, points = XY_new_all,
+    crs = crs, longlat = longlat, proj4string = proj4string,
+    fact = fact, which_longlat = which_longlat,
+    length_unit = length_unit, transform = transform
+  )
+  far_all <- norm_XY_all > tolerance
+
+
   for (gi in seq_along(unique_grps)) {
-    grp     <- unique_grps[gi]
-    idx_grp <- which(grp_dat == grp)
+    idx_grp <- idx_by_grp[[gi]]
 
     PtE_grp         <- PtE[idx_grp, , drop = FALSE]
     point_coords_grp <- point_coords[idx_grp, , drop = FALSE]
-    XY_new_grp      <- graph$coordinates(PtE = PtE_grp, normalized = TRUE)
+    XY_new_grp      <- XY_new_all[idx_grp, , drop = FALSE]
 
-    norm_XY_grp <- compute_aux_distances(
-      lines = point_coords_grp, points = XY_new_grp,
-      crs = crs, longlat = longlat, proj4string = proj4string,
-      fact = fact, which_longlat = which_longlat,
-      length_unit = length_unit, transform = transform
-    )
+    norm_XY_grp <- norm_XY_all[idx_grp]
 
-    far_grp <- norm_XY_grp > tolerance
-    far_list[[gi]] <- far_grp  # original group size
+    far_grp <- far_all[idx_grp]
+    far_out[n_far + seq_along(far_grp)] <- far_grp  # original group size
+    n_far <- n_far + length(far_grp)
 
     # Filter far points
     ok           <- !far_grp
@@ -2157,16 +2235,23 @@ filter_spatial_obs_groups <- function(graph, PtE, point_coords, grp_dat,
     }
 
     keep_final       <- !closest_grp
-    PtE_list[[gi]]   <- PtE_grp[keep_final, , drop = FALSE]
-    norm_list[[gi]]  <- norm_XY_grp[keep_final]
-    closest_list[[gi]] <- closest_grp
+    closest_out[n_closest + seq_along(closest_grp)] <- closest_grp
+    n_closest <- n_closest + length(closest_grp)
+
+    n_keep <- sum(keep_final)
+    if (n_keep > 0L) {
+      slot <- n_out + seq_len(n_keep)
+      PtE_out[slot, ]  <- PtE_grp[keep_final, , drop = FALSE]
+      norm_out[slot]   <- norm_XY_grp[keep_final]
+      n_out <- n_out + n_keep
+    }
   }
 
   list(
-    PtE          = do.call(rbind, PtE_list),
-    far_mask     = unlist(far_list),           # length = n_total
-    norm_XY      = unlist(norm_list),           # length = sum(!far & !closest)
-    closest_mask = unlist(closest_list),        # length = sum(!far)
+    PtE          = PtE_out[seq_len(n_out), , drop = FALSE],
+    far_mask     = far_out[seq_len(n_far)],          # length = n_total
+    norm_XY      = norm_out[seq_len(n_out)],         # length = sum(!far & !closest)
+    closest_mask = closest_out[seq_len(n_closest)],  # length = sum(!far)
     has_dup      = has_dup
   )
 }
@@ -2193,7 +2278,7 @@ map_into_reference_edge <- function(graph, verbose = 0) {
   return(ref_edge)
 }
 
-#' @noRd 
+#' @noRd
 # Converts distance on edge equal 1 to distance on edge equal to 0
 
 standardize_df_positions <- function(df, graph, edge_number = "edge_number", distance_on_edge = "distance_on_edge"){
@@ -2204,7 +2289,7 @@ standardize_df_positions <- function(df, graph, edge_number = "edge_number", dis
   }
 
   ref_edges <- graph$.__enclos_env__$private$ref_edges
-  
+
   if(length(idx_pos1)>0){
     edge_num_pos1 <- df[[edge_number]][idx_pos1]
     vertices_pos1 <- graph$E[edge_num_pos1, 2]
@@ -2242,7 +2327,7 @@ fill_na_values_split_edge <- function(data) {
 
 # Helper function for merging observations to be used with `add_observations()`
 # strategies "remove", "merge", "average"
-#' @noRd 
+#' @noRd
 
 get_idx_within_merge_tolerance <- function(PtE, group_vector, aux_length, tolerance, dplyr = FALSE){
   if(is.null(group_vector)){
@@ -2287,7 +2372,7 @@ filter_indices_by_tolerance <- function(edge_indices, positions, tolerance) {
     while (TRUE) {
         diffs <- diff(positions[selected - min(selected) + 1])  # Calculate diffs on the current selection
         below_tolerance <- which(diffs < tolerance)
-        
+
         if (length(below_tolerance) == 0) {
             # Stop if no diffs are below tolerance
             break
@@ -2296,7 +2381,7 @@ filter_indices_by_tolerance <- function(edge_indices, positions, tolerance) {
         # Remove the first occurrence where diff < tolerance
         selected <- selected[-(below_tolerance[1] + 1)]
     }
-    
+
     return(selected)  # Return the filtered indices for this subgroup
 }
 
@@ -2307,23 +2392,23 @@ filter_group_edge <- function(df, tolerance) {
     # Start with all indices selected
     selected <- seq_len(nrow(df))
     positions <- df$position
-    
+
     # Calculate initial differences
     diffs <- diff(positions)
-    
+
     # While there are differences below tolerance
     while (any(diffs < tolerance)) {
         # Find the first position where diff is below tolerance
         first_below <- which(diffs < tolerance)[1]
-        
+
         # Remove the second element in the violating pair
         selected <- selected[-(first_below + 1)]
-        
+
         # Recalculate diffs only around the modified region
         if (first_below > 1) diffs[first_below - 1] <- positions[selected[first_below]] - positions[selected[first_below - 1]]
         diffs <- diffs[-first_below]
     }
-    
+
     # Return the original indices of the selected rows
     return(df$orig_index[selected])
 }
@@ -2334,12 +2419,12 @@ find_merged_indices_for_unselected <- function(selected_rows, total_rows) {
     # Identify unselected rows
     all_rows <- 1:total_rows
     unselected_rows <- setdiff(all_rows, selected_rows)
-    
+
     # For each unselected row, find the nearest preceding selected row
     merged_indices <- sapply(unselected_rows, function(row) {
         max(selected_rows[selected_rows <= row])
     })
-    
+
     return(merged_indices)
 }
 
@@ -2368,10 +2453,10 @@ apply_merge_strategy <- function(data, removed_merge, merge_idx_map, ref_idx_mer
     for (i in seq_along(ref_idx_merges)) {
         # Access the mapped index using the character version of ref_idx_merges[i]
         ref_idx <- as.integer(merge_idx_map[as.character(ref_idx_merges[i])])
-        
+
         # Get the removed observations linked to this ref_idx
         removed_indices <- which(ref_idx_merges == ref_idx_merges[i])
-        
+
         # Apply the merge or average strategy based on `merge_strategy`
         if (merge_strategy == "merge") {
             data <- fill_na_merge(data, removed_merge, ref_idx, removed_indices)
@@ -2379,7 +2464,7 @@ apply_merge_strategy <- function(data, removed_merge, merge_idx_map, ref_idx_mer
             data <- fill_na_average(data, removed_merge, ref_idx, removed_indices)
         }
     }
-    
+
     return(data)
 }
 
@@ -2389,10 +2474,10 @@ fill_na_average <- function(data, removed_merge, ref_idx, removed_indices) {
     for (col in names(data)) {
         # Gather all values for averaging, including the reference index value
         values_to_average <- c(data[[col]][ref_idx], removed_merge[[col]][removed_indices])
-        
+
         # Filter out NA values from values_to_average
         non_na_values <- values_to_average[!is.na(values_to_average)]
-        
+
         if (length(non_na_values) > 0) {
             if (is.numeric(data[[col]][ref_idx])) {
                 # Use the average of all non-NA values if the column is numeric
@@ -2407,17 +2492,38 @@ fill_na_average <- function(data, removed_merge, ref_idx, removed_indices) {
 }
 
 
+# Evaluate the user-supplied directional weight functions once and return one
+# output and input weight per edge. Covariance and constraint construction use
+# this same helper so their vertex conditions stay identical.
+#' @noRd
+directional_weight_vectors <- function(E, nE, weight,
+                                       DirectionalWeightFunction_out,
+                                       DirectionalWeightFunction_in) {
+  out_by_edge <- vapply(
+    seq_len(nE),
+    function(edge) DirectionalWeightFunction_out(weight[edge]),
+    numeric(1)
+  )
+
+  in_by_edge <- numeric(nE)
+  for (edges in split(seq_len(nE), E[, 2])) {
+    in_by_edge[edges] <- DirectionalWeightFunction_in(weight[edges])
+  }
+
+  list(out_by_edge = out_by_edge, in_by_edge = in_by_edge)
+}
+
 # Function to build constraint matrix
 #' @noRd
 construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree, V_outdegree, weight,
                                     DirectionalWeightFunction_out, DirectionalWeightFunction_in) {
-  
+
   # Precompute out_edges and in_edges for each vertex
   out_edges_list <- split(seq_len(nrow(E)), E[, 1])
   in_edges_list <- split(seq_len(nrow(E)), E[, 2])
 
   # Calculate an upper bound on the number of elements in i_, j_, and x_
-  nC <- sum((V_outdegree > 0 & V_indegree > 0) * V_outdegree * (1 + V_indegree) + 
+  nC <- sum((V_outdegree > 0 & V_indegree > 0) * V_outdegree * (1 + V_indegree) +
             (V_indegree == 0) * (V_outdegree - 1)) * alpha
 
   # Initialize vectors to store the row indices (i_), column indices (j_), and values (x_) of the sparse matrix
@@ -2439,18 +2545,18 @@ construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree
     for (i in seq_along(out_edges)) {
       out_weight_values <- DirectionalWeightFunction_out(weight[out_edges[i]])
       in_weight_values <- DirectionalWeightFunction_in(weight[in_edges])
-      
+
       for (der in seq_len(alpha)) {
         # Set row indices and column indices for the current out edge
         i_[count + 1] <- count_constraint + 1
         j_[count + 1] <- 2 * alpha * (out_edges[i] - 1) + der
         x_[count + 1] <- out_weight_values  # Apply out weight
-        
+
         # Set row indices, column indices, and values for each in edge
         i_[count + seq(2, n_in + 1)] <- count_constraint + 1
         j_[count + seq(2, n_in + 1)] <- 2 * alpha * (in_edges - 1) + alpha + der
         x_[count + seq(2, n_in + 1)] <- in_weight_values  # Apply in weights
-        
+
         count <- count + (n_in + 1)
         count_constraint <- count_constraint + 1
       }
@@ -2470,7 +2576,7 @@ construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree
           j_[count + 1] <- 2 * alpha * (out_edges[i] - 1) + der
           j_[count + 2] <- 2 * alpha * (out_edges[i - 1] - 1) + der
           x_[count + 1:2] <- c(1, -1)
-          
+
           count <- count + 2
           count_constraint <- count_constraint + 1
         }
@@ -2490,7 +2596,7 @@ construct_directional_constraint_matrix <- function(E, nV, nE, alpha, V_indegree
 }
 
 #' Compare values with proper NA handling in a vectorized way
-#' 
+#'
 #' @param x First value or vector/matrix
 #' @param y Second value or vector/matrix
 #' @param is_matrix Whether the input should be treated as a matrix
@@ -2500,10 +2606,10 @@ compare_with_na <- function(x, y, is_matrix = FALSE) {
   # Create temporary copies with NA replaced by a unique placeholder
   x_copy <- x
   y_copy <- y
-  
+
   x_copy[is.na(x_copy)] <- ".dummy_na_val"
   y_copy[is.na(y_copy)] <- ".dummy_na_val"
-  
+
   if (!is_matrix) {
     return(x_copy != y_copy)
   } else {
@@ -2524,40 +2630,40 @@ parse_formula_components <- function(formula) {
   if (!inherits(formula, "formula")) {
     stop("Input must be a formula object")
   }
-  
+
   # Extract the right-hand side of the formula
   rhs <- formula[[length(formula)]]
-  
+
   # Deparse the right-hand side to get a character representation
   rhs_char <- deparse(rhs, width.cutoff = 500)
-  
+
   # Parse the formula into an expression
   expr <- parse(text = rhs_char)[[1]]
-  
+
   # Initialize the result list
   result <- list()
-  
+
   # Function to process each term in the formula
   process_term <- function(term) {
     # Skip intercept term (-1)
     if (is.numeric(term) && term == -1) {
       return(NULL)
     }
-    
+
     # Check if the term is an f() function call
     if (is.call(term) && term[[1]] == as.name("f")) {
       # Extract the covariate name (first argument of f)
       if (is.numeric(term[[2]]) || (is.call(term[[2]]) && term[[2]][[1]] == as.name(":"))) {
         stop("Formula should only contain named variables as indices, not unnamed vectors")
       }
-      
+
       covariate <- deparse(term[[2]])
-      
+
       # Default model is "iid" if not specified
       model <- "iid"
       model_name <- "iid"
       is_character <- TRUE
-      
+
       # Check for model specification
       for (i in 3:length(term)) {
         if (!is.null(names(term)[i]) && names(term)[i] == "model") {
@@ -2582,7 +2688,7 @@ parse_formula_components <- function(formula) {
           }
         }
       }
-      
+
       return(list(
         covariate = covariate,
         model = model,
@@ -2595,14 +2701,14 @@ parse_formula_components <- function(formula) {
         if (is.numeric(term) || (is.call(term) && term[[1]] == as.name(":"))) {
           stop("Formula should only contain named variables as indices, not unnamed vectors")
         }
-        
+
         covariate <- deparse(term)
-        
+
         # Skip the -1 term
         if (covariate == "-1") {
           return(NULL)
         }
-        
+
         return(list(
           covariate = covariate,
           model = "linear",
@@ -2611,17 +2717,17 @@ parse_formula_components <- function(formula) {
         ))
       }
     }
-    
+
     return(NULL)
   }
-  
+
   # Recursively process all terms in the formula
   extract_terms <- function(expr) {
     if (is.call(expr) && expr[[1]] == as.name("+")) {
       # If it's an addition, process both sides
       left_result <- extract_terms(expr[[2]])
       right_result <- extract_terms(expr[[3]])
-      
+
       return(c(left_result, right_result))
     } else {
       # Process a single term
@@ -2633,10 +2739,10 @@ parse_formula_components <- function(formula) {
       }
     }
   }
-  
+
   # Extract all terms from the formula
   terms <- extract_terms(expr)
-  
+
   return(terms)
 }
 
@@ -2653,12 +2759,12 @@ parse_formula_components <- function(formula) {
 #' @noRd
 
 linear_interpolation_graph <- function(graph, covariates, integration_points, repl = NULL, repl_col = ".group") {
-  
+
   # Check if graph has a mesh
   if (is.null(graph$mesh)) {
     stop("No mesh provided in the graph object. Please build a mesh first with graph$build_mesh().")
   }
-  
+
   data <- graph$get_data(drop_na = TRUE)
   data <- as.data.frame(data)
 
@@ -2666,24 +2772,24 @@ linear_interpolation_graph <- function(graph, covariates, integration_points, re
   if (is.null(graph$mesh$C)) {
     graph$compute_fem()
   }
-  
+
   # Check if integration points are provided
   if (is.null(integration_points)) {
     stop("Integration points must be provided")
   }
-  
+
   # Check if covariates are provided
   if (is.null(covariates)) {
     return(integration_points)
   }
-  
+
   intrinsic_obj <- rSPDE::intrinsic.operators(tau = 1, beta = 1, C = graph$mesh$C, G = graph$mesh$G,
                                               d = 1, graph = graph, scaling = 1)
 
   Aprd <- graph$fem_basis(integration_points[, c(".edge_number", ".distance_on_edge")])
   # Initialize an empty result data frame
   result <- NULL
-  
+
   if(!is.null(repl) && repl == ".all"){
     repl <- unique(data[[repl_col]])
   } else if(is.null(repl)){
@@ -2691,32 +2797,32 @@ linear_interpolation_graph <- function(graph, covariates, integration_points, re
   } else{
     repl <- unique(repl)
   }
-  
+
   for(rep_val in repl){
     # Create a copy of integration points for this replicate
     int_points_rep <- integration_points
-    
+
     # Add replicate identifier
     int_points_rep[[repl_col]] <- rep_val
-    
+
     # Get data for this replicate
     data_tmp <- select_repl_group_rSPDE_version(data, repl = rep_val, repl_col = repl_col, group = NULL, group_col = NULL)
     data_tmp <- as.data.frame(data_tmp)
     A <- graph$fem_basis(data_tmp[, c(".edge_number", ".distance_on_edge")])
-    
+
     # Interpolate each covariate
     for (cov_name in covariates) {
       if (cov_name %in% names(data_tmp)) {
         # Perform interpolation for this covariate
         cov_values <- as.vector(predict(intrinsic_obj, A = A, Aprd = Aprd, Y = data_tmp[[cov_name]], sigma.e = 1e-7)$mean)
-        
+
         # Add to this replicate's data frame
         int_points_rep[[cov_name]] <- cov_values
       } else {
         warning(paste("Covariate", cov_name, "not found in data for replicate", rep_val))
       }
     }
-    
+
     # Append to result
     if(is.null(result)) {
       result <- int_points_rep
@@ -2741,7 +2847,7 @@ linear_interpolation_graph <- function(graph, covariates, integration_points, re
 #' @param new_h Numeric; mesh size for creating a new mesh if `use_current_mesh` is FALSE.
 #' @param new_n Integer; alternative to new_h, specifies the approximate number of mesh points.
 #' @param manual_integration_points Logical; if TRUE, use manually specified integration points.
-#' @param integration_points Data frame with columns `edge_number`, `distance_on_edge` and `E` 
+#' @param integration_points Data frame with columns `edge_number`, `distance_on_edge` and `E`
 #'        (integration weights) when `manual_integration` is TRUE.
 #' @param covariates Named vector of covariates at integration points or NULL if no covariates are used.
 #' @param interpolate Logical; if TRUE, interpolate covariates from the graph data to integration points.
@@ -2753,9 +2859,9 @@ linear_interpolation_graph <- function(graph, covariates, integration_points, re
 #' @param verbose Logical; if TRUE, print information about the integration points.
 #'
 #' @noRd
-create_integration_points <- function(graph, 
-                                     use_current_mesh = TRUE, 
-                                     new_h = NULL, 
+create_integration_points <- function(graph,
+                                     use_current_mesh = TRUE,
+                                     new_h = NULL,
                                      new_n = NULL,
                                      manual_integration_points = FALSE,
                                      manual_covariates = NULL,
@@ -2764,7 +2870,7 @@ create_integration_points <- function(graph,
                                      interpolate = TRUE,
                                      repl = NULL,
                                      repl_col = ".group") {
-  
+
   # Check graph input
   # graph_check <- check_graph(graph)
 
@@ -2774,39 +2880,39 @@ create_integration_points <- function(graph,
     if (!is.character(covariates)) {
       stop("covariates must be a character vector")
     }
-    
+
     # Get available data from the graph
     graph_data <- graph$get_data(drop_na = TRUE)
     graph_data <- as.data.frame(graph_data)
-    
+
     # Check if each covariate exists in the graph data
     missing_covs <- setdiff(covariates, names(graph_data))
     if (length(missing_covs) > 0) {
-      stop("The following covariates are not found in the graph data: ", 
+      stop("The following covariates are not found in the graph data: ",
            paste(missing_covs, collapse = ", "))
     }
   }
-  
+
   if (!is.null(manual_integration_points)) {
     # Use manually specified integration points
     if (is.null(integration_points)) {
       stop("When manual_integration_points is TRUE, integration_points must be provided")
     }
-    
+
     # Check if integration_points has required columns
     required_cols <- c("edge_number", "distance_on_edge")
     if (!all(required_cols %in% names(integration_points))) {
       stop("integration_points must contain columns: ", paste(required_cols, collapse = ", "))
     }
-    
+
     # Use provided integration points
     int_points <- integration_points
-    
+
     # If E (weights) not provided, throw an error
     if (!"E" %in% names(int_points)) {
       stop("Integration weights (E) must be provided in integration_points")
     }
-    
+
   } else if (use_current_mesh) {
     # Use existing mesh in the graph
     if (is.null(graph$mesh)) {
@@ -2816,33 +2922,33 @@ create_integration_points <- function(graph,
     if(is.null(graph$mesh$weights)){
       graph$compute_mesh_weights()
     }
-    
+
     # Extract mesh points and weights
     int_points <- data.frame(
       .edge_number = graph$mesh$VtE[,1],
       .distance_on_edge = graph$mesh$VtE[,2],
       .weights_int_points = graph$mesh$weights
     )
-    
+
   } else {
     # Create a new mesh for integration
     if (is.null(new_h) && is.null(new_n)) {
       stop("Either new_h or new_n must be provided when use_current_mesh is FALSE")
     }
-    
-    
+
+
     # Build the mesh
     if (!is.null(new_h)) {
       graph$build_mesh(h = new_h)
     } else {
       graph$build_mesh(n = new_n)
     }
-    
+
     # Compute FEM if not already done
     if (is.null(graph$mesh$C)) {
       graph$compute_fem()
     }
-    
+
     if(is.null(graph$mesh$weights)){
       graph$compute_mesh_weights()
     }
@@ -2874,8 +2980,8 @@ create_integration_points <- function(graph,
       }
       int_points <- cbind(int_points, manual_covariates)
     }
-  } 
-  
+  }
+
   return(int_points)
 }
 
@@ -2899,7 +3005,7 @@ create_integration_points <- function(graph,
 #' @param group_col Which "column" of the data contains the group variable?
 #' @param covariates A vector of covariate names to be included in the model.
 #' @param only_pred Should only return the `data.frame` to the prediction data?
-#' @param time Column containing times for space time models. Not needed when using inlabru. Only for INLA implementation of space time model. 
+#' @param time Column containing times for space time models. Not needed when using inlabru. Only for INLA implementation of space time model.
 #' @param bru Should the data be processed for `inlabru`?
 #' @param tibble Should the data be returned as a `tidyr::tibble`?
 #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
@@ -3072,7 +3178,7 @@ graph_data_rspde_internal <- function(graph_rspde, name = "field",
     } else {
       group_numeric <- as.numeric(group_vec)
     }
-    
+
     if (is.character(repl_vec) || is.factor(repl_vec)) {
       unique_repls <- unique(repl_vec)
       repl_numeric <- match(repl_vec, unique_repls)
@@ -3086,11 +3192,11 @@ graph_data_rspde_internal <- function(graph_rspde, name = "field",
     if(inherits(graph_rspde, "inla_rspde_spacetime")){
       ret[["basis"]] <- graph_rspde$A(loc = loc_basis, time = time_basis)
       ret[["basis"]] <- fmesher::fm_row_kron(t(blk_grp), ret[["basis"]])
-      ret[["basis"]] <- fmesher::fm_row_kron(t(blk_rep), ret[["basis"]])      
+      ret[["basis"]] <- fmesher::fm_row_kron(t(blk_rep), ret[["basis"]])
     } else{
       ret[["basis"]] <- graph_tmp$fem_basis(loc_basis)
       ret[["basis"]] <- fmesher::fm_row_kron(t(blk_grp), ret[["basis"]])
-      ret[["basis"]] <- fmesher::fm_row_kron(t(blk_rep), ret[["basis"]])            
+      ret[["basis"]] <- fmesher::fm_row_kron(t(blk_rep), ret[["basis"]])
     }
 
     if (!graph_rspde$integer.nu) {
@@ -3107,11 +3213,11 @@ graph_data_rspde_internal <- function(graph_rspde, name = "field",
       cov_tmp[[cov_var]] <- ret[["data"]][[cov_var]]
         if(!bru){
           ret[["data"]][[cov_var]] <- NULL
-        }      
+        }
     }
     ret[["index"]] <- list(ret[["index"]], cov_tmp)
     ret[["basis"]] <- list(ret[["basis"]], 1)
-  } 
+  }
 
   ret[["data"]] <- as.data.frame(ret[["data"]])
   if (!inherits(ret[["data"]], "metric_graph_data")) {
@@ -3142,14 +3248,14 @@ graph_data_rspde_internal <- function(graph_rspde, name = "field",
 #' @param group_col Which "column" of the data contains the group variable?
 #' @param covariates A vector of covariate names to be included in the model.
 #' @param only_pred Should only return the `data.frame` to the prediction data?
-#' @param time Column containing times for space time models. Not needed when using inlabru. Only for INLA implementation of space time model. 
+#' @param time Column containing times for space time models. Not needed when using inlabru. Only for INLA implementation of space time model.
 #' @param bru Should the data be processed for `inlabru`?
 #' @param tibble Should the data be returned as a `tidyr::tibble`?
 #' @param drop_na Should the rows with at least one NA for one of the columns be removed? DEFAULT is `FALSE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
 #' @param drop_all_na Should the rows with all variables being NA be removed? DEFAULT is `TRUE`. This option is turned to `FALSE` if `only_pred` is `TRUE`.
 #' @noRd
 
-graph_data_linear_inla <- function(graph_rspde, 
+graph_data_linear_inla <- function(graph_rspde,
                              repl = NULL,
                              repl_col = NULL,
                              group = NULL,
@@ -3283,11 +3389,11 @@ graph_data_linear_inla <- function(graph_rspde,
       cov_tmp[[cov_var]] <- ret[["data"]][[cov_var]]
         if(!bru){
           ret[["data"]][[cov_var]] <- NULL
-        }      
+        }
     }
     ret[["index"]] <- list(ret[["index"]], cov_tmp)
     ret[["basis"]] <- list(ret[["basis"]], 1)
-  } 
+  }
 
   ret[["data"]] <- as.data.frame(ret[["data"]])
   if (!inherits(ret[["data"]], "metric_graph_data")) {
@@ -3298,7 +3404,7 @@ graph_data_linear_inla <- function(graph_rspde,
 }
 
 
-  #' Match Data Frame Rows to Graph Mesh Order
+#' Match Data Frame Rows to Graph Mesh Order
 #'
 #' Reorders the rows of a data frame to align with the specific ordering of points
 #' along the edges of a metric graph's mesh. This ensures that data associated
@@ -3319,11 +3425,11 @@ graph_data_linear_inla <- function(graph_rspde,
 #'   reordered accordingly.
 #'
 #' @export
-match_mesh_data <- function(graph, 
-                            data, 
-                            edge_col = ".edge_number", 
+match_mesh_data <- function(graph,
+                            data,
+                            edge_col = ".edge_number",
                             dist_col = ".distance_on_edge") {
-  
+
   # Check if data is an sf object and handle accordingly
   is_sf <- inherits(data, "sf")
   if (is_sf) {
@@ -3332,65 +3438,65 @@ match_mesh_data <- function(graph,
     data_geom <- sf::st_geometry(data)
     data <- sf::st_drop_geometry(data)
   }
-  
+
   # Extract mesh VtE information (VtE is a matrix: [,1] = edge_number, [,2] = distance_on_edge)
   mesh_vte <- graph$mesh$VtE
-  
+
   # Convert matrix to data frame for vectorized operations
   mesh_df <- data.frame(
     edge_number = as.integer(mesh_vte[, 1]),
     distance = mesh_vte[, 2],
     mesh_idx = seq_len(nrow(mesh_vte))
   )
-  
+
   # Prepare data with integer edge numbers and index
   data_df <- data.frame(
     edge_number = as.integer(data[[edge_col]]),
     distance = data[[dist_col]],
     data_idx = seq_len(nrow(data))
   )
-  
+
   # Group by edge_number and rank by distance within each group
   mesh_ranked <- mesh_df |>
     dplyr::group_by(.data[["edge_number"]]) |>
     dplyr::arrange(.data[["distance"]], .by_group = TRUE) |>
     dplyr::mutate(rank = dplyr::row_number()) |>
     dplyr::ungroup()
-  
+
   data_ranked <- data_df |>
     dplyr::group_by(.data[["edge_number"]]) |>
     dplyr::arrange(.data[["distance"]], .by_group = TRUE) |>
     dplyr::mutate(rank = dplyr::row_number()) |>
     dplyr::ungroup()
-  
+
   # Join mesh and data by edge_number and rank
   # This matches points on the same edge with the same rank (position when sorted by distance)
   matched <- mesh_ranked |>
     dplyr::left_join(data_ranked, by = c("edge_number", "rank"), suffix = c("_mesh", "_data"))
-  
+
   # Check for missing matches
   n_na <- sum(is.na(matched[["data_idx"]]))
   if (n_na > 0) {
-    warning("Matching resulted in ", n_na, " NA values out of ", 
+    warning("Matching resulted in ", n_na, " NA values out of ",
             nrow(matched), " total rows. ",
             "This may indicate mismatched row counts between mesh and data on some edges.")
-    
+
     # Identify problematic edges
     problem_edges <- matched |>
       dplyr::filter(is.na(.data[["data_idx"]])) |>
       dplyr::pull(.data[["edge_number"]]) |>
       unique()
-    
+
     if (length(problem_edges) > 0) {
       warning("Edges with matching issues: ", paste(problem_edges, collapse = ", "))
     }
   }
-  
+
   # Sort by original mesh index to maintain mesh order, then extract data indices
   result_indices <- matched |>
     dplyr::arrange(.data[["mesh_idx"]]) |>
     dplyr::pull(.data[["data_idx"]])
-  
+
   # Check if we have NA indices and stop with informative error
   if (any(is.na(result_indices))) {
     stop("Cannot reorder data: matching failed for some mesh points.\n",
@@ -3399,14 +3505,43 @@ match_mesh_data <- function(graph,
          "Number of data points: ", nrow(data), "\n",
          "Please check if data_on_mesh is filtered correctly (e.g., by .group).")
   }
-  
+
   # Return reordered data
   result <- data[result_indices, ]
-  
+
   # If input was sf, reattach geometry in the correct order
   if (is_sf) {
     result <- sf::st_sf(result, geometry = data_geom[result_indices])
   }
-  
+
   return(result)
+}
+
+#' Split a weight table into its rows
+#'
+#' Returns `lapply(seq_len(nrow(w)), function(i) w[i, , drop = FALSE])`, but
+#' without paying the `[.data.frame` dispatch for every row.
+#'
+#' Falls back to the plain subsetting loop for anything that is not a bare
+#' `data.frame` of atomic columns, so subclasses (tibbles, `sf` frames) and
+#' matrix columns keep their own semantics.
+#'
+#' @noRd
+split_weight_rows <- function(w) {
+  n <- nrow(w)
+  slow <- function() lapply(seq_len(n), function(i) w[i, , drop = FALSE])
+  if (!identical(class(w), "data.frame")) {
+    return(slow())
+  }
+  cols <- unclass(w)
+  attributes(cols) <- NULL
+  if (any(vapply(cols, function(cc) !is.null(dim(cc)), logical(1)))) {
+    return(slow())
+  }
+  nms <- names(w)
+  rn <- attr(w, "row.names")
+  lapply(seq_len(n), function(i) {
+    structure(lapply(cols, function(cc) cc[i]),
+              names = nms, row.names = rn[i], class = "data.frame")
+  })
 }

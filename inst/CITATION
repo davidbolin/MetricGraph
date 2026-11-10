@@ -12,8 +12,8 @@ bibentry( bibtype = "Manual",
                     person("Jonas", "Wallin",
                            email = "jonas.wallin81@gmail.com",
                            role = "aut")),
-          year = "2023",
-          note = "R package version 1.4.1",
+          year = "2026",
+          note = "R package version 1.7.0",
           url = "https://CRAN.R-project.org/package=MetricGraph",
 )
 

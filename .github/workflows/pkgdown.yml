@@ -5,6 +5,12 @@ on:
 
 name: pkgdown
 
+# A new push to the same branch cancels a run that is still going. The site is
+# only deployed in the final step, so a cancelled run leaves it untouched.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   pkgdown:
     runs-on: ubuntu-latest
@@ -32,6 +38,7 @@ jobs:
           dependencies: '"all"'
           extra-packages: |
              pkgdown
+             github::davidbolin/rSPDE@devel
       - name: Session info
         run: |
           options(width = 100)
@@ -39,10 +46,17 @@ jobs:
           sessioninfo::session_info(pkgs, include_base = TRUE)
         shell: Rscript {0}
       - name: Installing rSPDE
+        env:
+          RSPDE_COMPILE: 1
         run: |
           install.packages(c("remotes", "rmarkdown"),dependencies=TRUE)
-          remotes::install_github("davidbolin/rSPDE", ref = "devel-src")
-        shell: Rscript {0}   
+          # force: setup-r-dependencies already installed this commit (pure R),
+          # so without it remotes skips the compiled reinstall.
+          remotes::install_github("davidbolin/rSPDE", ref = "devel", force = TRUE)
+          if (!nzchar(system.file("shared", "rspde_cgeneric_models.so", package = "rSPDE"))) {
+            stop("rSPDE was installed without its compiled cgeneric library")
+          }
+        shell: Rscript {0}
       - name: Install package
         run: R CMD INSTALL .
 

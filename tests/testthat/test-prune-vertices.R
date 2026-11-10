@@ -169,6 +169,58 @@ test_that("prune_vertices preserves graph connectivity on a Y junction", {
   expect_true(all(all_pte_valid(g)))
 })
 
+test_that("prune_vertices preserves oriented-tree edge directions", {
+  # In-tree with two source branches converging at (0, 0), followed by a
+  # one-edge trunk to the outlet. Edge order deliberately mixes chains that
+  # are first encountered from their upstream and downstream ends.
+  in_tree_edges <- list(
+    rbind(c(0, 0), c(1, 0)),
+    rbind(c(1, 0), c(2, 0)),
+    rbind(c(-1, 1), c(0, 0)),
+    rbind(c(-2, 2), c(-1, 1)),
+    rbind(c(-1, -1), c(0, 0)),
+    rbind(c(-2, -2), c(-1, -1))
+  )
+
+  for (reverse_edges in c(FALSE, TRUE)) {
+    edges <- if (reverse_edges) {
+      lapply(in_tree_edges, function(edge) edge[2:1, , drop = FALSE])
+    } else {
+      in_tree_edges
+    }
+    graph <- metric_graph$new(
+      edges = edges,
+      perform_merges = TRUE,
+      check_connected = FALSE,
+      verbose = 0
+    )
+
+    indegree_before <- graph$get_degrees("indegree")
+    outdegree_before <- graph$get_degrees("outdegree")
+    orientation_before <- c(
+      sources = sum(indegree_before == 0L),
+      outlets = sum(outdegree_before == 0L),
+      maximum_indegree = max(indegree_before),
+      maximum_outdegree = max(outdegree_before)
+    )
+
+    graph$prune_vertices()
+
+    indegree_after <- graph$get_degrees("indegree")
+    outdegree_after <- graph$get_degrees("outdegree")
+    orientation_after <- c(
+      sources = sum(indegree_after == 0L),
+      outlets = sum(outdegree_after == 0L),
+      maximum_indegree = max(indegree_after),
+      maximum_outdegree = max(outdegree_after)
+    )
+
+    expect_equal(orientation_after, orientation_before)
+    expect_equal(graph$nV, 4L)
+    expect_equal(graph$nE, 3L)
+  }
+})
+
 test_that("prune_vertices produces edges with valid PtE attributes", {
   edges <- make_open_chain(10)
   g <- metric_graph$new(edges = edges, perform_merges = TRUE,
