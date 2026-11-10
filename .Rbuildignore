@@ -4,6 +4,7 @@ examples
 ^README\.md
 ^\.Rhistory
 ^\.gitignore$
+^\.git$
 ^\.hgflow$
 ^\.hgignore$
 ^docs$
