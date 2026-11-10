@@ -11,9 +11,9 @@
 library(MetricGraph)
 library(testthat)
 
-skip_if_no_inla <- function() {
-  skip_if_not_installed("INLA")
-  skip_if_not_installed("inlabru")
+# See helper-inla.R.
+skip_if_no_inla <- function(envir = parent.frame()) {
+  skip_if_no_safe_inla(envir = envir)
 }
 
 # Returns the bru fit, or NULL if INLA fails. On dlopen / cgeneric issues

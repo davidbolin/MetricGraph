@@ -134,8 +134,7 @@ test_that("add_observations stores one attribute name per group variable", {
 })
 
 test_that("Inlabru predict works without grouping", {
-    skip_if_not_installed("INLA")
-    skip_if_not_installed("inlabru")
+    skip_if_no_safe_inla()
     library(INLA)
     library(inlabru)
     # No grouping -> no "first replicate" warning should be emitted.
@@ -144,8 +143,7 @@ test_that("Inlabru predict works without grouping", {
 })
 
 test_that("Inlabru predict works with a single group variable", {
-    skip_if_not_installed("INLA")
-    skip_if_not_installed("inlabru")
+    skip_if_no_safe_inla()
     library(INLA)
     library(inlabru)
     # newdata has no replicate column, so predict falls back to the first
@@ -158,8 +156,7 @@ test_that("Inlabru predict works with a single group variable", {
 })
 
 test_that("Inlabru predict works with multiple group variables (regression: condition has length > 1)", {
-    skip_if_not_installed("INLA")
-    skip_if_not_installed("inlabru")
+    skip_if_no_safe_inla()
     library(INLA)
     library(inlabru)
     # Before the fix this raised:
@@ -216,8 +213,7 @@ test_that("Inlabru predict works with multiple group variables (regression: cond
 }
 
 test_that("Inlabru predict accepts a one-sided component formula (regression: invalid model formula in ExtractVars)", {
-    skip_if_not_installed("INLA")
-    skip_if_not_installed("inlabru")
+    skip_if_no_safe_inla()
     library(INLA)
     library(inlabru)
     s <- .fit_covariate_setup()
@@ -237,8 +233,7 @@ test_that("Inlabru predict accepts a one-sided component formula (regression: in
 })
 
 test_that("Inlabru predict one-sided and two-sided component formulas agree (same fit)", {
-    skip_if_not_installed("INLA")
-    skip_if_not_installed("inlabru")
+    skip_if_no_safe_inla()
     library(INLA)
     library(inlabru)
     s <- .fit_covariate_setup(seed = 3)
@@ -266,8 +261,7 @@ test_that("Inlabru predict one-sided and two-sided component formulas agree (sam
 })
 
 test_that("Inlabru predict recycles a scalar covariate in newdata (regression: different number of elements than coordinates)", {
-    skip_if_not_installed("INLA")
-    skip_if_not_installed("inlabru")
+    skip_if_no_safe_inla()
     library(INLA)
     library(inlabru)
     s <- .fit_covariate_setup(seed = 5)

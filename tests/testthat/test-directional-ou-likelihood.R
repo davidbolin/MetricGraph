@@ -89,6 +89,7 @@ test_that("covariance likelihood C++ and R paths agree on out-trees", {
 })
 
 test_that("small reversed Columbia C++ covariance agrees with R", {
+  skip_if_no_columbia_data()
   skip_on_cran()
   helper <- system.file(
     "examples/directional/columbia_full_graph_helpers.R",

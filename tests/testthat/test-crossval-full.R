@@ -171,6 +171,7 @@ test_that("WM1 plug-in LOO matches an explicit dense Gaussian calculation", {
 
 
 test_that("the packaged Columbia component has audited content", {
+  skip_if_no_columbia_data()
   environment <- new.env(parent = globalenv())
   utils::data(
     "columbia_main_component",
@@ -201,6 +202,7 @@ test_that("the packaged Columbia component has audited content", {
 
 
 test_that("the packaged Columbia component reconstructs in both directions", {
+  skip_if_no_columbia_data()
   skip_on_cran()
   environment <- new.env(parent = globalenv())
   utils::data(
