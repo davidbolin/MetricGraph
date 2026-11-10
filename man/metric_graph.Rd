@@ -790,7 +790,7 @@ distance matrix?}
 There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages
 are printed. In level 1, only messages regarding important steps are printed.
 Finally, in level 2, messages detailing all the steps are printed.
-The default is 1.}
+The default is 0.}
     }
     \if{html}{\out{</div>}}
   }

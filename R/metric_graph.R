@@ -2122,7 +2122,7 @@ metric_graph <-  R6Class("metric_graph",
      #' There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages
      #' are printed. In level 1, only messages regarding important steps are printed.
      #' Finally, in level 2, messages detailing all the steps are printed.
-     #' The default is 1.
+     #' The default is 0.
      #' @return A distance matrix with one row and column per input point,
      #' plus one per graph vertex at the beginning if include_vertices is TRUE.
      compute_geodist_PtE = function(PtE,
