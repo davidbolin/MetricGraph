@@ -147,7 +147,14 @@ graph_lme <- function(formula, graph,
     if(!inherits(previous_fit, "graph_lme")){
       warning("previous_fit is not a 'graph_lme' object, thus will be ignored.")
     }
-    if(tolower(previous_fit$latent_model$type) %in% c("whittlematern", "graphlaplacian")){
+    if(inherits(previous_fit, "rspde_lme")){
+      # FEM-based WhittleMatern fit: random_effects are named (theta1..thetaN,
+      # nu, sigma, range, tau, kappa, ...) and may include a "(fixed)" suffix.
+      # Skip the legacy positional extraction below — rspde_lme handles
+      # previous_fit via extract_starting_values, which does name-based
+      # extraction (and strips the " (fixed)" suffix).
+      par_vec <- FALSE
+    } else if(tolower(previous_fit$latent_model$type) %in% c("whittlematern", "graphlaplacian")){
       par_vec <- FALSE
       if(tolower(model_type) == "isocov"){
         warning("previous_fit is of type 'isoCov' and thus will be ignored.")
@@ -197,7 +204,15 @@ graph_lme <- function(formula, graph,
   #   stop("The possible values for 'parameterization_latent' are 'matern' and 'spde'!")
   # }
 
-  if(!(BC%in%c(0,1))){
+  is_fem_whittle <- (model_type == "whittlematern") && isTRUE(model[["fem"]])
+  if(is_fem_whittle){
+    # BC has no effect for FEM-based WhittleMatern models (boundary
+    # conditions are baked into the FEM operator). Warn only if the
+    # caller explicitly passed a non-default value.
+    if(!is.null(BC) && !identical(BC, 1)){
+      warning("The 'BC' argument has no effect for FEM-based WhittleMatern models (fem = TRUE) and will be ignored.")
+    }
+  } else if(!(BC %in% c(0, 1))){
     stop("The possible values for 'BC' are 0 and 1!")
   }
 
@@ -295,19 +310,38 @@ graph_lme <- function(formula, graph,
       }
 
 
+      # When B.range / B.sigma (or B.tau / B.kappa) are supplied along
+      # with a user-specified alpha/nu, the rspde_object MUST be built
+      # with that alpha/nu — `B.tau` and `B.kappa` are computed from
+      # `B.range` and `B.sigma` through formulas that depend on nu (and
+      # similarly the "spde" parameterization carries alpha-dependent
+      # offsets). If we build the operator at rSPDE's default nu (e.g.
+      # 0.75) and then only later apply `fix_nu = 0.5` via
+      # model_options, the operator's B.tau / B.kappa stay at the
+      # default-nu values and the likelihood is optimised against the
+      # wrong model — symptom: a non-stationary FEM fit to data
+      # generated from the same family produces dramatically worse CV
+      # scores than a stationary FEM fit to the same data.
+      .build_alpha <- model[["alpha"]]
+      .build_nu    <- model[["nu"]]
+      if (is.null(.build_nu) && !is.null(.build_alpha)) {
+        .build_nu <- .build_alpha - 0.5
+      }
+      .build_args <- list(graph = graph, m = rspde_order)
+
       if(!is.null(model[["B.tau"]]) && !is.null(model[["B.kappa"]])){
-              rspde_object <- rSPDE::spde.matern.operators(graph = graph,
-                                                m = rspde_order,
-                                                parameterization = "spde",
-                                                B.tau = model[["B.tau"]],
-                                                B.kappa = model[["B.kappa"]])
+              .build_args$parameterization <- "spde"
+              .build_args$B.tau   <- model[["B.tau"]]
+              .build_args$B.kappa <- model[["B.kappa"]]
+              if (!is.null(.build_alpha)) .build_args$alpha <- .build_alpha
+              rspde_object <- do.call(rSPDE::spde.matern.operators, .build_args)
 
       } else if(!is.null(model[["B.sigma"]]) && !is.null(model[["B.range"]])){
-              rspde_object <- rSPDE::spde.matern.operators(graph = graph,
-                                                m = rspde_order,
-                                                parameterization = "matern",
-                                                B.sigma = model[["B.sigma"]],
-                                                B.range = model[["B.range"]])
+              .build_args$parameterization <- "matern"
+              .build_args$B.sigma <- model[["B.sigma"]]
+              .build_args$B.range <- model[["B.range"]]
+              if (!is.null(.build_nu)) .build_args$nu <- .build_nu
+              rspde_object <- do.call(rSPDE::spde.matern.operators, .build_args)
       } else if ( (!is.null(model[["B.tau"]]) && is.null(model[["B.kappa"]])) ||
        (is.null(model[["B.tau"]]) && !is.null(model[["B.kappa"]])) ||
        (!is.null(model[["B.sigma"]]) && is.null(model[["B.range"]])) ||
@@ -348,14 +382,23 @@ graph_lme <- function(formula, graph,
         nu <- NULL
       }
 
-      # Determine parameterization from model_options
-      parameterization <- "spde" # default
+      # Determine parameterization: start from the rspde_object's own
+      # parameterization (which depends on whether B.tau/B.kappa or
+      # B.sigma/B.range were supplied), then allow model_options to override.
+      if (!is.null(rspde_object$parameterization)) {
+        parameterization <- rspde_object$parameterization
+      } else {
+        parameterization <- "spde"
+      }
       if (!is.null(model_options)) {
-        # Check for matern parameterization indicators
-        matern_params <- c("fix_nu", "fix_sigma", "fix_range", 
+        matern_params <- c("fix_nu", "fix_sigma", "fix_range",
                           "start_nu", "start_sigma", "start_range")
+        spde_params <- c("fix_alpha", "fix_kappa", "fix_tau",
+                         "start_alpha", "start_kappa", "start_tau")
         if (any(names(model_options) %in% matern_params)) {
           parameterization <- "matern"
+        } else if (any(names(model_options) %in% spde_params)) {
+          parameterization <- "spde"
         }
       }
 
@@ -444,6 +487,17 @@ graph_lme <- function(formula, graph,
       #   names(fit$coeff$random_effects)[1] <- "alpha"
       #   fit$coeff$random_effects[1] <- fit$coeff$random_effects[1] + 0.5
       # }
+      # BC is intentionally not stored: it has no effect for FEM-based
+      # WhittleMatern fits. `model_arg` preserves the user-supplied model
+      # spec so callers (e.g. posterior_crossvalidation) can refit through
+      # this same branch.
+      fit$model_arg <- model
+      # Normalize $latent_model$type so MetricGraph dispatch (glance,
+      # previous_fit, posterior_crossvalidation, ...) treats FEM-based fits
+      # the same way as closed-form WhittleMatern fits. The CBrSPDEobj/
+      # rSPDEobj class on $latent_model is kept intact, and the fit's
+      # "rspde_lme" class still distinguishes FEM from non-FEM.
+      fit$latent_model$type <- "WhittleMatern"
       class(fit) <- c("graph_lme", class(fit))
       return(fit)
     } else{
@@ -1268,6 +1322,7 @@ graph_lme <- function(formula, graph,
   object$nobs <- sum(graph$.__enclos_env__$private$data[[".group"]] %in% which_repl)
   object$optim_controls <- optim_controls
   object$latent_model <- model
+  object$model_arg <- model
   object$loglik <- loglik
   object$BC <- BC
   object$niter <- res$counts
@@ -1390,8 +1445,20 @@ deviance.graph_lme <- function(object, ...){
 
 glance.graph_lme <- function(x, ...){
   alpha <- NULL
-  if(x$latent_model$type == "Covariance-Based Matern SPDE Approximation"){
-    alpha <- x$coeff$random_effects[[1]]
+  if(inherits(x, "rspde_lme")){
+    # FEM-based fit: alpha/nu lives in random_effects (with a possible
+    # "(fixed)" suffix when fixed) or on the latent_model itself.
+    re <- x$coeff$random_effects
+    nm <- sub(" \\(fixed\\)$", "", names(re))
+    if("alpha" %in% nm){
+      alpha <- as.numeric(re[[which(nm == "alpha")[1]]])
+    } else if("nu" %in% nm){
+      alpha <- as.numeric(re[[which(nm == "nu")[1]]]) + 0.5
+    } else if(!is.null(x$latent_model$alpha)){
+      alpha <- x$latent_model$alpha
+    } else if(!is.null(x$latent_model$nu)){
+      alpha <- x$latent_model$nu + 0.5
+    }
   } else if(!is.null(x$latent_model$alpha)){
     alpha <- x$latent_model$alpha
   }
@@ -1886,25 +1953,37 @@ predict.graph_lme <- function(object,
   # Initialize train/test indices
   train_idx <- NULL
   test_idx <- NULL
+  # na_test_idx: positions in graph_bkp's full data vector to mask as NA
+  # for the prediction (i.e. the held-out observations). For single-
+  # replicate models this is identical to test_idx, but for multi-
+  # replicate models test_idx is interpreted as a WITHIN-replicate index
+  # (it indexes the per-replicate location array used to build PtV / A /
+  # PtE_full), while NA-setting needs to address the full per-row data
+  # vector. Defaults to test_idx so existing callers see no change.
+  na_test_idx <- NULL
 
-  
+
   if (length(advanced_options) > 0) {
     # Extract precomputation options
     if (!is.null(advanced_options$precompute_data)) {
       precompute_data <- advanced_options$precompute_data
     }
-    
+
     if (!is.null(advanced_options$precompute_type)) {
       precompute_type <- advanced_options$precompute_type
     }
-    
+
     # Extract train/test indices if provided
     if (!is.null(advanced_options$train_idx)) {
       train_idx <- advanced_options$train_idx
     }
-    
+
     if (!is.null(advanced_options$test_idx)) {
       test_idx <- advanced_options$test_idx
+    }
+
+    if (!is.null(advanced_options$na_test_idx)) {
+      na_test_idx <- advanced_options$na_test_idx
     }
   }
 
@@ -1926,13 +2005,20 @@ predict.graph_lme <- function(object,
 
   if(inherits(object, "rspde_lme")){
     class(object) <- "rspde_lme"
+    # Forward advanced_options so callers (notably posterior_crossvalidation)
+    # can pass precompute_data / na_test_idx through to predict.rspde_lme.
     return(stats::predict(object = object,
               newdata = newdata,
               mesh = mesh, which_repl = which_repl,
-              compute_variances = compute_variances, posterior_samples = posterior_samples,
-                               n_samples = n_samples, edge_number = edge_number,
-                               distance_on_edge = distance_on_edge, normalized = normalized, return_as_list = return_as_list, return_original_order = return_original_order)
-              )
+              compute_variances = compute_variances,
+              posterior_samples = posterior_samples,
+              n_samples = n_samples, edge_number = edge_number,
+              distance_on_edge = distance_on_edge,
+              normalized = normalized,
+              return_as_list = return_as_list,
+              return_original_order = return_original_order,
+              advanced_options = advanced_options)
+           )
   }
 
   out <- list()
@@ -1957,8 +2043,12 @@ predict.graph_lme <- function(object,
     response_var <- object$response_var
     graph_bkp <- precomputed$graph_bkp
     bkp_data <- graph_bkp$.__enclos_env__$private$data[[response_var]]
-    if(!is.null(test_idx)){
-      graph_bkp$.__enclos_env__$private$data[[response_var]][test_idx] <- NA
+    # na_test_idx (global, indexes into graph_bkp's full data vector)
+    # takes precedence; otherwise fall back to test_idx, which is the
+    # single-replicate convention where the two indices coincide.
+    na_idx <- if(!is.null(na_test_idx)) na_test_idx else test_idx
+    if(!is.null(na_idx)){
+      graph_bkp$.__enclos_env__$private$data[[response_var]][na_idx] <- NA
     }
   }
 
@@ -2300,8 +2390,11 @@ predict.graph_lme <- function(object,
               }            
               Q_edges <- Qalpha1_edges(c(tau,kappa), graph_bkp, w = 0,BC=BC, build=TRUE)
               n_const <- length(graph_bkp$CoB$S)
-              ind.const <- c(1:n_const)
-              Tc <- graph_bkp$CoB$T[-ind.const, ]
+              if (n_const > 0) {
+                Tc <- graph_bkp$CoB$T[-seq_len(n_const), , drop = FALSE]
+              } else {
+                Tc <- graph_bkp$CoB$T
+              }
               Q_T <- Matrix::forceSymmetric(Tc%*%Q_edges%*%t(Tc))
               Sigma.overdetermined <- as.matrix(t(Tc)%*%solve(Q_T, Tc))
               PtE = graph_bkp$get_PtE()
@@ -2313,12 +2406,16 @@ predict.graph_lme <- function(object,
             graph_bkp$buildC(2)
           }
           PtE <- graph_bkp$get_PtE()
-          n.c <- 1:length(graph_bkp$CoB$S)
+          n_const <- length(graph_bkp$CoB$S)
+          if (n_const > 0) {
+            Tc <- graph_bkp$CoB$T[-seq_len(n_const), , drop = FALSE]
+          } else {
+            Tc <- graph_bkp$CoB$T
+          }
           Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
                               graph = graph_bkp, BC = BC)
-          Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
-          Qtilde <- Qtilde[-n.c, -n.c, drop=FALSE]
-          Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c, , drop=FALSE]) %*% solve(Qtilde, graph_bkp$CoB$T[-n.c, , drop=FALSE])
+          Qtilde <- Tc %*% Q %*% t(Tc)
+          Sigma.overdetermined  = t(Tc) %*% solve(Qtilde, Tc)
           index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
             3.0 * (abs(PtE[, 2]) > 1e-14)
           Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs, drop=FALSE])
@@ -2603,9 +2700,14 @@ predict.graph_lme <- function(object,
         }
       } 
       if(!return_as_list){
-        out$variance <- rep(var_tmp, length(u_repl))
+        # Append the current replicate's variance to the running vector,
+        # mirroring how $mean is built up across the per-replicate loop.
+        # The previous code replaced $variance with rep(var_tmp,
+        # length(u_repl)) on every iteration, so every replicate ended up
+        # reporting the LAST replicate's kriging variance.
+        out$variance <- c(out$variance, var_tmp)
         if(compute_pred_variances  || pred_samples) {
-            out$pred_variance <- rep(pred_var_tmp, length(u_repl))
+            out$pred_variance <- c(out$pred_variance, pred_var_tmp)
         }
       }
       else {
@@ -2742,7 +2844,8 @@ predict.graph_lme <- function(object,
     out$precomputed_data <- precomputed_data
   }
 
-  if(!is.null(test_idx)){
+  # Restore the original response vector if we masked any entries above.
+  if(!is.null(test_idx) || !is.null(na_test_idx)){
     graph_bkp$.__enclos_env__$private$data[[response_var]] <- bkp_data
   }
   return(out)
@@ -2777,13 +2880,16 @@ get_covariance_precision <- function(object){
         }
         BC = object$BC
         PtE <- graph_bkp$get_PtE()
-        n.c <- 1:length(graph_bkp$CoB$S)
+        n_const <- length(graph_bkp$CoB$S)
+        if (n_const > 0) {
+          Tc <- graph_bkp$CoB$T[-seq_len(n_const), , drop = FALSE]
+        } else {
+          Tc <- graph_bkp$CoB$T
+        }
         Q <- spde_precision(kappa = kappa, tau = tau, alpha = 2,
                             graph = graph_bkp, BC = BC)
-        Qtilde <- (graph_bkp$CoB$T) %*% Q %*% t(graph_bkp$CoB$T)
-        Qtilde <- Qtilde[-n.c,-n.c]
-        Sigma.overdetermined  = t(graph_bkp$CoB$T[-n.c,]) %*% solve(Qtilde) %*%
-          (graph_bkp$CoB$T[-n.c,])
+        Qtilde <- Tc %*% Q %*% t(Tc)
+        Sigma.overdetermined  = t(Tc) %*% solve(Qtilde) %*% Tc
         index.obs <- 4 * (PtE[,1] - 1) + 1.0 * (abs(PtE[, 2]) < 1e-14) +
           3.0 * (abs(PtE[, 2]) > 1e-14)
         Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
@@ -3013,27 +3119,38 @@ update_graph_lme_with_na <- function(object, index_to_replace) {
   if (!inherits(object, "graph_lme")) {
     stop("input object is not of class graph_lme")
   }
-  
+
   # Clone the graph to avoid modifying the original
   new_graph <- object$graph$clone()
-  
+
   # Get the response variable from the object
   y_term <- as.character(object$response_var)
-  
+
   # Check if the response variable exists in the graph's private data
   if (!y_term %in% names(new_graph$.__enclos_env__$private$data)) {
     stop(paste("Response variable", y_term, "not found in graph data"))
   }
-  
+
   # Replace the specified indices with NA
   new_graph$.__enclos_env__$private$data[[y_term]][index_to_replace] <- NA
-  
+
   # Create a copy of the original object
   new_object <- object
-  
+
   # Update the graph in the new object
   new_object$graph <- new_graph
-  
+
+  # For rspde_lme fits, predict() reads the training response from
+  # object$model_matrix (not from the graph), so we must mirror the NA
+  # mask there. Without this, posterior_crossvalidation silently
+  # produced "leak-in" predictions where the held-out observation was
+  # still used as a training point.
+  if (inherits(object, "rspde_lme") && !is.null(object$model_matrix)) {
+    mm <- as.matrix(object$model_matrix)
+    mm[index_to_replace, 1] <- NA
+    new_object$model_matrix <- mm
+  }
+
   return(new_object)
 }
 

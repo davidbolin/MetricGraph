@@ -124,11 +124,13 @@ graph. The weights are given by the edge lengths.}
     \item \href{#method-metric_graph-get_data}{\code{metric_graph$get_data()}}
     \item \href{#method-metric_graph-setDirectionalWeightFunction}{\code{metric_graph$setDirectionalWeightFunction()}}
     \item \href{#method-metric_graph-buildDirectionalConstraints}{\code{metric_graph$buildDirectionalConstraints()}}
+    \item \href{#method-metric_graph-compute_directional_covariance}{\code{metric_graph$compute_directional_covariance()}}
     \item \href{#method-metric_graph-buildC}{\code{metric_graph$buildC()}}
     \item \href{#method-metric_graph-build_mesh}{\code{metric_graph$build_mesh()}}
     \item \href{#method-metric_graph-get_version}{\code{metric_graph$get_version()}}
     \item \href{#method-metric_graph-is_disconnected}{\code{metric_graph$is_disconnected()}}
     \item \href{#method-metric_graph-get_components}{\code{metric_graph$get_components()}}
+    \item \href{#method-metric_graph-get_largest}{\code{metric_graph$get_largest()}}
     \item \href{#method-metric_graph-which_component}{\code{metric_graph$which_component()}}
     \item \href{#method-metric_graph-compute_fem}{\code{metric_graph$compute_fem()}}
     \item \href{#method-metric_graph-compute_mesh_weights}{\code{metric_graph$compute_mesh_weights()}}
@@ -765,8 +767,8 @@ distances are stored in the \code{geo_dist} element of the \code{metric_graph} o
 \if{html}{\out{<a id="method-metric_graph-compute_geodist_PtE"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-compute_geodist_PtE}{}}}
 \subsection{\code{metric_graph$compute_geodist_PtE()}}{
-  Computes shortest path distances between the vertices in the
-graph.
+  Computes shortest path distances among points on graph
+edges, preserving the input order and duplicate points.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
     \preformatted{metric_graph$compute_geodist_PtE(
@@ -780,20 +782,21 @@ graph.
   \subsection{Arguments}{
     \if{html}{\out{<div class="arguments">}}
     \describe{
-      \item{\code{PtE}}{Points to compute the metric for.}
-      \item{\code{normalized}}{are the locations in PtE in normalized distance?}
+      \item{\code{PtE}}{Two-column matrix of edge numbers and positions on edges.}
+      \item{\code{normalized}}{Are edge positions fractions of edge length?}
       \item{\code{include_vertices}}{Should the original vertices be included in the
 distance matrix?}
       \item{\code{verbose}}{Print progress of the computation of the geodesic distances.
 There are 3 levels of verbose, level 0, 1 and 2. In level 0, no messages
 are printed. In level 1, only messages regarding important steps are printed.
 Finally, in level 2, messages detailing all the steps are printed.
-The default is 1.}
+The default is 0.}
     }
     \if{html}{\out{</div>}}
   }
   \subsection{Returns}{
-    A matrix containing the geodesic distances.
+    A distance matrix with one row and column per input point, plus one
+per graph vertex at the beginning if \code{include_vertices} is TRUE.
   }
 }
 
@@ -1987,6 +1990,45 @@ in the same vertex)
 }
 
 \if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-compute_directional_covariance"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-compute_directional_covariance}{}}}
+\subsection{\code{metric_graph$compute_directional_covariance()}}{
+  Closed-form covariance of the directional OU model at
+observation locations or arbitrary points.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{metric_graph$compute_directional_covariance(
+  kappa,
+  tau,
+  PtE = NULL,
+  PtE2 = NULL,
+  sigma_source = NULL,
+  normalized = TRUE,
+  cpp = TRUE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{kappa}}{Positive OU rate parameter.}
+      \item{\code{tau}}{White-noise scale; the stationary variance is
+\code{1/(2*kappa*tau^2)}.}
+      \item{\code{PtE}}{Evaluation points \verb{(edge_number, distance_on_edge)}.}
+      \item{\code{PtE2}}{Optional second point set for cross-covariance.}
+      \item{\code{sigma_source}}{Optional source-vertex anchoring variances.}
+      \item{\code{normalized}}{Whether point distances are normalized to \verb{[0, 1]}.}
+      \item{\code{cpp}}{Use C++ numeric setup and the shared C++ covariance fill
+when available for oriented in-trees and out-trees.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A dense covariance matrix.
+  }
+}
+
+\if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-metric_graph-buildC"></a>}}
 \if{latex}{\out{\hypertarget{method-metric_graph-buildC}{}}}
 \subsection{\code{metric_graph$buildC()}}{
@@ -2005,8 +2047,8 @@ in the same vertex)
     \if{html}{\out{</div>}}
   }
   \subsection{Details}{
-    Currently not implemented for circles (edges that start and end
-in the same vertex)
+    Circular edges (edges that start and end in the same vertex)
+are supported: both ends of the edge are constrained at that vertex.
   }
   \subsection{Returns}{
     No return value. Called for its side effects.
@@ -2122,6 +2164,35 @@ constructors (default \code{0}).}
   }
   \subsection{Returns}{
     A list of \code{metric_graph} objects.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-metric_graph-get_largest"></a>}}
+\if{latex}{\out{\hypertarget{method-metric_graph-get_largest}{}}}
+\subsection{\code{metric_graph$get_largest()}}{
+  Return only the largest connected component, as a
+\code{metric_graph} object. Equivalent to \code{get_components()[[1]]}, but it
+builds just that one component instead of all of them, which matters
+when a graph decomposes into many small pieces and only the main
+network is of interest. For a connected graph it returns the graph
+itself. Components are ranked by total edge length, so the result is
+the same graph \code{get_components()[[1]]} would return.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{metric_graph$get_largest(verbose = 0)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{verbose}}{Verbosity level passed to the component constructor
+(default \code{0}).}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A \code{metric_graph} object, or \code{NULL} if the graph has no edges.
   }
 }
 

@@ -1,12 +1,10 @@
 ## ---------------------------------------------------------------------------
 ## Cross-validation for inlabru fits on metric graphs.
 ##
-## Mirrors the API of rSPDE::cross_validation. For models containing an
-## inla_metric_graph_spde component (exact, non-FEM SPDE on metric graphs)
-## this dispatches to a metric-graph-aware refit/sample path that follows
-## the augmented-graph pattern used by predict.inla_metric_graph_spde.
-## For other components (rSPDE / FEM / generic), it uses the standard
-## inlabru::bru_set_missing + bru_rerun + inlabru::generate path.
+## Mirrors the API of rSPDE::cross_validation, using the standard
+## inlabru::bru_set_missing + bru_rerun + inlabru::generate path. When
+## true_CV = FALSE we fix theta to the original fit's mode (so only the
+## latent posterior is updated); when TRUE we let INLA re-estimate theta.
 ## ---------------------------------------------------------------------------
 
 
@@ -110,88 +108,9 @@
 
 
 # -----------------------------------------------------------------------------
-# Detection of a metric_graph SPDE component inside a bru fit.
-# -----------------------------------------------------------------------------
-
-#' @noRd
-.cv_find_mg_component <- function(bru_fit) {
-  effects <- bru_fit$bru_info$model$effects
-  if (is.null(effects) || length(effects) == 0) {
-    return(NULL)
-  }
-  candidates <- list(
-    function(eff) eff$main$model,
-    function(eff) eff$main$mapper$model,
-    function(eff) eff$env$model,
-    function(eff) eff$mapper$model
-  )
-  for (eff_name in names(effects)) {
-    eff <- effects[[eff_name]]
-    model <- NULL
-    for (getter in candidates) {
-      m <- tryCatch(getter(eff), error = function(e) NULL)
-      if (!is.null(m) && inherits(m, "inla_metric_graph_spde")) {
-        model <- m
-        break
-      }
-    }
-    if (is.null(model)) {
-      mapper <- tryCatch(eff$mapper, error = function(e) NULL)
-      if (!is.null(mapper) &&
-        inherits(mapper, "bru_mapper_inla_metric_graph_spde")) {
-        model <- mapper$model
-      }
-    }
-    if (!is.null(model)) {
-      input <- tryCatch(eff$main$input$input, error = function(e) NULL)
-      location_var <- if (is.null(input)) "loc" else .bru_input_to_name(input)
-      return(list(
-        effect_name = eff_name,
-        location_var = location_var,
-        spde_model = model
-      ))
-    }
-  }
-  return(NULL)
-}
-
-#' @noRd
-.cv_find_spde_var_name <- function(bru_fit) {
-  fenv <- environment(bru_fit$bru_info$model$formula)
-  if (is.null(fenv)) return(NULL)
-  candidates <- character(0)
-  envs_to_search <- list(fenv)
-  parent <- parent.env(fenv)
-  while (!identical(parent, emptyenv()) &&
-    !identical(parent, globalenv()) &&
-    length(envs_to_search) < 20) {
-    envs_to_search[[length(envs_to_search) + 1]] <- parent
-    parent <- tryCatch(parent.env(parent), error = function(e) emptyenv())
-  }
-  envs_to_search[[length(envs_to_search) + 1]] <- globalenv()
-  for (env in envs_to_search) {
-    nms <- ls(env, all.names = TRUE)
-    for (nm in nms) {
-      val <- tryCatch(get(nm, envir = env, inherits = FALSE),
-        error = function(e) NULL
-      )
-      if (inherits(val, "inla_metric_graph_spde")) {
-        candidates <- c(candidates, nm)
-      }
-    }
-    if (length(candidates) > 0) break
-  }
-  if (length(candidates) == 0) return(NULL)
-  candidates[1]
-}
-
-
-# -----------------------------------------------------------------------------
-# Refit on training data only.
-#  - For metric-graph SPDE components: build a fresh spde object on a clone
-#    of the original graph with NA at test indices, rebuild the data list,
-#    rebuild cmp by replacing the spde model name, and call inlabru::bru().
-#  - Otherwise: use bru_set_missing + bru_rerun.
+# Refit on training data only using inlabru::bru_set_missing + bru_rerun.
+# When true_CV is FALSE we fix theta to the original fit's mode so only the
+# latent posterior is updated; when TRUE we let INLA re-estimate theta.
 # -----------------------------------------------------------------------------
 
 #' @noRd
@@ -209,133 +128,20 @@
     inlabru::as.bru_options(options)
   )
   result <- inlabru::bru_set_missing(bru_fit, keep = idx_data)
-  result <- inlabru::bru_rerun(result, options = options)
+  # When true_CV = FALSE we pass fixed = TRUE; INLA then sets restart = FALSE
+  # internally and emits a benign warning. iinla() strips and reconstructs
+  # control.mode each iteration, so passing restart = FALSE doesn't survive.
+  # Muffle just that specific warning so test output stays clean.
+  result <- withCallingHandlers(
+    inlabru::bru_rerun(result, options = options),
+    warning = function(w) {
+      if (grepl("restart=TRUE.*set to.*FALSE.*fixed=TRUE", conditionMessage(w))) {
+        invokeRestart("muffleWarning")
+      }
+    }
+  )
   result
 }
-
-#' @noRd
-.cv_bru_rerun_metric_graph <- function(bru_fit, idx_data_per_lik, true_CV,
-                                       fit_verbose, model_options_bru,
-                                       mg_info) {
-  spde_model <- mg_info$spde_model
-  loc_name <- mg_info$location_var
-
-  # Find variable name of the spde model in the formula's environment so we
-  # can splice a fresh model into the cmp via text substitution. The fallback
-  # value matches predict.inla_metric_graph_spde's substitution target.
-  spde_var_name <- .cv_find_spde_var_name(bru_fit)
-
-  orig_graph <- spde_model$graph_spde
-  graph_tmp <- orig_graph$get_initial_graph()
-  graph_tmp$clear_observations()
-
-  original_data <- spde_model$.__enclos_env__$private$data
-  if (is.null(original_data)) {
-    original_data <- bru_fit$bru_info$lhoods[[1]]$data
-  }
-
-  group_variables <- attr(
-    spde_model$graph_spde$.__enclos_env__$private$data,
-    "group_variable"
-  )
-  if (is.null(group_variables)) group_variables <- ".none"
-
-  if (group_variables == ".none") {
-    graph_tmp$add_observations(
-      data = original_data,
-      edge_number = ".edge_number",
-      distance_on_edge = ".distance_on_edge",
-      data_coords = "PtE",
-      normalized = TRUE,
-      verbose = 0,
-      suppress_warnings = TRUE
-    )
-  } else {
-    graph_tmp$add_observations(
-      data = original_data,
-      edge_number = ".edge_number",
-      distance_on_edge = ".distance_on_edge",
-      data_coords = "PtE",
-      normalized = TRUE,
-      group = group_variables,
-      verbose = 0,
-      suppress_warnings = TRUE
-    )
-  }
-
-  graph_tmp$observation_to_vertex(mesh_warning = FALSE)
-
-  # Mark held-out responses as NA in the cloned graph data.
-  responses <- bru_fit$.args$family
-  if (length(idx_data_per_lik) != length(responses)) {
-    if (length(responses) == 1L) {
-      idx_data_per_lik <- list(idx_data_per_lik[[1]])
-    }
-  }
-  lhoods <- inlabru::as_bru_obs_list(bru_fit)
-  for (i_lik in seq_along(lhoods)) {
-    response_name <- as.character(lhoods[[i_lik]]$formula[[2]])
-    if (length(response_name) > 1) response_name <- response_name[1]
-    if (!is.null(graph_tmp$.__enclos_env__$private$data[[response_name]])) {
-      keep_idx <- idx_data_per_lik[[i_lik]]
-      n_obs_lik <- length(graph_tmp$.__enclos_env__$private$data[[response_name]])
-      drop_idx <- setdiff(seq_len(n_obs_lik), keep_idx)
-      graph_tmp$.__enclos_env__$private$data[[response_name]][drop_idx] <- NA
-    }
-  }
-
-  spde____model <- graph_spde(graph_tmp,
-    alpha = spde_model$alpha,
-    directional = spde_model$directional
-  )
-
-  cmp_orig <- bru_fit$bru_info$model$formula
-  cmp_c <- as.character(cmp_orig)
-  if (!is.null(spde_var_name)) {
-    pattern <- paste0("(?<![A-Za-z0-9_.])", spde_var_name, "(?![A-Za-z0-9_.])")
-    cmp_c[3] <- sub(pattern, "spde____model", cmp_c[3], perl = TRUE)
-  } else {
-    cmp_c[3] <- sub(
-      "model\\s*=\\s*[A-Za-z_.][A-Za-z0-9_.]*",
-      "model = spde____model",
-      cmp_c[3]
-    )
-  }
-  cmp_new <- stats::as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
-  environment(cmp_new) <- new.env(parent = environment(cmp_orig))
-  assign("spde____model", spde____model, envir = environment(cmp_new))
-
-  data_spde_new <- graph_data_spde(spde____model,
-    loc_name = loc_name,
-    drop_all_na = FALSE, drop_na = FALSE
-  )[["data"]]
-
-  options <- if (is.null(model_options_bru)) list() else model_options_bru
-  if (!true_CV) {
-    options$control.mode <- list(theta = bru_fit$mode$theta, fixed = TRUE)
-  }
-  options$verbose <- isTRUE(fit_verbose)
-  info <- bru_fit[["bru_info"]]
-  bru_opts <- inlabru::bru_options(
-    info[["options"]],
-    inlabru::as.bru_options(options)
-  )
-
-  bru_fit_new <- inlabru::bru(cmp_new,
-    data = data_spde_new,
-    options = bru_opts,
-    allow_combine = FALSE
-  )
-
-  attr(bru_fit_new, "mg_info") <- list(
-    spde_model_train = spde____model,
-    location_var = loc_name,
-    graph_train = graph_tmp,
-    cmp = cmp_new
-  )
-  bru_fit_new
-}
-
 
 # -----------------------------------------------------------------------------
 # Posterior linear-predictor sampling at test locations.
@@ -363,46 +169,27 @@
   post[test_list[[i_lik]], , drop = FALSE]
 }
 
-#' @noRd
-.cv_sample_post_lp_metric_graph <- function(bru_fit_train, i_lik, test_list,
-                                            n_samples, print, full_bru_fit) {
-  link_name <- full_bru_fit$.args$control.family[[i_lik]]$link
-  model_family <- full_bru_fit$.args$family[[i_lik]]
-  if (link_name == "default") {
-    linkfuninv <- .cv_default_linkinv(model_family)
-  } else {
-    linkfuninv <- .cv_process_link(link_name)
-  }
-  formula_tmp <- .cv_process_formula_lhoods(full_bru_fit, i_lik)
-  env_tmp <- environment(formula_tmp)
-  assign("linkfuninv", linkfuninv, envir = env_tmp)
-  if (print) cat("Generating samples...\n")
-
-  data <- inlabru::as_bru_obs_list(bru_fit_train)[[i_lik]]$data
-  post <- inlabru::generate(bru_fit_train,
-    newdata = data,
-    formula = formula_tmp, n.samples = n_samples
-  )
-  post[test_list[[i_lik]], , drop = FALSE]
-}
-
 
 # -----------------------------------------------------------------------------
 # Posterior response samples (linear predictor + likelihood noise).
 # -----------------------------------------------------------------------------
 
 #' @noRd
+.cv_orient_loss <- function(x, orientation_results) {
+  if (orientation_results == "positive") -x else x
+}
+
+#' @noRd
 .cv_get_response_samples <- function(post_linear_predictors, fit_for_hyper,
-                                     i_lik, n_samples_total, print) {
+                                     i_lik, n_samples_total, print,
+                                     trial_counts = NULL) {
   model_family <- fit_for_hyper$.args$family[[i_lik]]
   family_mappings <- .cv_map_models_to_strings(fit_for_hyper)
 
   if (family_mappings[[i_lik]][[1]] != ".none") {
+    hyper_sample <- INLA::inla.hyperpar.sample(n_samples_total,
+      fit_for_hyper, improve.marginals = TRUE)
     meas_err_par <- lapply(family_mappings[[i_lik]], function(param) {
-      hyper_sample <- INLA::inla.hyperpar.sample(n_samples_total,
-        fit_for_hyper,
-        improve.marginals = TRUE
-      )
       hyper_sample[, param]
     })
   }
@@ -430,9 +217,15 @@
       stats::rpois(n_samples_total, post_linear_predictors[i, ])
     })
   } else if (model_family == "binomial") {
+    if (is.null(trial_counts)) trial_counts <- rep(1L, nrow(post_linear_predictors))
+    if (length(trial_counts) != nrow(post_linear_predictors) ||
+        anyNA(trial_counts) || any(trial_counts < 1) ||
+        any(trial_counts != as.integer(trial_counts))) {
+      stop("Binomial trial counts must be positive integers for each held-out response.")
+    }
     Y_sample <- lapply(seq_len(nrow(post_linear_predictors)), function(i) {
       stats::rbinom(n_samples_total,
-        size = 1, prob = post_linear_predictors[i, ]
+        size = trial_counts[i], prob = post_linear_predictors[i, ]
       )
     })
   } else {
@@ -450,18 +243,43 @@
 # Main user-facing function.
 # -----------------------------------------------------------------------------
 
+# Route only when a fitted component identifies the rSPDE implementation.
+# Ordinary bru components have no package owner, so their existing behaviour
+# stays with the function the caller selected.
+.cv_model_origin <- function(models) {
+  if (inherits(models, "bru")) models <- list(models)
+  if (!is.list(models) || !length(models) ||
+      !all(vapply(models, inherits, logical(1), "bru"))) return("unknown")
+  component_models <- unlist(lapply(models, function(fit) {
+    effects <- fit$bru_info$model$effects
+    if (!is.list(effects)) return(list())
+    lapply(effects, function(effect) effect$main$model)
+  }), recursive = FALSE)
+  classes <- unlist(lapply(component_models, class), use.names = FALSE)
+  if (any(classes %in% c("inla_metric_graph_spde",
+                         "inla_metric_graph_lgcp_spde"))) return("MetricGraph")
+  if (any(grepl("^inla_rspde($|_)", classes)) ||
+      "rspde_metric_graph" %in% classes) return("rSPDE")
+  "unknown"
+}
+
 #' Perform cross-validation on a list of fitted inlabru models on metric graphs.
 #'
-#' Mirrors [rSPDE::cross_validation()] for `bru` fits (output from `inlabru::bru()`),
-#' with built-in support for the exact, non-FEM SPDE models in
-#' \pkg{MetricGraph} (objects of class `inla_metric_graph_spde`). For models
-#' fit with such a component, the function rebuilds the SPDE on a graph clone
-#' with held-out responses set to NA, refits when `true_CV = TRUE`, and draws
-#' posterior samples via the `inlabru::generate` path used by
-#' [`predict.inla_metric_graph_spde`]. For models without a metric-graph SPDE
-#' component (e.g. FEM-based rSPDE models), it uses the standard
-#' `inlabru::bru_set_missing()` + `bru_rerun()` + `inlabru::generate()` path
-#' shared with [rSPDE::cross_validation()].
+#' Mirrors [rSPDE::cross_validation()] for `bru` fits (output from `inlabru::bru()`).
+#' For each fold, the held-out responses are set to NA with
+#' `inlabru::bru_set_missing()` and the model is refit with `inlabru::bru_rerun()`.
+#' When `true_CV = FALSE`, the original fit's `mode$theta` is held fixed so only
+#' the latent posterior is updated; when `TRUE`, theta is re-estimated. Posterior
+#' response samples are then drawn at the held-out locations via `inlabru::generate()`.
+#' Scores are averaged equally across folds; for multiple likelihoods, each
+#' fold's total score weights likelihoods by its number of held-out responses.
+#' Repeated leave-percentage-out folds retain every held-out scoring event.
+#' Works with the exact, non-FEM SPDE models in \pkg{MetricGraph}
+#' (`inla_metric_graph_spde`) and FEM-based rSPDE models alike.
+#' A fit containing an rSPDE component and no exact MetricGraph SPDE is
+#' delegated to [rSPDE::cross_validation()]. Mixed exact/rSPDE model lists
+#' use this implementation. Fits without a recognizable package-specific
+#' component continue to use the function explicitly called.
 #'
 #' @param models A fitted model from `inlabru::bru()` or a list of such models.
 #'   All models must have the same number of likelihoods and be fitted to
@@ -487,8 +305,9 @@
 #' @param return_true_test_values Return the true response values at test points.
 #' @param parallelize_RP Parallelize CRPS/SCRPS pairwise integrals.
 #' @param n_cores_RP Number of cores for `parallelize_RP`.
-#' @param true_CV If `TRUE`, refit the model on each training fold; if `FALSE`,
-#'   sample directly from the supplied fit without refitting.
+#' @param true_CV If `TRUE`, re-estimate hyperparameters on each training fold;
+#'   if `FALSE`, update the latent posterior on the training fold while keeping
+#'   the original fit's hyperparameters fixed.
 #' @param save_settings If `TRUE`, return the CV settings used.
 #' @param model_options_bru List of options passed to inlabru.
 #' @param print Print partial progress.
@@ -516,6 +335,11 @@ cross_validation <- function(models, model_names = NULL,
                              model_options_bru = list(),
                              print = TRUE,
                              fit_verbose = FALSE) {
+  if (.cv_model_origin(models) == "rSPDE") {
+    call <- match.call()
+    call[[1L]] <- quote(rSPDE::cross_validation)
+    return(eval(call, envir = parent.frame()))
+  }
   if (!requireNamespace("inlabru", quietly = TRUE)) {
     stop("Package 'inlabru' is required for cross_validation().")
   }
@@ -567,9 +391,17 @@ cross_validation <- function(models, model_names = NULL,
   lhoods <- inlabru::as_bru_obs_list(models[[1]])
   n_likelihoods <- length(lhoods)
   for (mn in seq_along(models)) {
-    if (length(inlabru::as_bru_obs_list(models[[mn]])) != n_likelihoods) {
+    model_lhoods <- inlabru::as_bru_obs_list(models[[mn]])
+    if (length(model_lhoods) != n_likelihoods) {
       stop(paste("Model", mn,
         "does not have the same number of likelihoods as the first model."))
+    }
+    for (i in seq_len(n_likelihoods)) {
+      y0 <- lhoods[[i]]$response_data$BRU_response
+      y1 <- model_lhoods[[i]]$response_data$BRU_response
+      if (!isTRUE(all.equal(y0, y1, check.attributes = FALSE))) {
+        stop("All models must use the same responses in the same order.")
+      }
     }
   }
 
@@ -593,6 +425,7 @@ cross_validation <- function(models, model_names = NULL,
   if (n_samples <= 0) stop("n_samples must be positive!")
 
   cluster_tmp <- NULL
+  on.exit(if (!is.null(cluster_tmp)) parallel::stopCluster(cluster_tmp), add = TRUE)
   if (parallelize_RP) {
     if (!requireNamespace("parallel", quietly = TRUE) ||
       !requireNamespace("doParallel", quietly = TRUE) ||
@@ -658,11 +491,6 @@ cross_validation <- function(models, model_names = NULL,
   needs_paired_samples <- any(c("crps", "scrps", "dss", "wcrps", "swcrps") %in% scores)
   new_n_samples <- if (needs_paired_samples) 2 * n_samples else n_samples
 
-  # Per-model dispatch flags.
-  is_mg <- vapply(models, function(m) {
-    !is.null(.cv_find_mg_component(m))
-  }, logical(1))
-
   for (fold in seq_len(n_folds)) {
     train_list <- train_test_indexes[[fold]][["train"]]
     test_list <- train_test_indexes[[fold]][["test"]]
@@ -672,47 +500,41 @@ cross_validation <- function(models, model_names = NULL,
         cat(sprintf("Model: %s\n", model_names[[mn]]))
       }
       cur_fit <- models[[mn]]
-      mg_info <- if (is_mg[mn]) .cv_find_mg_component(cur_fit) else NULL
 
-      if (true_CV) {
-        if (is_mg[mn]) {
-          new_fit <- .cv_bru_rerun_metric_graph(cur_fit,
-            idx_data_per_lik = train_list,
-            true_CV = TRUE, fit_verbose = fit_verbose,
-            model_options_bru = model_options_bru,
-            mg_info = mg_info
-          )
-        } else {
-          new_fit <- .cv_bru_rerun_generic(cur_fit,
-            idx_data = train_list,
-            true_CV = TRUE, fit_verbose = fit_verbose,
-            model_options_bru = model_options_bru
-          )
-        }
-      } else {
-        new_fit <- cur_fit
-      }
+      new_fit <- .cv_bru_rerun_generic(cur_fit,
+        idx_data = train_list,
+        true_CV = true_CV, fit_verbose = fit_verbose,
+        model_options_bru = model_options_bru
+      )
       fit_for_hyper <- if (true_CV) new_fit else cur_fit
 
       for (i_lik in seq_len(n_likelihoods)) {
-        if (is_mg[mn] && true_CV) {
-          post_lp <- .cv_sample_post_lp_metric_graph(new_fit, i_lik, test_list,
-            new_n_samples, print, full_bru_fit = cur_fit
-          )
-        } else {
-          post_lp <- .cv_sample_post_lp_generic(new_fit, i_lik, test_list,
-            new_n_samples, print
-          )
-        }
-
-        Y_samples <- .cv_get_response_samples(post_lp, fit_for_hyper, i_lik,
+        post_lp <- .cv_sample_post_lp_generic(new_fit, i_lik, test_list,
           new_n_samples, print
         )
-        Y_samples <- do.call(rbind, Y_samples)
-        post_samples[[model_names[[mn]]]][[fold]][[i_lik]] <- Y_samples
 
         lhoods_full <- inlabru::as_bru_obs_list(cur_fit)
         test_data <- lhoods_full[[i_lik]]$response_data$BRU_response[test_list[[i_lik]]]
+        trials <- NULL
+        if (cur_fit$.args$family[[i_lik]] == "binomial") {
+          trials_all <- lhoods_full[[i_lik]]$response_data$BRU_Ntrials
+          if (is.null(trials_all)) trials_all <- lhoods_full[[i_lik]]$data$Ntrials
+          if (is.null(trials_all)) trials_all <- lhoods_full[[i_lik]]$response_data$Ntrials
+          if (is.null(trials_all)) {
+            if (any(test_data > 1, na.rm = TRUE)) {
+              stop("Binomial counts require observation-specific Ntrials in the likelihood data.")
+            }
+            trials_all <- rep(1L, nrow(lhoods_full[[i_lik]]$data))
+          }
+          if (length(trials_all) == 1L) {
+            trials_all <- rep(trials_all, nrow(lhoods_full[[i_lik]]$data))
+          }
+          trials <- trials_all[test_list[[i_lik]]]
+        }
+        Y_samples <- .cv_get_response_samples(post_lp, fit_for_hyper, i_lik,
+          new_n_samples, print, trial_counts = trials)
+        Y_samples <- do.call(rbind, Y_samples)
+        post_samples[[model_names[[mn]]]][[fold]][[i_lik]] <- Y_samples
         if (return_true_test_values) {
           true_test_values[[model_names[[mn]]]][[fold]][[i_lik]] <- test_data
         }
@@ -723,13 +545,13 @@ cross_validation <- function(models, model_names = NULL,
         post_mean <- rowMeans(Y_samples)
         if ("mse" %in% scores) {
           val <- mean((test_data - post_mean)^2, na.rm = TRUE)
-          if (orientation_results == "positive") val <- -val
+          val <- .cv_orient_loss(val, orientation_results)
           mse[[i_lik]][fold, mn] <- val
           if (print) cat(sprintf("MSE - Likelihood %d: %g\n", i_lik, val))
         }
         if ("mae" %in% scores) {
           val <- mean(abs(test_data - post_mean), na.rm = TRUE)
-          if (orientation_results == "positive") val <- -val
+          val <- .cv_orient_loss(val, orientation_results)
           mae[[i_lik]][fold, mn] <- val
           if (print) cat(sprintf("MAE - Likelihood %d: %g\n", i_lik, val))
         }
@@ -738,6 +560,7 @@ cross_validation <- function(models, model_names = NULL,
           Y2 <- Y_samples[, (n_samples + 1):(2 * n_samples), drop = FALSE]
           post_var <- rowMeans(Y1^2) - (rowMeans(Y1))^2
           val <- mean((test_data - rowMeans(Y2))^2 / post_var + log(post_var))
+          val <- .cv_orient_loss(val, orientation_results)
           dss[[i_lik]][fold, mn] <- val
           if (print) cat(sprintf("DSS - Likelihood %d: %g\n", i_lik, val))
         }
@@ -893,8 +716,6 @@ cross_validation <- function(models, model_names = NULL,
     result_df <- rbind(result_df, final_row)
     rownames(result_df)[nrow(result_df)] <- ""
   }
-
-  if (!is.null(cluster_tmp)) parallel::stopCluster(cluster_tmp)
 
   if (return_post_samples) return_scores_folds <- TRUE
 

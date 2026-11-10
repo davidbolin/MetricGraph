@@ -15,6 +15,19 @@ bibliography: references.bib
   set.seed(111)
 ```
 
+```{r inla_call, include = FALSE}
+# inlabru <= 2.15.0 expects INLA's 'inla.call' option to hold the path to the
+# INLA executable, but INLA >= 26.11 leaves that option unset. Set it here so
+# that the inlabru examples below work with every INLA version.
+if (requireNamespace("INLA", quietly = TRUE) &&
+    is.null(INLA::inla.getOption("inla.call")) &&
+    exists("inla.binary.path", envir = asNamespace("INLA"))) {
+  try(INLA::inla.setOption(
+    inla.call = get("inla.binary.path", envir = asNamespace("INLA"))(check = TRUE)
+  ), silent = TRUE)
+}
+```
+
 ## Introduction
 
 In this vignette we will introduce how to fit Whittle--Matérn fields with
@@ -367,10 +380,10 @@ graph$add_observations(data = df_data, normalized = TRUE)
 Let us create the model object:
 ```{r, message=FALSE}
   library(INLA)
-  rspde_model <- rspde.metric_graph(graph, shared_lib = "rSPDE")
+  rspde_model <- rspde.metric_graph(graph)
 ```
 
-By default, the order of the rational approximation is 2.
+By default, the order of the rational approximation is 1.
 
 We can now create the auxiliary quantities that will be needed with the `graph_data_rspde()` function:
 ```{r}
@@ -997,13 +1010,15 @@ summary(fit_ns_start)
 
 ### Fitting the inlabru rSPDE model
 
-Let us then fit the same model using `inlabru` now. We start by defing the `rSPDE` model with the `rspde.metric_graph()` function:
+Let us then fit the same model using `inlabru` now. We start by defing the `rSPDE` model with the `rspde.metric_graph()` function. Since the smoothness estimated by `graph_lme()` is above 2, we increase the upper bound for $\nu$ with the `nu.upper.bound` argument. We also use a slightly more informative prior for the coefficients of the non-stationary parameters (`theta.prior.prec = 1`) to stabilize the estimation:
 
 ```{r}
 rspde_model_nonstat <- rspde.metric_graph(pems_graph,
   B.sigma = B.sigma,
   B.range = B.range,
-  parameterization = "matern") 
+  parameterization = "matern",
+  nu.upper.bound = 4,
+  theta.prior.prec = 1)
 ```
 
 Let us now create the `data.frame()` and the vector with the replicates indexes:

@@ -62,10 +62,11 @@
 #' @param factor_start_range Factor to multiply the max/min dimension of the bounding box to obtain a starting value for range. Default is 0.3.
 #' @param type_start_range_bbox Which dimension from the bounding box should be used? The options are 'diag', the default, 'max' and 'min'.
 #' @param shared_lib Which shared lib to use for the cgeneric implementation?
-#' If "detect", it will check if the shared lib exists locally, in which case it will
-#' use it. Otherwise it will use 'INLA's shared library.
-#' If 'INLA', it will use the shared lib from 'INLA's installation. If 'rSPDE', then
-#' it will use the local installation of the rSPDE package (does not work if your installation is from CRAN).
+#' If "detect", the default, it will use the compiled rSPDE library if one is
+#' available locally, and otherwise the models built into the 'INLA' binary.
+#' If 'INLA', it will use the models built into the 'INLA' binary. If 'rSPDE',
+#' it will use the local installation of the rSPDE package, which requires
+#' rSPDE to have been installed from source with its cgeneric library compiled.
 #' Otherwise, you can directly supply the path of the .so (or .dll) file.
 #' @param debug Should debug be displayed?
 #' @param verbose Level of verbosity. 0 is silent, 1 prints basic information, 2 prints more.
@@ -717,29 +718,57 @@ graph_spde <- function(graph_object,
 
   ### Location of object files
 
-  gpgraph_lib <- shared_lib
+  ## Recent 'INLA' versions have the cgeneric models compiled into the 'INLA'
+  ## binary, in which case no shared library is needed and `shlib = NULL` is
+  ## passed on. A locally compiled rSPDE library is still used when available.
+  ## When the model is compiled into the 'INLA' binary no shared library is
+  ## passed, and 'INLA' then leaves the "shlib" entry out of the character
+  ## arguments. The cgeneric code addresses those arguments by position, so the
+  ## empty slot has to be restored.
+  restore_shlib_slot <- function(model) {
+    cgeneric <- model[["f"]][["cgeneric"]]
+    if (!is.null(cgeneric[["shlib"]])) {
+      return(model)
+    }
+    characters <- cgeneric[["data"]][["characters"]]
+    if ("shlib" %in% names(characters)) {
+      return(model)
+    }
+    model_index <- match("model", names(characters))
+    if (is.na(model_index)) {
+      stop("There was a problem with the 'INLA' model creation.")
+    }
+    model[["f"]][["cgeneric"]][["data"]][["characters"]] <-
+      append(characters, list(shlib = ""), after = model_index)
+    model
+  }
+
+  rspde_shared_library <- function() {
+    shared_dir <- system.file("shared", package = "rSPDE")
+    if (!nzchar(shared_dir)) {
+      return(NULL)
+    }
+    extension <- if (.Platform$OS.type == "windows") ".dll" else ".so"
+    path <- file.path(shared_dir, paste0("rspde_cgeneric_models", extension))
+    if (file.exists(path)) normalizePath(path, mustWork = TRUE) else NULL
+  }
 
   if (shared_lib == "INLA") {
-    gpgraph_lib <- INLA::inla.external.lib("rSPDE")
+    gpgraph_lib <- NULL
   } else if (shared_lib == "rSPDE") {
-    gpgraph_lib <- system.file("shared", package = "rSPDE")
-    if (Sys.info()["sysname"] == "Windows") {
-      gpgraph_lib <- paste0(gpgraph_lib, "/rspde_cgeneric_models.dll")
-    } else {
-      gpgraph_lib <- paste0(gpgraph_lib, "/rspde_cgeneric_models.so")
+    gpgraph_lib <- rspde_shared_library()
+    if (is.null(gpgraph_lib)) {
+      stop("No compiled rSPDE shared library was found. Either install rSPDE ",
+           "from source with its cgeneric library compiled, or use ",
+           "shared_lib = 'INLA' to use the models built into the 'INLA' binary.")
     }
   } else if (shared_lib == "detect") {
-    gpgraph_lib_local <- system.file("shared", package = "rSPDE")
-    if (Sys.info()["sysname"] == "Windows") {
-      gpgraph_lib_local <- paste0(gpgraph_lib_local, "/rspde_cgeneric_models.dll")
-    } else {
-      gpgraph_lib_local <- paste0(gpgraph_lib_local, "/rspde_cgeneric_models.so")
+    gpgraph_lib <- rspde_shared_library()
+  } else {
+    if (!file.exists(shared_lib)) {
+      stop("'shared_lib' must be 'INLA', 'rSPDE', 'detect', or an existing file.")
     }
-    if (file.exists(gpgraph_lib_local)) {
-      gpgraph_lib <- gpgraph_lib_local
-    } else {
-      gpgraph_lib <- INLA::inla.external.lib("rSPDE")
-    }
+    gpgraph_lib <- normalizePath(shared_lib, mustWork = TRUE)
   }
 
   if (verbose > 0) {
@@ -831,6 +860,8 @@ graph_spde <- function(graph_object,
         )
       )
   }
+  model <- restore_shlib_slot(model)
+
   model$graph_spde <- graph_spde
   model$directional <- directional
   model$data_PtE <- suppressWarnings(graph_object$get_PtE())
@@ -1107,8 +1138,15 @@ graph_data_spde <- function(graph_spde, name = "field", repl = NULL, repl_col = 
     if (any(is.na(ret[["data"]][[repl_col]]))) {
       # Group by .group and fill NA values with first non-NA value within each group
       groups <- unique(ret[["data"]][[".group"]])
-      for (grp in groups) {
-        grp_idx <- which(ret[["data"]][[".group"]] == grp)
+      # Row indices per group, built in one pass. Re-extracting the group
+      # column and scanning it once per group is O(n_groups * n_obs).
+      group_col <- ret[["data"]][[".group"]]
+      group_rows <- split(seq_along(group_col),
+                          factor(match(group_col, groups),
+                                 levels = seq_along(groups)))
+      for (gi in seq_along(groups)) {
+        grp <- groups[gi]
+        grp_idx <- group_rows[[gi]]
         grp_repl_vals <- ret[["data"]][[repl_col]][grp_idx]
 
         if (any(is.na(grp_repl_vals))) {
@@ -1957,9 +1995,17 @@ predict.inla_metric_graph_spde <- function(object,
   name_locations <- .bru_input_to_name(bru_fit$bru_info$model$effects$field$main$input$input)
   original_data <- object$original_data
 
-  group_variables <- attr(object$graph_spde$.__enclos_env__$private$data, "group_variable")
+  group_variables <- attr(object$graph_spde$.__enclos_env__$private$data, "group_variables", exact = TRUE)
+  # Fall back to the (legacy / partial-match) singular attribute name if the
+  # canonical plural attribute is not present.
+  if (is.null(group_variables)) {
+    group_variables <- attr(object$graph_spde$.__enclos_env__$private$data, "group_variable")
+  }
+  if (is.null(group_variables)) {
+    group_variables <- ".none"
+  }
 
-  if (group_variables == ".none") {
+  if (identical(group_variables, ".none")) {
     graph_tmp$add_observations(
       data = original_data,
       edge_number = ".edge_number",
@@ -1992,9 +2038,6 @@ predict.inla_metric_graph_spde <- function(object,
     ".distance_on_edge"
   ))
 
-  # for(name_column in names_columns){
-  #   new_data[[name_column]] <- rep(NA, n_locations)
-  # }
   if (data_coords == "PtE") {
     new_data[[".edge_number"]] <- data[[name_locations]][, 1]
     new_data[[".distance_on_edge"]] <- data[[name_locations]][, 2]
@@ -2003,11 +2046,35 @@ predict.inla_metric_graph_spde <- function(object,
     new_data[[".coord_y"]] <- data[[name_locations]][, 2]
   }
 
+  # The internal refit below uses the full component formula, so every covariate
+  # (and the response) present in the original data must have a value at each of
+  # the `n_locations` prediction points. Recycle user-supplied covariates (e.g. a
+  # scalar `day = 1`) to the right length, and NA-fill any that were not supplied.
+  # Internal book-keeping columns (".loc_idx", ".group", ...) and the grouping /
+  # replicate variables are handled separately and are excluded here.
+  group_cols <- if (identical(group_variables, ".none")) {
+    character(0)
+  } else {
+    group_variables
+  }
+  covariate_columns <- setdiff(
+    grep("^\\.", names_columns, value = TRUE, invert = TRUE),
+    group_cols
+  )
+  for (name_column in covariate_columns) {
+    col <- new_data[[name_column]]
+    if (is.null(col)) {
+      new_data[[name_column]] <- rep(NA, n_locations)
+    } else if (length(col) != n_locations) {
+      new_data[[name_column]] <- rep(col, length.out = n_locations)
+    }
+  }
+
   new_data[["__dummy_var"]] <- 1:length(new_data[[".edge_number"]])
 
-  if (group_variables == ".none") {
+  if (identical(group_variables, ".none")) {
     group_variables <- NULL
-  } else if (group_variables == ".group") {
+  } else if (identical(group_variables, ".group")) {
     if (!(".group" %in% names(new_data))) {
       if (length(unique(original_data[[".group"]])) == 1) {
         new_data[[".group"]] <- rep(unique(original_data[[".group"]]), length(new_data[[".edge_number"]]))
@@ -2016,9 +2083,17 @@ predict.inla_metric_graph_spde <- function(object,
   }
 
   if (!is.null(group_variables)) {
-    if (!(group_variables %in% names(new_data))) {
+    missing_group <- setdiff(group_variables, names(new_data))
+    if (length(missing_group) > 0) {
       warning("The replicate variable was not found in newdata. Predictions were only given for the first replicate.")
-      new_data[[".group"]] <- rep(original_data[[group_variables]][1], length(new_data[[".edge_number"]]))
+      n_pred <- length(new_data[[".edge_number"]])
+      for (gv in missing_group) {
+        if (identical(gv, ".group")) {
+          new_data[[".group"]] <- rep(original_data[[".group"]][1], n_pred)
+        } else {
+          new_data[[gv]] <- rep(original_data[[gv]][1], n_pred)
+        }
+      }
     }
   }
 
@@ -2082,10 +2157,36 @@ predict.inla_metric_graph_spde <- function(object,
 
   spde____model <- graph_spde(graph_tmp, alpha = object$alpha, directional = object$directional)
 
-  cmp_c <- as.character(cmp)
+  # The user's component formula `cmp` may be one-sided (`~ components`, the
+  # natural 'inlabru' form) or two-sided (`response ~ components`). Replace the
+  # user's model-object name with the internal `spde____model` in the RHS and
+  # rebuild a two-sided formula (the internal refit below needs the response).
   name_model <- deparse(substitute(object))
-  cmp_c[3] <- sub(name_model, "spde____model", cmp_c[3])
-  cmp <- as.formula(paste(cmp_c[2], cmp_c[1], cmp_c[3]))
+  rhs_txt <- paste(deparse(cmp[[length(cmp)]]), collapse = " ")
+  rhs_txt <- sub(name_model, "spde____model", rhs_txt)
+  if (length(cmp) == 3L) {
+    # Two-sided: keep the user-supplied response.
+    lhs_txt <- paste(deparse(cmp[[2L]]), collapse = " ")
+  } else {
+    # One-sided: recover the response name from the fitted likelihood so the
+    # internal refit knows what to fit against.
+    # 'inlabru' 2.15 moved the observations from bru_info$lhoods into
+    # bru_info$model$lhoods; as_bru_obs_list() works for both.
+    lhood <- tryCatch(
+      inlabru::as_bru_obs_list(bru_fit)[[1]],
+      error = function(e) bru_fit[["bru_info"]][["lhoods"]][[1]]
+    )
+    if (!is.null(lhood[["formula"]]) && length(lhood[["formula"]]) == 3L) {
+      lhs_txt <- paste(deparse(lhood[["formula"]][[2L]]), collapse = " ")
+    } else {
+      stop(paste0(
+        "Could not determine the response variable from the fitted model. ",
+        "Please supply a two-sided component formula, e.g. ",
+        "'y ~ ...', to predict()."
+      ))
+    }
+  }
+  cmp <- stats::as.formula(paste(lhs_txt, "~", rhs_txt), env = environment())
 
   new_data_tmp <- graph_data_spde(spde____model,
     loc_name = name_locations,

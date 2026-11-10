@@ -31,12 +31,15 @@ posterior_mean_covariance <- function(theta, graph, model = "alpha1")
     Q <- Qalpha1(c(tau, kappa), graph)
     Sigma <- as.matrix(solve(Q))[graph$PtV, graph$PtV]
   } else if (model == "alpha2") {
-    n.c <- 1:length(graph$CoB$S)
+    n_const <- length(graph$CoB$S)
+    if (n_const > 0) {
+      Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+    } else {
+      Tc <- graph$CoB$T
+    }
     Q <- Qalpha2(c(tau, kappa), graph, BC = 1)
-    Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
-    Qtilde <- Qtilde[-n.c, -n.c]
-    Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
-      solve(Qtilde) %*% (graph$CoB$T[-n.c, ])
+    Qtilde <- Tc %*% Q %*% t(Tc)
+    Sigma.overdetermined = t(Tc) %*% solve(Qtilde) %*% Tc
     index.obs <- 4*(graph$PtE[, 1] - 1) + (1 * (graph$PtE[, 2] == 0)) +
       (3 * (graph$PtE[, 2] != 0))
     Sigma <-  as.matrix(Sigma.overdetermined[index.obs, index.obs])
@@ -102,12 +105,15 @@ posterior_crossvalidation_covariance_manual <- function(theta,
   } else if (model == "alpha2") {
 
     graph$buildC(2,BC==0)
-    n.c <- 1:length(graph$CoB$S)
+    n_const <- length(graph$CoB$S)
+    if (n_const > 0) {
+      Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+    } else {
+      Tc <- graph$CoB$T
+    }
     Q <- Qalpha2(c(tau, kappa), graph, BC = BC)
-    Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
-    Qtilde <- Qtilde[-n.c, -n.c]
-    Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
-      solve(Qtilde) %*% (graph$CoB$T[-n.c, ])
+    Qtilde <- Tc %*% Q %*% t(Tc)
+    Sigma.overdetermined = t(Tc) %*% solve(Qtilde) %*% Tc
     PtE = graph$get_PtE()
     index.obs <- 4*(PtE[, 1] - 1) + (1 * (PtE[, 2] == 0)) +
       (3 * (PtE[, 2] != 0))
@@ -196,12 +202,15 @@ posterior_crossvalidation_manual <- function(theta,
     Sigma.o <- Sigma
     diag(Sigma.o) <- diag(Sigma.o) + sigma_e^2
   } else if(model == "alpha2"){
-    n.c <- 1:length(graph$CoB$S)
+    n_const <- length(graph$CoB$S)
+    if (n_const > 0) {
+      Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+    } else {
+      Tc <- graph$CoB$T
+    }
     Q <- Qalpha2(c(tau, kappa), graph, BC = 1)
-    Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
-    Qtilde <- Qtilde[-n.c, -n.c]
-    Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
-      solve(Qtilde) %*% (graph$CoB$T[-n.c, ])
+    Qtilde <- Tc %*% Q %*% t(Tc)
+    Sigma.overdetermined = t(Tc) %*% solve(Qtilde) %*% Tc
     PtE = graph$get_PtE()
     index.obs <- 4*(PtE[, 1] - 1) + (1 * (PtE[, 2] == 0)) +
       (3 * (PtE[, 2] != 0))
@@ -268,7 +277,10 @@ posterior_crossvalidation_manual <- function(theta,
 #' using either the posterior distribution from a fitted model (pseudo-CV) or by
 #' refitting the model for each fold (true CV).
 #'
-#' @param object A fitted model using the `graph_lme()` function or a named list of fitted objects using the `graph_lme()` function.
+#' @param object A fitted model using the `graph_lme()` function. Lists of
+#' fitted models are handled by the list method of the generic
+#' [rSPDE::posterior_crossvalidation()], which can also mix `graph_lme` and
+#' `rspde_lme` fits.
 #' @param scores A vector of scores to compute. The options are "logscore", "crps", "scrps", "mae", and "rmse". By default, all scores are computed.
 #' @param mode Cross-validation mode. Options are "k-fold", "loo" (leave-one-out), or "lpo" (leave-percentage-out). Default is "k-fold".
 #' @param k Number of folds for k-fold cross-validation. Default is 10.
@@ -285,21 +297,20 @@ posterior_crossvalidation_manual <- function(theta,
 #' @param seed Random seed for reproducibility in fold creation. Default is NULL.
 #' @param return_indices Logical indicating whether to return the train/test indices used. Default is FALSE.
 #' @param use_precomputed Logical indicating whether to use precomputation for faster CV. Default is TRUE.
+#' @param ... Currently not used.
 #' @return Vector with the posterior expectations and variances as well as
 #' mean absolute error (MAE), root mean squared errors (RMSE), and three
 #' negatively oriented proper scoring rules: log-score, CRPS, and scaled
 #' CRPS.
+#' @aliases posterior_crossvalidation
+#' @method posterior_crossvalidation graph_lme
 #' @export
-posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "scrps", "mae", "rmse"), mode = "k-fold", k = 10, percentage = 20, number_folds = 10,
-                                     train_test_indices = NULL, true_CV = FALSE, factor = 1, tibble = TRUE, 
-                                     parallel_folds = FALSE, parallel_fitting = FALSE, n_cores = parallel::detectCores() - 1, 
-                                     print = FALSE, seed = NULL, return_indices = FALSE, use_precomputed = TRUE)
+posterior_crossvalidation.graph_lme <- function(object, scores = c("logscore", "crps", "scrps", "mae", "rmse"), mode = "k-fold", k = 10, percentage = 20, number_folds = 10,
+                                     train_test_indices = NULL, true_CV = FALSE, factor = 1, tibble = TRUE,
+                                     parallel_folds = FALSE, parallel_fitting = FALSE, n_cores = parallel::detectCores() - 1,
+                                     print = FALSE, seed = NULL, return_indices = FALSE, use_precomputed = TRUE, ...)
 {
-  
-  if(!inherits(object,"graph_lme") && !is.list(object)){
-    stop("object should be of class graph_lme or a list of objects of class graph_lme.")
-  }
-  
+
   # Convert scores to lowercase for robustness
   scores <- tolower(scores)
   
@@ -307,30 +318,40 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
   valid_scores <- c("logscore", "crps", "scrps", "mae", "rmse")
   invalid_scores <- setdiff(scores, valid_scores)
 
-  # Pre-clean the data to only include non-NA values for the response variable
+  # Pre-clean the data:
+  #   * drop NA response rows (otherwise downstream indexing pulls in
+  #     rows whose y is missing — see existing behaviour);
+  #   * drop rows whose replicate is NOT in object$which_repl. When the
+  #     fit was restricted (graph_lme(..., which_repl = 2)), object$nobs
+  #     and object$A_list are sized for that replicate subset only.
+  #     Indexing the graph's full data vector by 1..nobs would otherwise
+  #     pull rows from replicates the fit never saw, and predict() would
+  #     ask for an A_list entry that doesn't exist (symptom: "argument
+  #     is not a matrix" inside t(A_repl)).
+  # We clone the graph first so that we don't mutate the user's
+  # fit$graph (R6 reference) as a side effect.
   if(inherits(object, "graph_lme")) {
-    # Get the response variable name
     response_var <- as.character(object$response_var)
-    
-    # Access the private data from the graph object
     data <- object$graph$.__enclos_env__$private$data
-    
-    # Check if the response variable exists in the data
+    n_data <- length(data[[".group"]])
+    keep <- rep(TRUE, n_data)
+
     if(response_var %in% names(data)) {
-      # Filter out NA values in the response variable
-      non_na_indices <- !is.na(data[[response_var]])
-      
-      # Update all columns in the data to only include non-NA response values
-      data <- lapply(data, function(col) col[non_na_indices])
-      
-      # Update the private data in the graph object
-      object$graph$.__enclos_env__$private$data <- data
-      
-      # Update the number of observations in the object
-      object$nobs <- sum(non_na_indices)
+      keep <- keep & !is.na(data[[response_var]])
     } else {
       warning(paste("Response variable", response_var, "not found in the data."))
     }
+
+    if(!is.null(object$which_repl) && ".group" %in% names(data)) {
+      keep <- keep & (as.character(data[[".group"]]) %in%
+                        as.character(object$which_repl))
+    }
+
+    cv_graph <- object$graph$clone()
+    cv_graph$.__enclos_env__$private$data <-
+      lapply(data, function(col) col[keep])
+    object$graph <- cv_graph
+    object$nobs  <- sum(keep)
   }
   
   if(length(invalid_scores) > 0) {
@@ -341,39 +362,6 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
 
   if(parallel_folds && parallel_fitting){
     stop("parallel_folds and parallel_fitting cannot both be TRUE.")
-  }
-
-  if(!inherits(object,"graph_lme")){
-    if(is.null(names(object))){
-      warning("The list with fitted models does not contain names for the models, thus the results will not be properly named.")
-    }
-    results_list <- lapply(object, function(obj){
-      posterior_crossvalidation(obj, k = k, mode = mode, percentage = percentage, 
-                               number_folds = number_folds,
-                               train_test_indices = train_test_indices, 
-                               true_CV = true_CV, factor = factor, 
-                               tibble = FALSE, parallel_folds = parallel_folds, 
-                               parallel_fitting = parallel_fitting,
-                               n_cores = n_cores, print = print, 
-                               seed = seed, return_indices = return_indices,
-                               scores = scores)
-    })
-    res <- list()
-    res[["mu"]] <- lapply(results_list, function(dat){dat[["mu"]]})
-    res[["var"]] <- lapply(results_list, function(dat){dat[["var"]]})
-    res[["scores"]] <- lapply(results_list, function(dat){dat[["scores"]]})
-    scores <- do.call(rbind, res[["scores"]])
-    row.names(scores) <- names(res[["scores"]])
-    if(tibble){
-      scores[["Model"]] <- row.names(scores)
-      scores <- tidyr::as_tibble(scores)
-      scores <- scores[, c("Model", "logscore", "crps", "scrps", "mae", "rmse")]
-    }
-    res[["scores"]] <- scores
-    if(return_indices && !is.null(results_list[[1]][["indices"]])) {
-      res[["indices"]] <- results_list[[1]][["indices"]]
-    }
-    return(res)
   }
 
   # Create or use provided train/test indices
@@ -434,11 +422,28 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
   need_variances <- any(scores %in% c("logscore", "crps", "scrps"))
   precomputed_data <- NULL
   precomputed_graph <- NULL
-  
+
+  # For rspde_lme fits the precomputed structures live in rSPDE
+  # (predict.rspde_lme): new_rspde_obj + Q + mu_corr. These are
+  # parameter-dependent only, so they can be built once and reused
+  # across folds. The cv-time NA mask is plumbed through as
+  # advanced_options$na_test_idx. We use a separate code path below
+  # (predict.rspde_lme expects only na_test_idx, not the
+  # test_idx / which_repl / PtV-aware machinery the native models use).
+  is_rspde_obj <- inherits(object, "rspde_lme")
+
+  # The precomputed prediction path treats test_idx as a WITHIN-replicate
+  # index (it picks rows of PtV / PtE_full / A, all of which are per-
+  # unique-location). For multi-replicate models we still allow the
+  # precomputed path on a per-fold basis, but only for folds whose test
+  # points all live in a single replicate (always true for LOO; usually
+  # false for k-fold). The per-fold decision is made in process_fold.
+  n_repl_obj <- length(unique(object$graph$.__enclos_env__$private$data[[".group"]]))
+
   if(print) {
     cat("Pre-computing data structures for faster cross-validation...\n")
   }
-  
+
   if(use_precomputed) {
     if(!true_CV) {
       # For pseudo-CV: precompute parameter-dependent structures (Q, Sigma, etc.)
@@ -502,20 +507,44 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
   if (!is.null(precomputed_graph) && !is.null(precomputed_graph$.__enclos_env__$private$data[[".dummy_order_var"]])) {
     # Get the ordering vector
     order_var <- precomputed_graph$.__enclos_env__$private$data[[".dummy_order_var"]]
-    
+
+    # For multi-replicate models the precomputed predict path indexes
+    # PtV / PtE_full per-location (one row per unique observation
+    # location), so test_idx passed to predict must be a WITHIN-replicate
+    # position. Build a mapping from precomputed-graph positions to
+    # (replicate, within-replicate index).
+    pre_group <- precomputed_graph$.__enclos_env__$private$data[[".group"]]
+    within_repl_idx <- integer(length(pre_group))
+    if(!is.null(pre_group)) {
+      for(r in unique(pre_group)) {
+        pos_r <- which(pre_group == r)
+        within_repl_idx[pos_r] <- seq_along(pos_r)
+      }
+    }
+
     # Apply the reordering to train_test_indices
     for (i in 1:length(train_test_indices)) {
-      # Create temporary copies
       train_orig <- train_test_indices[[i]]$train
-      test_orig <- train_test_indices[[i]]$test
-            
-      # Reorder using the ordering vector
-      # Find the positions in order_var that match the original indices
-      train_test_indices[[i]]$reordered_train <- match(train_orig, order_var)
-      train_test_indices[[i]]$reordered_test <- match(test_orig, order_var)
+      test_orig  <- train_test_indices[[i]]$test
 
+      train_in_graph <- match(train_orig, order_var)
+      test_in_graph  <- match(test_orig,  order_var)
+
+      # Backwards-compatible names: in single-replicate models these
+      # equal the global positions, matching the original code path.
+      train_test_indices[[i]]$reordered_train <- train_in_graph
+      train_test_indices[[i]]$reordered_test  <- test_in_graph
+
+      # New: within-replicate index + replicate id of the test (and
+      # train) points, used by the multi-replicate precomputed path.
+      if(!is.null(pre_group)) {
+        train_test_indices[[i]]$reordered_train_within <- within_repl_idx[train_in_graph]
+        train_test_indices[[i]]$reordered_test_within  <- within_repl_idx[test_in_graph]
+        train_test_indices[[i]]$test_repl  <- pre_group[test_in_graph]
+        train_test_indices[[i]]$train_repl <- pre_group[train_in_graph]
+      }
     }
-    
+
     if (print) {
         cat("Train and test indices reordered according to graph structure.\n")
       }
@@ -531,10 +560,63 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
     train_indices <- train_test_indices[[fold_idx]]$train
     test_indices <- train_test_indices[[fold_idx]]$test
 
-    if(use_precomputed){
+    # Decide whether THIS fold can use the precomputed path. The path
+    # supports one replicate per predict() call (test_idx is within-
+    # replicate for native models, na_test_idx is global for rspde).
+    # For rspde, multi-replicate folds split into per-replicate
+    # sub-predicts below (rspde_multi_rep_split). For native models,
+    # multi-replicate folds fall back to a single non-precomputed
+    # predict. For LOO every fold is single-replicate.
+    fold_use_precomputed <- use_precomputed
+    fold_test_repl <- NULL
+    rspde_multi_rep_split <- FALSE
+    test_repls_in_fold <- NULL
+    # For multi-replicate rspde fits the split path is needed for
+    # correctness regardless of `use_precomputed`: predict.rspde_lme
+    # does not emit $edge_number / $distance_on_edge, so a single
+    # multi-replicate predict() returns $mean rows the downstream key
+    # match cannot disambiguate by (replicate, location) — it silently
+    # falls through to position-based indexing and reports the wrong
+    # replicate's prediction for most test points. Splitting by
+    # replicate avoids this AND lets the cached precompute be reused.
+    if(is_rspde_obj && n_repl_obj > 1){
+      test_repls_in_fold <-
+        object$graph$.__enclos_env__$private$data[[".group"]][test_indices]
+      if(length(unique(test_repls_in_fold)) != 1L){
+        rspde_multi_rep_split <- TRUE
+      } else {
+        fold_test_repl <- test_repls_in_fold[1]
+      }
+    }
+    if(fold_use_precomputed && !rspde_multi_rep_split){
       reordered_train_indices <- train_test_indices[[fold_idx]]$reordered_train
-      reordered_test_indices <- train_test_indices[[fold_idx]]$reordered_test
-    } 
+      reordered_test_indices  <- train_test_indices[[fold_idx]]$reordered_test
+      if(n_repl_obj > 1 && !is_rspde_obj){
+        # Native model: per-fold precompute path needs the test points to
+        # live in a single replicate. Multi-replicate folds fall back.
+        test_repls_in_fold <- train_test_indices[[fold_idx]]$test_repl
+        if(is.null(test_repls_in_fold)){
+          test_repls_in_fold <-
+            object$graph$.__enclos_env__$private$data[[".group"]][test_indices]
+        }
+        if(length(unique(test_repls_in_fold)) != 1L){
+          fold_use_precomputed <- FALSE
+        } else {
+          fold_test_repl <- test_repls_in_fold[1]
+          # Native precompute path: predict idx_prd is WITHIN-replicate.
+          reordered_test_indices  <- train_test_indices[[fold_idx]]$reordered_test_within
+          reordered_train_indices <- train_test_indices[[fold_idx]]$reordered_train_within
+        }
+      }
+    }
+    # rspde precompute always uses newdata for the prediction location,
+    # so build new_data unconditionally for that case (the split path
+    # builds per-replicate newdata below).
+    if(!rspde_multi_rep_split &&
+       (!fold_use_precomputed || is.null(precomputed_data) || is_rspde_obj)){
+      new_data <- object$graph$.__enclos_env__$private$data
+      new_data <- lapply(new_data, function(x){x[test_indices]})
+    }
     
     local_results <- list(
       test_indices = test_indices,
@@ -558,9 +640,14 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
       cv_graph$.__enclos_env__$private$data[[response_name]][test_indices] <- NA
       
       model_options <- object$options_model
-      # Set starting values based on the original model parameters
-      if(tolower(object$latent_model$type) %in% c("whittlematern", "graphlaplacian")) {
-        # For WhittleMatern or graphLaplacian models
+      # For rSPDE-backed (FEM) fits we let graph_lme/rspde_lme do the
+      # name-based extraction of starting values via `previous_fit = object`
+      # — the positional kappa/tau extraction below would silently pick the
+      # wrong elements (e.g. "nu (fixed)" or "theta1") for nonstationary fits.
+      refit_previous_fit <- NULL
+      if(inherits(object, "rspde_lme")){
+        refit_previous_fit <- object
+      } else if(tolower(object$latent_model$type) %in% c("whittlematern", "graphlaplacian")) {
         if(!is.null(object$coeff$random_effects)) {
           model_options$start_kappa <- object$coeff$random_effects[2]
           model_options$start_tau <- object$coeff$random_effects[1]
@@ -578,18 +665,34 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
         }
       }
 
-      # Refit the model using the same optimization method
-      cv_model <- graph_lme(
+      # Refit the model using the same optimization method.
+      # Prefer `model_arg` (original user input) over `latent_model`: the
+      # latter is the rSPDE operator for FEM fits and does not carry the
+      # B.sigma/B.range or fem=TRUE flags graph_lme needs to re-dispatch.
+      refit_model <- if(!is.null(object$model_arg)) object$model_arg else object$latent_model
+      refit_is_fem <- isTRUE(refit_model$fem)
+      refit_optim_method <- if(!is.null(object$optim_method)) object$optim_method else "L-BFGS-B"
+      refit_optim_controls <- if(!is.null(object$optim_controls)) object$optim_controls else list()
+      refit_args <- list(
         formula = object$formula,
         graph = cv_graph,
-        model = object$latent_model,
-        BC = object$BC,
-        optim_method = object$optim_method,
-        optim_controls = object$optim_controls,
+        model = refit_model,
+        optim_method = refit_optim_method,
+        optim_controls = refit_optim_controls,
         model_options = model_options,
         parallel = parallel_fitting,
         n_cores = n_cores
       )
+      if(!is.null(refit_previous_fit)){
+        refit_args$previous_fit <- refit_previous_fit
+      }
+      # Only pass BC when it is meaningful for the model (i.e. non-FEM
+      # WhittleMatern). Passing it for FEM fits would trigger a spurious
+      # "BC has no effect" warning on every fold.
+      if(!refit_is_fem && !is.null(object$BC)){
+        refit_args$BC <- object$BC
+      }
+      cv_model <- do.call(graph_lme, refit_args)
 
     } else {
       # Pseudo cross-validation: use the original model parameters
@@ -597,76 +700,156 @@ posterior_crossvalidation <- function(object, scores = c("logscore", "crps", "sc
       cv_model <- update_graph_lme_with_na(object, test_indices)
     }
 
-    if(!use_precomputed) {
-      new_data <- object$graph$.__enclos_env__$private$data
-      new_data <- lapply(new_data, function(x){x[test_indices]})
-    }
-
-
     # Make predictions for test indices
-    if(!is.null(precomputed_data)) {
-      # Use precomputed data structures
-      if(need_variances){
-        pred <- predict(cv_model, 
-                      edge_number = ".edge_number", 
-                      distance_on_edge = ".distance_on_edge", 
-                      normalized = TRUE, 
-                      compute_variances = TRUE, 
-                      advanced_options = list(precompute_data = precomputed_data, precompute_type = "full", test_idx = reordered_test_indices, train_idx = reordered_train_indices))
-      } else {
-        pred <- predict(cv_model, 
-                      edge_number = ".edge_number", 
-                      distance_on_edge = ".distance_on_edge", 
-                      normalized = TRUE, 
-                      compute_variances = FALSE,
-                      advanced_options = list(precompute_data = precomputed_data, precompute_type = "full", test_idx = reordered_test_indices, train_idx = reordered_train_indices))
+    if(rspde_multi_rep_split){
+      # rspde multi-replicate fold: split into per-replicate
+      # sub-predicts so each one has unique prediction locations (no
+      # duplicate-loc warning), only iterates kriging over the one
+      # relevant replicate, and — critically — assembles predictions
+      # in test_indices order so the downstream key match can't pick
+      # the wrong replicate's row. When `use_precomputed` is on, the
+      # cached new_rspde_obj / Q are reused across sub-predicts.
+      gdata <- object$graph$.__enclos_env__$private$data
+      n_test <- length(test_indices)
+      mu_vec <- rep(NA_real_, n_test)
+      var_vec <- rep(NA_real_, n_test)
+      base_adv_opts <- list(precompute_data = precomputed_data)
+      for(r in unique(test_repls_in_fold)){
+        pos_r <- which(test_repls_in_fold == r)
+        ti_r  <- test_indices[pos_r]
+        nd_r  <- lapply(gdata, function(x){x[ti_r]})
+        adv_opts_r <- base_adv_opts
+        adv_opts_r$na_test_idx <- ti_r
+        pred_r <- predict(cv_model,
+                          newdata = nd_r,
+                          edge_number = ".edge_number",
+                          distance_on_edge = ".distance_on_edge",
+                          normalized = TRUE,
+                          compute_variances = need_variances,
+                          which_repl = r,
+                          advanced_options = adv_opts_r)
+        mu_vec[pos_r]  <- as.numeric(pred_r$mean)
+        if(need_variances){
+          var_vec[pos_r] <- as.numeric(pred_r$variance)
+        }
       }
+      # Build a `pred` object in test_indices order. The downstream
+      # post-processing detects length(pred$mean) == n_test and skips
+      # the key-based lookup.
+      pred <- list(mean = mu_vec, variance = var_vec)
+    } else if(fold_use_precomputed && !is.null(precomputed_data) && is_rspde_obj) {
+      # rspde precompute path: predict.rspde_lme reuses the cached
+      # (new_rspde_obj, Q, mu_corr) and masks the held-out points via
+      # na_test_idx. The location for the prediction itself still has
+      # to come from newdata.
+      adv_opts <- list(precompute_data = precomputed_data,
+                       na_test_idx     = test_indices)
+      pred <- predict(cv_model,
+                    newdata = new_data,
+                    edge_number = ".edge_number",
+                    distance_on_edge = ".distance_on_edge",
+                    normalized = TRUE,
+                    compute_variances = need_variances,
+                    which_repl = fold_test_repl,
+                    advanced_options = adv_opts)
+    } else if(fold_use_precomputed && !is.null(precomputed_data)) {
+      # Native (non-rspde) precompute path. For multi-replicate folds we
+      # pass the within-replicate test_idx (for predict's PtV /
+      # PtE_full lookup) together with na_test_idx (global, for masking
+      # the response vector). For single-replicate folds these collapse
+      # to the same value and the call is equivalent to the original
+      # code path.
+      adv_opts <- list(precompute_data = precomputed_data,
+                       precompute_type = "full",
+                       test_idx = reordered_test_indices,
+                       train_idx = reordered_train_indices)
+      if(n_repl_obj > 1L){
+        adv_opts$na_test_idx <- train_test_indices[[fold_idx]]$reordered_test
+      }
+      pred <- predict(cv_model,
+                    edge_number = ".edge_number",
+                    distance_on_edge = ".distance_on_edge",
+                    normalized = TRUE,
+                    compute_variances = need_variances,
+                    which_repl = fold_test_repl,
+                    advanced_options = adv_opts)
     } else {
-      # Fallback if precomputation failed
-      if(need_variances){
-        pred <- predict(cv_model, 
-                      newdata = new_data, 
-                      edge_number = ".edge_number", 
-                      distance_on_edge = ".distance_on_edge", 
-                      normalized = TRUE, 
-                      compute_variances = TRUE)
-      } else {
-        pred <- predict(cv_model, 
-                      newdata = new_data, 
-                      edge_number = ".edge_number", 
-                      distance_on_edge = ".distance_on_edge", 
-                      normalized = TRUE, 
-                      compute_variances = FALSE)
-      }
+      # Fallback path (precomputation skipped, failed, or the fold spans
+      # multiple replicates). When the fold is confined to a single
+      # replicate (single-rep models, or LOO/per-fold on multi-rep), pass
+      # `which_repl` so predict() does not iterate over every replicate
+      # and return rows the downstream key match cannot disambiguate.
+      pred <- predict(cv_model,
+                    newdata = new_data,
+                    edge_number = ".edge_number",
+                    distance_on_edge = ".distance_on_edge",
+                    normalized = TRUE,
+                    compute_variances = need_variances,
+                    which_repl = fold_test_repl)
     }
       
-    # Extract predictions for test indices
-    for(i in seq_along(test_indices)) {
-      idx <- test_indices[i]
-      local_results$mu.p[i] <- pred$mean[i]
-      if(need_variances) {
-        local_results$var.p[i] <- pred$variance[i] + object$coeff$measurement_error^2
+    # predict() returns one entry per (newdata row x replicate). In the
+    # precompute path with `which_repl` set and in the single-replicate
+    # fallback (and the rspde multi-rep split path above), the output
+    # already has exactly one entry per test point in `test_indices`
+    # order; we can index directly. The match-based lookup is only
+    # needed for the multi-replicate native fallback, where predict
+    # produces predictions across all replicates.
+    n_test <- length(test_indices)
+    full_data <- object$graph$.__enclos_env__$private$data
+    if(length(pred$mean) == n_test){
+      pred_idx_vec <- seq_len(n_test)
+    } else {
+      test_repl <- full_data[[".group"]][test_indices]
+      test_edge <- full_data[[".edge_number"]][test_indices]
+      test_dist <- full_data[[".distance_on_edge"]][test_indices]
+      pred_repl <- pred$repl
+      if(is.null(pred_repl)){
+        # Older / single-replicate code paths may omit $repl; assume
+        # one entry per test point in input order.
+        pred_repl <- rep(test_repl[1], length(pred$mean))
       }
-      y_test <- object$graph$.__enclos_env__$private$data[[response_name]][idx]
-      
-      # Calculate scores
-      if("logscore" %in% scores) {
-        local_results$logscore[i] <- LS(y_test, local_results$mu.p[i], sqrt(local_results$var.p[i]))
-      }
-      if("crps" %in% scores) {
-        local_results$crps[i] <- CRPS(y_test, local_results$mu.p[i], sqrt(local_results$var.p[i]))
-      }
-      if("scrps" %in% scores) {
-        local_results$scrps[i] <- SCRPS(y_test, local_results$mu.p[i], sqrt(local_results$var.p[i]))
-      }
-      if("mae" %in% scores) {
-        local_results$mae[i] <- abs(y_test - local_results$mu.p[i])
-      }
-      if("rmse" %in% scores) {
-        local_results$rmse[i] <- (y_test - local_results$mu.p[i])^2
+      pred_keys <- paste(as.character(pred_repl),
+                         pred$edge_number,
+                         formatC(pred$distance_on_edge, digits = 12, format = "g"),
+                         sep = "")
+      test_keys <- paste(as.character(test_repl),
+                         test_edge,
+                         formatC(test_dist, digits = 12, format = "g"),
+                         sep = "")
+      pred_idx_vec <- match(test_keys, pred_keys)
+      na_pos <- is.na(pred_idx_vec)
+      if(any(na_pos)){
+        pred_idx_vec[na_pos] <- which(na_pos)
       }
     }
-    
+
+    mu_vec <- pred$mean[pred_idx_vec]
+    local_results$mu.p <- mu_vec
+    if(need_variances){
+      var_vec <- pred$variance[pred_idx_vec] + object$coeff$measurement_error^2
+      local_results$var.p <- var_vec
+      sd_vec <- sqrt(var_vec)
+    }
+    y_test_vec <- full_data[[response_name]][test_indices]
+    resid_vec  <- y_test_vec - mu_vec
+
+    if("logscore" %in% scores){
+      local_results$logscore <- LS(y_test_vec, mu_vec, sd_vec)
+    }
+    if("crps" %in% scores){
+      local_results$crps <- CRPS(y_test_vec, mu_vec, sd_vec)
+    }
+    if("scrps" %in% scores){
+      local_results$scrps <- SCRPS(y_test_vec, mu_vec, sd_vec)
+    }
+    if("mae" %in% scores){
+      local_results$mae <- abs(resid_vec)
+    }
+    if("rmse" %in% scores){
+      local_results$rmse <- resid_vec^2
+    }
+
     return(local_results)
   }
 
@@ -866,12 +1049,15 @@ posterior_crossvalidation_covariance <- function(object)
   } else if (model == "WM alpha2") {
 
     graph$buildC(2,BC==0)
-    n.c <- 1:length(graph$CoB$S)
+    n_const <- length(graph$CoB$S)
+    if (n_const > 0) {
+      Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+    } else {
+      Tc <- graph$CoB$T
+    }
     Q <- Qalpha2(c(tau, kappa), graph, BC = BC)
-    Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
-    Qtilde <- Qtilde[-n.c, -n.c]
-    Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
-      solve(Qtilde) %*% (graph$CoB$T[-n.c, ])
+    Qtilde <- Tc %*% Q %*% t(Tc)
+    Sigma.overdetermined = t(Tc) %*% solve(Qtilde) %*% Tc
     PtE = graph$get_PtE()
     index.obs <- 4*(PtE[, 1] - 1) + (1 * (PtE[, 2] == 0)) +
       (3 * (PtE[, 2] != 0))
@@ -999,6 +1185,18 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, whi
     stop("object should be of class graph_lme or a list of objects of class graph_lme.")
   }
 
+  # rspde_lme fits don't expose the (tau, kappa) precision-based
+  # parameterisation this routine assumes — coeff$random_effects[1:2]
+  # mean something different (sigma, range or tau, kappa under spde
+  # parameterisation but with a fractional alpha). The model-type
+  # dispatch below would silently fall through to GL1/GL2 and return
+  # finite but wrong scores. Refuse to do that.
+  if(inherits(object, "rspde_lme")){
+    stop("posterior_crossvalidation_loo does not support rspde_lme (FEM / ",
+         "fractional) fits. Use posterior_crossvalidation(object, ",
+         "mode = \"loo\", true_CV = FALSE) instead.")
+  }
+
   if(!inherits(object,"graph_lme")){
     if(is.null(names(object))){
       warning("The list with fitted models does not contain names for the models, thus the results will not be properly named.")
@@ -1020,6 +1218,46 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, whi
   }
 
   graph <- object$graph$clone()
+
+  # Resolve the effective replicate set for this CV call:
+  #   * default: the replicates the fit was actually built on
+  #     (object$which_repl, populated by graph_lme).
+  #   * user override (function arg which_repl): must be a SUBSET of
+  #     object$which_repl — scoring with parameters that were never
+  #     optimised against a replicate would otherwise silently return
+  #     misleading (or empty) results.
+  # Apply the resolved set as a single filter on the graph private data
+  # AND on model_matrix below, so repl_vec / y_graph / X_cov stay
+  # aligned with the fit's actual observations.
+  if (is.null(which_repl)) {
+    effective_repl <- object$which_repl
+  } else {
+    if (!is.null(object$which_repl)) {
+      bad <- setdiff(as.character(which_repl),
+                     as.character(object$which_repl))
+      if (length(bad) > 0) {
+        stop("posterior_crossvalidation_loo: which_repl values [",
+             paste(bad, collapse = ", "),
+             "] are not in the fit's replicate set [",
+             paste(as.character(object$which_repl), collapse = ", "),
+             "]. The fit's parameters were not optimised for those ",
+             "replicates, so scoring them would be misleading.")
+      }
+    }
+    effective_repl <- which_repl
+  }
+  d <- graph$.__enclos_env__$private$data
+  n_data <- length(d[[".group"]])
+  if (!is.null(effective_repl) && ".group" %in% names(d)) {
+    .keep_repl <- as.character(d[[".group"]]) %in%
+                    as.character(effective_repl)
+  } else {
+    .keep_repl <- rep(TRUE, n_data)
+  }
+  if (any(!.keep_repl)) {
+    graph$.__enclos_env__$private$data <-
+      lapply(d, function(col) col[.keep_repl])
+  }
 
   graph$observation_to_vertex(mesh_warning = FALSE)
 
@@ -1081,12 +1319,15 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, whi
       graph$buildC(2)
     }
 
-    n.c <- 1:length(graph$CoB$S)
+    n_const <- length(graph$CoB$S)
+    if (n_const > 0) {
+      Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+    } else {
+      Tc <- graph$CoB$T
+    }
     Q <- Qalpha2(c(tau, kappa), graph, BC = BC)
-    Qtilde <- (graph$CoB$T) %*% Q %*% t(graph$CoB$T)
-    Qtilde <- Qtilde[-n.c, -n.c]
-    Sigma.overdetermined = t(graph$CoB$T[-n.c, ]) %*%
-      solve(Qtilde) %*% (graph$CoB$T[-n.c, ])
+    Qtilde <- Tc %*% Q %*% t(Tc)
+    Sigma.overdetermined = t(Tc) %*% solve(Qtilde) %*% Tc
     PtE = graph$get_PtE()
     index.obs <- 4*(PtE[, 1] - 1) + (1 * (PtE[, 2] == 0)) +
       (3 * (PtE[, 2] != 0))
@@ -1102,8 +1343,11 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, whi
 
     Q_edges <- Qalpha1_edges(c(tau,kappa), graph, w = 0,BC=BC, build=TRUE)
     n_const <- length(graph$CoB$S)
-    ind.const <- c(1:n_const)
-    Tc <- graph$CoB$T[-ind.const, ]
+    if (n_const > 0) {
+      Tc <- graph$CoB$T[-seq_len(n_const), , drop = FALSE]
+    } else {
+      Tc <- graph$CoB$T
+    }
     Q_T <- Matrix::forceSymmetric(Tc%*%Q_edges%*%t(Tc))
     Sigma.overdetermined <- as.matrix(t(Tc)%*%solve(Q_T)%*%Tc)
     PtE = graph$get_PtE()
@@ -1128,12 +1372,23 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, whi
     object$model_matrix <- matrix(object$model_matrix, ncol=1)
   }
 
-  y_graph <- object$model_matrix[,1]
+  # Slice model_matrix to the same observation subset the graph clone
+  # now contains. graph_lme keeps model_matrix at full data length even
+  # when which_repl restricts the fit, so without this y_graph and
+  # repl_vec would have different lengths and y_graph[idx_repl_j] would
+  # silently recycle.
+  if(nrow(object$model_matrix) == length(.keep_repl)){
+    mm <- object$model_matrix[.keep_repl, , drop = FALSE]
+  } else {
+    mm <- object$model_matrix
+  }
+
+  y_graph <- mm[,1]
 
   ind <- 1:length(y_graph)
 
-  if(ncol(object$model_matrix) > 1){
-    X_cov <- object$model_matrix[,-1]
+  if(ncol(mm) > 1){
+    X_cov <- mm[,-1]
   } else{
     X_cov <- NULL
   }
@@ -1156,89 +1411,72 @@ posterior_crossvalidation_loo <- function(object, factor = 1, tibble = TRUE, whi
 
   n_obs <- sum(repl_vec == repl[1])
 
-  mu.p <- var.p <- logscore <- crps <- scrps <- rep(0, n_obs)
-  mae <- rmse <- rep(0, n_obs)
+  # Allocate per-observation result vectors over ALL replicates. Each
+  # entry corresponds to a row of the underlying data (in y_graph
+  # order); earlier code only allocated length n_obs and overwrote those
+  # n_obs slots on every replicate iteration, so the returned $mu / $var
+  # silently held just the LAST replicate's predictions.
+  n_total <- n_obs * length(repl)
+  mu.p <- var.p <- logscore <- crps <- scrps <- rep(NA_real_, n_total)
+  mae  <- rmse  <- rep(NA_real_, n_total)
 
+  for(j in seq_along(repl)){
+    idx_repl_j <- repl_vec == repl[j]
+    pos_r <- which(idx_repl_j)
+    y_graph_repl <- y_graph[idx_repl_j]
+    if(!is.null(X_cov)){
+      X_cov_repl <- X_cov[idx_repl_j, , drop = FALSE]
+    }
 
-  for(i in 1:n_obs){
-        idx_repl <- repl_vec == repl[1]
-        y_graph_repl <- y_graph[idx_repl]
+    for(i in seq_len(n_obs)){
+      y_cv <- y_graph_repl[-i]
+      v_cv <- y_cv
+      if(!is.null(X_cov)){
+        v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
+        mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
+      } else {
+        mu_fe <- 0
+      }
 
-        y_cv <- y_graph_repl[-i]
-        v_cv <- y_cv
-        if(!is.null(X_cov)){
-          X_cov_repl <- X_cov[idx_repl, , drop = FALSE]
-          v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
-          mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
-        } else {
-          mu_fe <- 0
-        }
+      slot <- pos_r[i]
 
-        if(model == "isoExp" || model == "WM alpha2" || model == "WMD alpha1" ){
-          mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
-          Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
-                                                              Sigma.o[-i, i])
-          var.p[i] <- diag(Sigma.p)
-        } else {
-          .row_idx <- graph$PtV[-i]
-          A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
-                                    x = 1, dims = c(length(.row_idx), graph$nV))
-          Q.p <- Q + t(A) %*% A / sigma_e^2
-          mu.p[i] <- solve(Q.p,
+      if(model == "isoExp" || model == "WM alpha2" || model == "WMD alpha1"){
+        mu.p[slot] <- Sigma[i, -i] %*% solve(Sigma.o[-i, -i], v_cv) + mu_fe
+        Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
+                                                            Sigma.o[-i, i])
+        var.p[slot] <- diag(Sigma.p)
+      } else {
+        .row_idx <- graph$PtV[-i]
+        A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
+                                  x = 1, dims = c(length(.row_idx), graph$nV))
+        Q.p <- Q + t(A) %*% A / sigma_e^2
+        mu.p[slot] <- solve(Q.p,
                            as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
-          v <- rep(0,dim(Q.p)[1])
-          v[graph$PtV[i]] <- 1
-          var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
-        }
-        logscore[i] <- LS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-        crps[i] <- CRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-        scrps[i] <- SCRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-        mae[i] <- abs(y_graph_repl[i] - mu.p[i])
-        rmse[i] <- (y_graph_repl[i] - mu.p[i])^2
-      if(length(repl)>1){
-        for (j in 2:length(repl)) {
-          y_graph_repl <- y_graph[repl_vec == repl[j]]
-          y_cv <- y_graph_repl[-i]
-          v_cv <- y_cv
-          if(!is.null(X_cov)){
-            X_cov_repl <- X_cov[idx_repl,, drop = FALSE]
-            v_cv <- v_cv - as.vector(X_cov_repl[-i, , drop = FALSE] %*% beta_cov)
-            mu_fe <- as.vector(X_cov_repl[i, , drop = FALSE] %*% beta_cov)
-          } else {
-            mu_fe <- 0
-          }
+        v <- rep(0, dim(Q.p)[1])
+        v[graph$PtV[i]] <- 1
+        var.p[slot] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
+      }
 
-          if(model == "isoExp" || model == "WM alpha2"|| model == "WMD alpha1"){
-            mu.p[i] <-Sigma[i,-i] %*% solve(Sigma.o[-i,-i], v_cv) + mu_fe
-            Sigma.p <- Sigma.o[i, i] - Sigma.o[i, -i] %*% solve(Sigma.o[-i, -i],
-                                                                Sigma.o[-i, i])
-            var.p[i] <- diag(Sigma.p)
-          } else {
-            .row_idx <- graph$PtV[-i]
-            A <- Matrix::sparseMatrix(i = seq_along(.row_idx), j = .row_idx,
-                                      x = 1, dims = c(length(.row_idx), graph$nV))
-            Q.p <- Q + t(A) %*% A / sigma_e^2
-            mu.p[i] <- solve(Q.p,
-                             as.vector(t(A) %*% v_cv / sigma_e^2))[graph$PtV[i]] + mu_fe
-            v <- rep(0,dim(Q.p)[1])
-            v[graph$PtV[i]] <- 1
-            var.p[i] <- solve(Q.p, v)[graph$PtV[i]] + sigma_e^2
-          }
-          logscore[i] <- logscore[i] + LS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-          crps[i] <- crps[i] + CRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-          scrps[i] <- scrps[i] + SCRPS(y_graph_repl[i], mu.p[i], sqrt(var.p[i]))
-          mae[i] <- mae[i] + abs(y_graph_repl[i] - mu.p[i])
-          rmse[i] <- rmse[i] + (y_graph_repl[i] - mu.p[i])^2
-        }
+      sd_pred <- sqrt(var.p[slot])
+      logscore[slot] <- LS(y_graph_repl[i], mu.p[slot], sd_pred)
+      crps[slot]     <- CRPS(y_graph_repl[i], mu.p[slot], sd_pred)
+      scrps[slot]    <- SCRPS(y_graph_repl[i], mu.p[slot], sd_pred)
+      mae[slot]      <- abs(y_graph_repl[i] - mu.p[slot])
+      rmse[slot]     <- (y_graph_repl[i] - mu.p[slot])^2
     }
   }
+
   res <- list(mu = mu.p,
               var = var.p)
-  res[["scores"]] <- data.frame(logscore = -factor * mean(logscore/length(repl), na.rm = TRUE),
-              crps = -factor * mean(crps/length(repl), na.rm = TRUE),
-              scrps = -factor * mean(scrps/length(repl), na.rm = TRUE),
-              mae = factor * mean(mae/length(repl), na.rm = TRUE),
-              rmse = factor * sqrt(mean(rmse/length(repl), na.rm = TRUE)))
+  # Each per-(replicate, obs) entry contributes once to the mean — this is
+  # equivalent to the old "accumulate then divide by length(repl)" idiom
+  # but generalises cleanly to per-observation results.
+  res[["scores"]] <- data.frame(
+    logscore = -factor * mean(logscore, na.rm = TRUE),
+    crps     = -factor * mean(crps,     na.rm = TRUE),
+    scrps    = -factor * mean(scrps,    na.rm = TRUE),
+    mae      =  factor * mean(mae,      na.rm = TRUE),
+    rmse     =  factor * sqrt(mean(rmse, na.rm = TRUE)))
   attr(res[["scores"]], "factor") <- factor
   if(tibble){
     res[["scores"]] <- tidyr::as_tibble(res[["scores"]])

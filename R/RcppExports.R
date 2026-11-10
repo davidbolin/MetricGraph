@@ -150,6 +150,81 @@ PtE_to_mesh_cpp <- function(PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_
     .Call(`_MetricGraph_PtE_to_mesh_cpp`, PtE, VtE, mesh_PtE, E, mesh_E, edge_lengths, mesh_h_e, nV)
 }
 
+#' @name snap_points_to_edges_cpp
+#' @title Snap candidate points to their nearest position on given edges
+#' @description Given a list of edges and, for each edge, a set of candidate
+#' point indices, computes the closest point on the edge (following the same
+#' algorithm as the R helpers `nearestPointOnLine`/`nearestPointOnSegment`),
+#' discards the candidates whose distance exceeds `tolerance`, and returns the
+#' relative position along the edge of the retained snapped points, computed
+#' with `proj_vec_line` (i.e. the same quantity as `projectVecLine`).
+#' @param edges List of two-column numeric matrices.
+#' @param XY `nx2 matrix` Coordinates of the candidate points.
+#' @param edge_id `k vector` 1-based edge indices, one per group.
+#' @param group_start `k vector` 0-based start offset of each group in `pt_idx`.
+#' @param group_end `k vector` 0-based end offset (exclusive) of each group.
+#' @param pt_idx `m vector` 1-based row indices into `XY`, grouped by edge.
+#' @param tolerance `double` Maximum snapping distance.
+#' @noRd
+#'
+snap_points_to_edges_cpp <- function(edges, XY, edge_id, group_start, group_end, pt_idx, tolerance) {
+    .Call(`_MetricGraph_snap_points_to_edges_cpp`, edges, XY, edge_id, group_start, group_end, pt_idx, tolerance)
+}
+
+#' @noRd
+cv_loo_selinv_cpp <- function(precomputed_data, edge_endpoints, Q_list, sigma_e, reciprocal_tau, kappa) {
+    .Call(`_MetricGraph_cv_loo_selinv_cpp`, precomputed_data, edge_endpoints, Q_list, sigma_e, reciprocal_tau, kappa)
+}
+
+directional_edge_precision_triplets_cpp <- function(edge_lengths, stationary_edges, tau, kappa, w) {
+    .Call(`_MetricGraph_directional_edge_precision_triplets_cpp`, edge_lengths, stationary_edges, tau, kappa, w)
+}
+
+directional_ou_setup_numeric_cpp <- function(skeleton, kappa, tau, source_var_by_vertex) {
+    .Call(`_MetricGraph_directional_ou_setup_numeric_cpp`, skeleton, kappa, tau, source_var_by_vertex)
+}
+
+directional_ou_out_tree_lca_index_cpp <- function(parent_edge, depth) {
+    .Call(`_MetricGraph_directional_ou_out_tree_lca_index_cpp`, parent_edge, depth)
+}
+
+directional_ou_covariance_oriented_tree_cpp <- function(E, edge_lengths, tree_orientation, kappa, sigma_stationary, var_tail, logG_tail, signG_tail, enter, exit, depth, out_tree_lca_index, PtE_abs, PtE2_abs, same_point_set) {
+    .Call(`_MetricGraph_directional_ou_covariance_oriented_tree_cpp`, E, edge_lengths, tree_orientation, kappa, sigma_stationary, var_tail, logG_tail, signG_tail, enter, exit, depth, out_tree_lca_index, PtE_abs, PtE2_abs, same_point_set)
+}
+
+#' @name draw_edge_direct_cpp
+#' @title C++ direct bridge draw (Method A)
+#' @description
+#' Same algorithm as the R reference `draw_edge_direct`.
+#' Builds S_e, Sigma*_e via the closed-form kernel, then draws
+#' S_e b_e + chol(Sigma*_e)^T z.  Uses Eigen::LLT and R::norm_rand().
+#' @param kappa,tau SPDE parameters.
+#' @param b_e Boundary state: length-2 (alpha=1) or length-4 (alpha=2).
+#' @param l_e Edge length.
+#' @param t_abs Interior locations in absolute coordinates (sorted).
+#' @param alpha Smoothness: 1 or 2.
+#' @noRd
+draw_edge_direct_cpp <- function(kappa, tau, b_e, l_e, t_abs, alpha) {
+    .Call(`_MetricGraph_draw_edge_direct_cpp`, kappa, tau, b_e, l_e, t_abs, alpha)
+}
+
+#' @name draw_edge_kriging_cpp
+#' @title C++ kriging-corrected Markov draw (Method B)
+#' @description
+#' Same algorithm as the R reference `draw_edge_kriging`.
+#' Simulates a full Markov path on the edge, then applies the kriging
+#' correction to enforce the vertex boundary conditions.
+#' Uses a unique-lag cache for (A, chol(Omega)) and R::norm_rand().
+#' @param kappa,tau SPDE parameters.
+#' @param b_e Boundary state: length-2 (alpha=1) or length-4 (alpha=2).
+#' @param l_e Edge length.
+#' @param t_abs Interior locations in absolute coordinates (must be sorted).
+#' @param alpha Smoothness: 1 or 2.
+#' @noRd
+draw_edge_kriging_cpp <- function(kappa, tau, b_e, l_e, t_abs, alpha) {
+    .Call(`_MetricGraph_draw_edge_kriging_cpp`, kappa, tau, b_e, l_e, t_abs, alpha)
+}
+
 #' @name compute_PtE_edges_cpp
 #' @title Per-edge cumulative relative positions
 #' @description Given a list of edges (each a 2-column numeric matrix of
@@ -259,6 +334,26 @@ split_one_edge_cpp <- function(edge, PtE_edge, t_values, edge_len, E_row, first_
 #' @noRd
 split_edges_batch_cpp <- function(edges_full, PtE_full, E_full, edge_lens, edge_ids, t_values_list, first_new_vs) {
     .Call(`_MetricGraph_split_edges_batch_cpp`, edges_full, PtE_full, E_full, edge_lens, edge_ids, t_values_list, first_new_vs)
+}
+
+#' @name nearest_edge_cpp
+#' @title Nearest edge and snapped coordinates for a set of points
+#' @description For every point, finds the edge minimizing the Euclidean
+#' distance to the point and returns the closest point on that edge. Ties are
+#' resolved towards the smallest edge index, matching \code{which.min()} on the
+#' dense distance matrix this replaces.
+#'
+#' The edges are indexed in a uniform grid built from their bounding boxes, and
+#' the search around each point expands ring by ring until no unvisited cell
+#' can hold a closer edge, so the cost is proportional to the number of nearby
+#' edges rather than to the total number of edges.
+#' @param edges List of two-column numeric matrices.
+#' @param XY `nx2 matrix` Coordinates of the points.
+#' @return A list with the 1-based `index` of the nearest edge, a `2 x n`
+#' matrix of snapped `coords` and the corresponding `dist`.
+#' @noRd
+nearest_edge_cpp <- function(edges, XY) {
+    .Call(`_MetricGraph_nearest_edge_cpp`, edges, XY)
 }
 
 selected_inv_cpp <- function(Q) {

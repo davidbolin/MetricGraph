@@ -1,5 +1,7 @@
 #include <Rcpp.h>
 #include <cmath>
+#include <vector>
+#include <algorithm>
 using namespace Rcpp;
 
 static const double METRIC_GRAPH_R_EARTH = 6371008.8; // WGS84 mean radius (m)
@@ -505,4 +507,277 @@ List split_edges_batch_cpp(
                                 E_row, first_new_v);
   }
   return out;
+}
+
+
+// Closest point on a polyline to (px, py), following exactly the algorithm of
+// the R helpers nearestPointOnSegment()/nearestPointOnLine(): clamp the
+// projection parameter to [0, 1] (mapping NaN to 0) and keep the first segment
+// attaining the minimum distance.
+//
+// Every arithmetic operation is written as its own statement so that the
+// compiler cannot contract a multiply-add into an FMA: the results must agree
+// with the R reference bit for bit, and a fused operation rounds differently.
+void nearest_point_on_polyline(const double* x, const double* y,
+                               int n, double px, double py,
+                               double& bx, double& by, double& bd) {
+  bd = -1.0;
+  bx = R_NaN;
+  by = R_NaN;
+  for (int s = 0; s < n - 1; s++) {
+    double s0x = x[s], s0y = y[s];
+    double abx = x[s + 1] - s0x;
+    double aby = y[s + 1] - s0y;
+    double apx = px - s0x;
+    double apy = py - s0y;
+    double n1 = apx * abx;
+    double n2 = apy * aby;
+    double num = n1 + n2;
+    double d1 = abx * abx;
+    double d2 = aby * aby;
+    double den = d1 + d2;
+    double t = num / den;
+    if (t != t) {
+      t = 0.0;
+    } else if (t < 0.0) {
+      t = 0.0;
+    } else if (t > 1.0) {
+      t = 1.0;
+    }
+    double mx = abx * t;
+    double my = aby * t;
+    double cx = s0x + mx;
+    double cy = s0y + my;
+    double ex = cx - px;
+    double ey = cy - py;
+    double e1 = ex * ex;
+    double e2 = ey * ey;
+    double e = e1 + e2;
+    double d = std::sqrt(e);
+    if (bd < 0.0 || d < bd) {
+      bd = d;
+      bx = cx;
+      by = cy;
+    }
+  }
+}
+
+//' @name nearest_edge_cpp
+//' @title Nearest edge and snapped coordinates for a set of points
+//' @description For every point, finds the edge minimizing the Euclidean
+//' distance to the point and returns the closest point on that edge. Ties are
+//' resolved towards the smallest edge index, matching \code{which.min()} on the
+//' dense distance matrix this replaces.
+//'
+//' The edges are indexed in a uniform grid built from their bounding boxes, and
+//' the search around each point expands ring by ring until no unvisited cell
+//' can hold a closer edge, so the cost is proportional to the number of nearby
+//' edges rather than to the total number of edges.
+//' @param edges List of two-column numeric matrices.
+//' @param XY `nx2 matrix` Coordinates of the points.
+//' @return A list with the 1-based `index` of the nearest edge, a `2 x n`
+//' matrix of snapped `coords` and the corresponding `dist`.
+//' @noRd
+// [[Rcpp::export]]
+List nearest_edge_cpp(List edges, NumericMatrix XY) {
+  int np = XY.nrow();
+  int nL = edges.size();
+
+  IntegerVector index(np, NA_INTEGER);
+  NumericVector dist(np, NA_REAL);
+  NumericMatrix coords(2, np);
+  std::fill(coords.begin(), coords.end(), R_NaN);
+
+  // Cache the edge matrices. NumericMatrix wraps the R object without copying.
+  std::vector<NumericMatrix> em;
+  em.reserve(nL);
+  std::vector<double> bx0(nL), bx1(nL), by0(nL), by1(nL);
+  std::vector<char> usable(nL, 0);
+
+  double gx0 = R_PosInf, gx1 = R_NegInf, gy0 = R_PosInf, gy1 = R_NegInf;
+  int n_usable = 0;
+  for (int e = 0; e < nL; e++) {
+    NumericMatrix L = as<NumericMatrix>(edges[e]);
+    em.push_back(L);
+    int n = L.nrow();
+    if (n < 2 || L.ncol() < 2) continue;
+    const double* x = &L[0];
+    const double* y = &L[0] + n;
+    double x0 = x[0], x1 = x[0], y0 = y[0], y1 = y[0];
+    bool ok = true;
+    for (int k = 0; k < n; k++) {
+      if (!R_FINITE(x[k]) || !R_FINITE(y[k])) { ok = false; break; }
+      if (x[k] < x0) x0 = x[k];
+      if (x[k] > x1) x1 = x[k];
+      if (y[k] < y0) y0 = y[k];
+      if (y[k] > y1) y1 = y[k];
+    }
+    if (!ok) continue;
+    usable[e] = 1;
+    n_usable++;
+    bx0[e] = x0; bx1[e] = x1; by0[e] = y0; by1[e] = y1;
+    if (x0 < gx0) gx0 = x0;
+    if (x1 > gx1) gx1 = x1;
+    if (y0 < gy0) gy0 = y0;
+    if (y1 > gy1) gy1 = y1;
+  }
+
+  if (np == 0 || n_usable == 0) {
+    return List::create(Named("index") = index,
+                        Named("coords") = coords,
+                        Named("dist") = dist);
+  }
+
+  // Grid geometry: aim for roughly one cell per edge.
+  double spanx = gx1 - gx0, spany = gy1 - gy0;
+  if (!(spanx > 0)) spanx = 1.0;
+  if (!(spany > 0)) spany = 1.0;
+  int side = (int)std::ceil(std::sqrt((double)n_usable));
+  if (side < 1) side = 1;
+  if (side > 2048) side = 2048;
+  double aspect = spanx / spany;
+  int ncols = (int)std::ceil(side * std::sqrt(aspect));
+  int nrows = (int)std::ceil(side / std::sqrt(aspect));
+  if (ncols < 1) ncols = 1;
+  if (nrows < 1) nrows = 1;
+  if (ncols > 4096) ncols = 4096;
+  if (nrows > 4096) nrows = 4096;
+  double cw = spanx / ncols, ch = spany / nrows;
+  if (!(cw > 0)) cw = 1.0;
+  if (!(ch > 0)) ch = 1.0;
+  int ncell = ncols * nrows;
+
+  // Edges whose bounding box covers a large part of the grid are kept apart and
+  // always tested, instead of being written into thousands of cells.
+  const long max_span_cells = 1024;
+  std::vector<int> big;
+  std::vector<int> counts(ncell + 1, 0);
+
+  auto cell_range = [&](int e, int& i0, int& i1, int& j0, int& j1) {
+    i0 = (int)std::floor((bx0[e] - gx0) / cw);
+    i1 = (int)std::floor((bx1[e] - gx0) / cw);
+    j0 = (int)std::floor((by0[e] - gy0) / ch);
+    j1 = (int)std::floor((by1[e] - gy0) / ch);
+    // Clamp both ends: an edge lying exactly on the upper border of the domain
+    // maps to an index one past the last cell.
+    if (i0 < 0) i0 = 0;
+    if (i0 > ncols - 1) i0 = ncols - 1;
+    if (i1 < 0) i1 = 0;
+    if (i1 > ncols - 1) i1 = ncols - 1;
+    if (j0 < 0) j0 = 0;
+    if (j0 > nrows - 1) j0 = nrows - 1;
+    if (j1 < 0) j1 = 0;
+    if (j1 > nrows - 1) j1 = nrows - 1;
+  };
+
+  std::vector<char> is_big(nL, 0);
+  for (int e = 0; e < nL; e++) {
+    if (!usable[e]) continue;
+    int i0, i1, j0, j1;
+    cell_range(e, i0, i1, j0, j1);
+    long span = (long)(i1 - i0 + 1) * (long)(j1 - j0 + 1);
+    if (span > max_span_cells) {
+      is_big[e] = 1;
+      big.push_back(e);
+      continue;
+    }
+    for (int j = j0; j <= j1; j++)
+      for (int i = i0; i <= i1; i++)
+        counts[j * ncols + i + 1]++;
+  }
+  for (int c = 0; c < ncell; c++) counts[c + 1] += counts[c];
+  std::vector<int> items(counts[ncell]);
+  std::vector<int> fill(counts.begin(), counts.begin() + ncell);
+  for (int e = 0; e < nL; e++) {
+    if (!usable[e] || is_big[e]) continue;
+    int i0, i1, j0, j1;
+    cell_range(e, i0, i1, j0, j1);
+    for (int j = j0; j <= j1; j++)
+      for (int i = i0; i <= i1; i++)
+        items[fill[j * ncols + i]++] = e;
+  }
+
+  const double* px_all = &XY[0];
+  const double* py_all = &XY[0] + np;
+  std::vector<int> stamp(nL, -1);
+
+  for (int p = 0; p < np; p++) {
+    double px = px_all[p], py = py_all[p];
+    double best_d = -1.0, best_x = R_NaN, best_y = R_NaN;
+    int best_e = -1;
+
+    auto consider = [&](int e) {
+      if (stamp[e] == p) return;
+      stamp[e] = p;
+      const NumericMatrix& L = em[e];
+      int n = L.nrow();
+      double qx, qy, qd;
+      nearest_point_on_polyline(&L[0], &L[0] + n, n, px, py, qx, qy, qd);
+      if (qd < 0.0) return;
+      // Strict `<`, plus an explicit smaller-index rule, so the answer does not
+      // depend on the order in which the cells happen to be visited.
+      if (best_e < 0 || qd < best_d || (qd == best_d && e < best_e)) {
+        best_d = qd;
+        best_x = qx;
+        best_y = qy;
+        best_e = e;
+      }
+    };
+
+    if (!R_FINITE(px) || !R_FINITE(py)) {
+      continue;
+    }
+
+    for (size_t b = 0; b < big.size(); b++) consider(big[b]);
+
+    int cx = (int)std::floor((px - gx0) / cw);
+    int cy = (int)std::floor((py - gy0) / ch);
+    if (cx < 0) cx = 0;
+    if (cx > ncols - 1) cx = ncols - 1;
+    if (cy < 0) cy = 0;
+    if (cy > nrows - 1) cy = nrows - 1;
+
+    for (int r = 0; ; r++) {
+      int i0 = cx - r, i1 = cx + r, j0 = cy - r, j1 = cy + r;
+      // Scan the cells of ring r only (ring 0 is the point's own cell).
+      auto scan_cell = [&](int i, int j) {
+        if (i < 0 || i > ncols - 1 || j < 0 || j > nrows - 1) return;
+        int c = j * ncols + i;
+        for (int k = counts[c]; k < counts[c + 1]; k++) consider(items[k]);
+      };
+      for (int j = j0; j <= j1; j++) {
+        if (j == j0 || j == j1) {
+          for (int i = i0; i <= i1; i++) scan_cell(i, j);
+        } else {
+          scan_cell(i0, j);
+          if (i1 != i0) scan_cell(i1, j);
+        }
+      }
+
+      // Everything not yet visited lies outside the world rectangle covered by
+      // rings 0..r, so this is a lower bound on its distance to the point.
+      double rx0 = gx0 + (double)(cx - r) * cw;
+      double rx1 = gx0 + (double)(cx + r + 1) * cw;
+      double ry0 = gy0 + (double)(cy - r) * ch;
+      double ry1 = gy0 + (double)(cy + r + 1) * ch;
+      double bound = std::min(std::min(px - rx0, rx1 - px),
+                              std::min(py - ry0, ry1 - py));
+      if (bound < 0.0) bound = 0.0;
+
+      bool covers_all = (i0 <= 0 && i1 >= ncols - 1 && j0 <= 0 && j1 >= nrows - 1);
+      // Strict `<` so that edges tying with the current best are never skipped.
+      if (covers_all || (best_e >= 0 && best_d < bound)) break;
+    }
+
+    if (best_e >= 0) {
+      index[p] = best_e + 1;
+      dist[p] = best_d;
+      coords(0, p) = best_x;
+      coords(1, p) = best_y;
+    }
+  }
+
+  return List::create(Named("index") = index,
+                      Named("coords") = coords,
+                      Named("dist") = dist);
 }

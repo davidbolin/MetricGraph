@@ -120,6 +120,7 @@ test_that("predict on a graph_lme fit from a disconnected metric_graph returns f
 ## ── graph_spde ───────────────────────────────────────────────────────────────
 
 test_that("graph_spde accepts a disconnected metric_graph", {
+  skip_if_no_safe_inla()
   mg <- make_two_components_mg()
   attach_observations(mg, make_obs_df())
   spde <- graph_spde(graph_object = mg, alpha = 1, verbose = 0)

@@ -16,8 +16,20 @@ bibliography: references.bib
 knitr::opts_chunk$set(echo = TRUE)
 library(MetricGraph)
 library(sp)
-library(osmdata)
 set.seed(1)
+```
+
+```{r inla_call, include = FALSE}
+# inlabru <= 2.15.0 expects INLA's 'inla.call' option to hold the path to the
+# INLA executable, but INLA >= 26.11 leaves that option unset. Set it here so
+# that the inlabru examples below work with every INLA version.
+if (requireNamespace("INLA", quietly = TRUE) &&
+    is.null(INLA::inla.getOption("inla.call")) &&
+    exists("inla.binary.path", envir = asNamespace("INLA"))) {
+  try(INLA::inla.setOption(
+    inla.call = get("inla.binary.path", envir = asNamespace("INLA"))(check = TRUE)
+  ), silent = TRUE)
+}
 ```
 
 # Introduction
@@ -45,26 +57,50 @@ The following sections describe the main functionality of the package and summar
 
 # The `metric_graph` class
 
-A compact metric graph $\Gamma$ consists of a set of finitely many vertices $\mathcal{V}=\{v_i\}$ and a finite set $\mathcal{E}=\{e_j\}$ of edges connecting the vertices. Each edge $e$ is defined by a pair of vertices $(v_i,v_k)$ and a finite length $l_e \in (0,\infty)$. An edge in the graph is a curve parametrized by arc-length, and a location $s\in \Gamma$ is a position on an edge, and can thus be represented as a touple $(e,t)$ where $t\in[0,l_e]$. 
+A compact metric graph $\Gamma$ consists of a set of finitely many vertices $\mathcal{V}=\{v_i\}$ and a finite set $\mathcal{E}=\{e_j\}$ of edges connecting the vertices. Each edge $e$ is defined by a pair of vertices $(v_i,v_k)$ and a finite length $l_e \in (0,\infty)$. An edge in the graph is a curve parametrized by arc-length, and a location $s\in \Gamma$ is a position on an edge, and can thus be represented as a tuple $(e,t)$ where $t\in[0,l_e]$.
 
 ## Basic constructions 	
 A metric graph is represented in the `MetricGraph` package through the class `metric_graph`. An object of this class can be constructed in two ways. The first is to specify the vertex matrix `V` and the edge matrix `E`, and it is then assumed that all edges are straight lines. The second, more flexible, option is to specify the object from a `SpatialLines` object using the `sp` package [@sppackage]. 
 
-To illustrate this, we use the `osmdata` package to download data from OpenStreetMap. In the following code, we extract the streets on the campus of 
-King Abdullah University of Science and Technology (KAUST) as a `SpatialLines` object:
+To illustrate this, we extract the streets on the campus of
+King Abdullah University of Science and Technology (KAUST) from
+OpenStreetMap. Traditionally one would do this via the `osmdata`
+package as follows:
 
-```{r}
+```{r, eval=FALSE}
 call <- opq(bbox = c(39.0884, 22.33, 39.115, 22.3056))
-call <- add_osm_feature(call, key = "highway",value=c("motorway",
-                                                      "primary","secondary",
-                                                      "tertiary",
-                                                      "residential"))
+call <- add_osm_feature(call, key = "highway", value = c("motorway",
+                                                         "primary","secondary",
+                                                         "tertiary",
+                                                         "residential"))
 data <- osmdata_sf(call)
 ```
 
-We can now create the metric graph as follows. 
-```{r, fig.show='hold',fig.align = "center",echo=TRUE, message=FALSE}
+and then construct the metric graph from the resulting `osmdata` object:
+
+```{r, eval=FALSE}
 graph <- metric_graph$new(data)
+```
+
+`MetricGraph` provides a convenience wrapper `metric_graph_from_osm()`
+that builds the graph in one call. It also sidesteps a server-status
+check in `osmdata` that is often rate-limited and tends to hang vignette
+builds.
+
+```{r, eval=FALSE}
+graph <- metric_graph_from_osm(bbox  = c(39.0884, 22.33, 39.115, 22.3056),
+                               value = c("motorway", "primary", "secondary",
+                                         "tertiary", "residential"))
+graph$plot(vertex_size = 0.5)
+```
+
+```{r, fig.show='hold', fig.align = "center", echo=FALSE, message=FALSE}
+# Same call as above, but reading a saved Overpass response so that building
+# the vignette does not depend on the Overpass API being available.
+graph <- metric_graph_from_osm(bbox  = c(39.0884, 22.33, 39.115, 22.3056),
+                               value = c("motorway", "primary", "secondary",
+                                         "tertiary", "residential"),
+                               cache_path = "osm_data/kaust.osm")
 graph$plot(vertex_size = 0.5)
 ```
 
@@ -128,7 +164,7 @@ The locations of the vertices are specified in Euclidean coordinates. However,
 when specifying a position on the graph, it is not practical to work with 
 Euclidean coordinates since not all locations in Euclidean space are locations
 on the graph. It is instead better to specify a location on the graph by the 
-touple $(i, t)$, where $i$ denotes the number of the edge and $t$ is the 
+tuple $(i, t)$, where $i$ denotes the number of the edge and $t$ is the
 location on the edge. The location $t$ can either be specified as the 
 distance from the start of the edge (and then takes values between 0 and the 
 length of the edge) or as the normalized distance from the start of the edge

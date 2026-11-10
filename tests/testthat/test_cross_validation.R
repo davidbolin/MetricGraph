@@ -21,9 +21,9 @@
 library(MetricGraph)
 library(testthat)
 
-skip_if_no_inla <- function() {
-  skip_if_not_installed("INLA")
-  skip_if_not_installed("inlabru")
+# See helper-inla.R.
+skip_if_no_inla <- function(envir = parent.frame()) {
+  skip_if_no_safe_inla(envir = envir)
 }
 
 try_bru_fit <- function(cmp, data, options = list(num.threads = "1:1",
@@ -118,6 +118,8 @@ test_that("cross_validation: rejects non-bru objects with an informative error",
 
 
 test_that("cross_validation: rejects bogus cv_type and orientation_results", {
+  # cross_validation() checks for INLA and inlabru before its arguments.
+  skip_if_no_inla()
   fake_bru <- structure(list(), class = "bru")
   expect_error(
     cross_validation(fake_bru, cv_type = "bogus"),
@@ -131,6 +133,8 @@ test_that("cross_validation: rejects bogus cv_type and orientation_results", {
 
 
 test_that("cross_validation: rejects out-of-range percentage", {
+  # cross_validation() checks for INLA and inlabru before its arguments.
+  skip_if_no_inla()
   fake_bru <- structure(list(), class = "bru")
   expect_error(
     cross_validation(fake_bru, cv_type = "lpo", percentage = 150),
@@ -144,6 +148,8 @@ test_that("cross_validation: rejects out-of-range percentage", {
 
 
 test_that("cross_validation: requires weight_thr for wcrps / swcrps", {
+  # cross_validation() checks for INLA and inlabru before its arguments.
+  skip_if_no_inla()
   fake_bru <- structure(list(), class = "bru")
   expect_error(
     cross_validation(fake_bru, scores = "wcrps"),
