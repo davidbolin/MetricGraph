@@ -1,5 +1,7 @@
 # MetricGraph (development version)
 
+# MetricGraph 1.7.0
+
 * Fixed `compute_geodist_PtE()` failing with "subscript out of bounds" when
   the points contained duplicates or locations that coincide on the graph (for
   instance, the end of one edge and the start of the next). The distances are
