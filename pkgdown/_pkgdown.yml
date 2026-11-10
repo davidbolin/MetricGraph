@@ -35,6 +35,8 @@ navbar:
         href: articles/inla_interface.html
       - text: Whittle--Matern fields with general smoothness
         href: articles/fem_models.html
+      - text: Profile likelihood and REML for Whittle--Matern fields
+        href: articles/profile_likelihood.html
       - text: Log-Gaussian Cox processes on metric graphs
         href: articles/pointprocess.html
       - text: Comparison of different models using real data
@@ -52,14 +54,14 @@ navbar:
       - text: Solving PDEs on metric graphs
         href: articles/pde.html
     custom:
-        icon: fa-comments-o
+        icon: fas fa-comments
         text: Discussions
         href: https://github.com/davidbolin/MetricGraph/discussions
 
     twitter:
-      icon: fa-twitter
-      href: https://twitter.com/jdavidbolin
-      aria-label: Twitter
+      icon: fab fa-x-twitter
+      href: https://x.com/jdavidbolin
+      aria-label: X
 
 home:
   links:
@@ -135,6 +137,7 @@ reference:
   - title: Precision matrices
     contents:
     - spde_precision
+    - weighted_stiffness
   - title: Covariance functions
     contents:
     - exp_covariance
