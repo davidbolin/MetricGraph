@@ -5361,6 +5361,36 @@ coordinates!"))
        }
      },
 
+     #' @description Build and cache unweighted constraint matrices for
+     #' integer orders 1, 2, and 3.
+     #' @details Stores a list in `constraints`, with entries `alpha1`, `alpha2`,
+     #' and `alpha3`. Each entry contains `K` (the constraint matrix), `T` (the
+     #' orthogonal change of basis, with basis vectors in rows), `S` (the
+     #' singular values for constrained coordinates), `keep` (free coordinate
+     #' indices), `Tc` (the free rows of `T`), `indices` (endpoint value indices
+     #' in `PtV` order), and `A` (the map from free coordinates to those values).
+     #' Continuity of the process is imposed for all orders. Orders 2 and 3
+     #' additionally impose the Kirchhoff condition on first derivatives,
+     #' including Neumann conditions at degree-one vertices. Order 3 also
+     #' imposes continuity of second derivatives. Loops count both edge ends.
+     #'
+     #' `PtV` must be initialized, normally by `observation_to_vertex()`.
+     #' Repeated vertices retain their order. No graph transformation is
+     #' performed, and the existing `C` and `CoB` objects are left unchanged.
+     #' Repeated calls reuse the cache while `E`, `nV`, and `PtV` are unchanged.
+     #' Changing any of these invalidates `constraints`; call this method
+     #' again to rebuild it. The matrices do not depend on edge lengths or
+     #' covariance parameters. This method is opt-in and is not run during
+     #' graph initialization.
+     #' @return No return value. Called for its side effects.
+     build_constraints = function() {
+       if (!is.null(self$constraints)) return(invisible(NULL))
+       matrices <- build_constraint_matrices(self$E, self$nV, self$PtV)
+       private$constraint_matrices <- matrices
+       private$constraint_state <- list(E = self$E, nV = self$nV, PtV = self$PtV)
+       invisible(NULL)
+     },
+
      #' @description Builds mesh object for graph.
      #' @param h Maximum distance between mesh nodes (should be provided if n is
      #' not provided).
@@ -7560,7 +7590,42 @@ larger than 1")
      }
    ),
 
+   active = list(
+     #' @field constraints Read-only list of the integer-order constraint
+     #' setups, populated by `build_constraints()`. Entries are named `alpha1`,
+     #' `alpha2`, and `alpha3`. Returns `NULL` before construction or after
+     #' changes to `E`, `nV`, or `PtV`. Separate from the existing `C` and `CoB`.
+     constraints = function(value) {
+       # R6 calls this function whenever graph$constraints is read or assigned.
+       # Assignment supplies `value`; reading does not. Only build_constraints()
+       # should populate the cache, so reject direct assignments here.
+       if (!missing(value)) {
+         stop("constraints is read-only; use build_constraints()")
+       }
+       # Compare the current topology and vertex ordering with the inputs
+       # saved when the matrices were built. Edge lengths and covariance
+       # parameters are not checked because these matrices do not use them.
+       state <- private$constraint_state
+       if (!is.null(state) &&
+           (!identical(self$E, state$E) || !identical(self$nV, state$nV) ||
+            !identical(self$PtV, state$PtV))) {
+         # Discard stale matrices and their input snapshot together.
+         # Rebuilding remains explicit: call graph$build_constraints().
+         private$constraint_matrices <- NULL
+         private$constraint_state <- NULL
+       }
+       # Return the cached alpha1/alpha2/alpha3 list, or NULL if it has not
+       # been built or was invalidated above. Reading never rebuilds it.
+       private$constraint_matrices
+     }
+   ),
+
    private = list(
+     # Computed constraint setups; kept separate from the legacy C and CoB.
+     constraint_matrices = NULL,
+     # Snapshot of E, nV and PtV used to build constraint_matrices.
+     constraint_state = NULL,
+
      # Compute and cache the connected-component decomposition. Called once
      # at the end of `initialize()` (and after the `.assemble` shortcut),
      # then never recomputed: edges/vertices don't change after
