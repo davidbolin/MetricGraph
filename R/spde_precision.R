@@ -1,22 +1,53 @@
 #' Precision matrix for Whittle-Matérn fields
 #'
-#' Computes the precision matrix for all vertices for a Whittle-Matérn field.
+#' Computes a sparse precision matrix for a Whittle-Matérn field. Order three
+#' returns an unconstrained edge-endpoint precision. Fractional orders return
+#' the unconstrained joint precision of the rational-approximation components.
 #'
-#' @param kappa Range parameter.
-#' @param tau Precision parameter.
-#' @param alpha Smoothness parameter (1 or 2).
+#' @param kappa Positive range parameter; zero is also supported for alpha 1.
+#' @param tau Positive precision parameter.
+#' @param alpha Smoothness parameter, strictly greater than 0.5 and at most 3.
 #' @param graph A `metric_graph` object.
-#' @param BC Set boundary conditions for degree=1 vertices. BC =0 gives Neumann
-#' boundary conditions and BC=1 gives stationary boundary conditions.
+#' @param BC Boundary-condition code, one of 0, 1, 2, or 3, passed unchanged
+#' to the alpha-one and alpha-two backends. `BC = 1` adds stationary endpoint
+#' corrections; `BC = 0` adds no additional corrections. Codes 2 and 3 retain
+#' their backend-specific interpretation. Ignored for alpha 3 and fractional
+#' alpha: these return boundaryless raw precisions, with constraints imposed
+#' separately.
 #' @param build If `TRUE`, the precision matrix is returned. Otherwise a list
-#' list(i,j,x, nv) is returned.
-#' @return Precision matrix or list.
+#' with entries `i`, `j`, `x`, and `dims` is returned. As for the integer
+#' cases, `build = FALSE` is not supported for `graph_components` objects.
+#' @param m Rational approximation order for fractional alpha. A positive
+#' integer; ignored for alpha 1, 2, and 3. Defaults to 2.
+#' @param type_rational_approx Rational approximation type passed to rSPDE;
+#' one of `"chebfun"`, `"brasil"`, and `"chebfunLB"`. Used only for
+#' fractional alpha. Defaults to `"chebfun"`.
+#' @param type_interp Coefficient interpolation method passed to rSPDE;
+#' one of `"linear"`, `"log"`, `"spline"`, and `"logspline"`. Used only
+#' for fractional alpha. Defaults to `"spline"`.
+#' @details For fractional alpha, the component order is `Q0`, `Q1`, ..., `Qm`.
+#' The zeroth component has `graph$nV` vertex coordinates when alpha is below
+#' one, and `2 * floor(alpha) * graph$nE` endpoint coordinates otherwise.
+#' Each remaining component has `2 * ceiling(alpha) * graph$nE` coordinates.
+#' Endpoint coordinates follow edge order, with the process and its successive
+#' derivatives at the start followed by those at the end of each edge.
+#' Parameter scaling and the boundaryless edge correction are included, but
+#' no constraint basis or observation map is applied. For alpha 3, the result
+#' is a single `6 * graph$nE` square raw matrix, ordered as process value,
+#' first derivative, and second derivative at each edge start and then end.
+#' No rational approximation is used for alpha 3. The returned raw matrix
+#' need not be positive definite before the graph constraints are imposed.
+#' Neither observations nor `graph$PtV` are required, and `C`, `CoB`, and the
+#' constraint cache are left unchanged. For `graph_components`, entire joint
+#' matrices are assembled in component order, as in the integer cases.
+#' @return Precision matrix or triplet list. The existing alpha-one and
+#' alpha-two representations are unchanged.
 #' @export
-spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE) {
+spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE,
+                           m = 2, type_rational_approx = "chebfun",
+                           type_interp = "spline") {
 
-  if (!inherits(graph, c("metric_graph", "graph_components"))) {
-    stop("graph must be a 'metric_graph' or 'graph_components' object.")
-  }
+  validate_spde_precision_arguments(kappa, tau, alpha, graph, BC, build)
 
   if (alpha == 1) {
     return(Qalpha1(theta = c(tau, kappa),
@@ -24,11 +55,55 @@ spde_precision <- function(kappa, tau, alpha, graph, BC = 1, build = TRUE) {
                    BC = BC,
                    build = build))
   } else if (alpha == 2) {
-      return(Qalpha2(theta = c(tau, kappa),
-                     graph = graph,
-                     BC = BC,
-                     build = build))
+    return(Qalpha2(theta = c(tau, kappa),
+                   graph = graph,
+                   BC = BC,
+                   build = build))
+  } else if (alpha == 3) {
+    return(Qalpha3(theta = c(tau, kappa),
+                   graph = graph,
+                   build = build))
+  } else {
+    return(Qfractional(theta = c(tau, kappa),
+                       alpha = alpha,
+                       graph = graph,
+                       build = build,
+                       m = m,
+                       type_rational_approx = type_rational_approx,
+                       type_interp = type_interp))
   }
+}
+
+#' Raw boundaryless precision for the alpha-three endpoint states.
+#' @noRd
+Qalpha3 <- function(theta, graph, build = TRUE) {
+  if (inherits(graph, "graph_components")) {
+    if (!build) {
+      stop("build = FALSE is not supported for 'graph_components'.")
+    }
+    Qs <- lapply(graph$graphs, function(g) {
+      Qalpha3(theta = theta, graph = g, build = TRUE)
+    })
+    return(Matrix::bdiag(Qs))
+  }
+
+  lengths <- validate_spde_precision_graph(graph)
+  kappa <- theta[2]
+  tau <- theta[1]
+  # Real-line variance for nu = 5/2. No rational coefficients or graph
+  # constraints are needed for this exact integer-order component.
+  sigma2 <- 3 / (16 * tau^2 * kappa^5)
+  if (!is.finite(sigma2) || sigma2 <= 0) {
+    stop("The supplied kappa and tau produce a non-finite or zero variance scale")
+  }
+  entries <- spde_endpoint_precision_triplets(lengths, kappa, p = 0, alpha = 3)
+  entries$x <- entries$x / sigma2
+  if (any(!is.finite(entries$x))) {
+    stop("Non-finite alpha-three precision; check the parameters and edge lengths")
+  }
+  if (!build) return(entries)
+  return(Matrix::sparseMatrix(i = entries$i, j = entries$j,
+                              x = entries$x, dims = entries$dims))
 }
 
 #' The precision matrix for all edges in the brownian moiton case
