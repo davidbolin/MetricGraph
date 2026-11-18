@@ -57,7 +57,7 @@
 <h2 class="pkg-version" data-toc-text="development version" id="metricgraph-development-version">MetricGraph (development version)<a class="anchor" aria-label="anchor" href="#metricgraph-development-version"></a></h2>
 </div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.7.0" id="metricgraph-170">MetricGraph 1.7.0<a class="anchor" aria-label="anchor" href="#metricgraph-170"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.7.0" id="metricgraph-170">MetricGraph 1.7.0<a class="anchor" aria-label="anchor" href="#metricgraph-170"></a></h2><p class="text-muted">CRAN release: 2026-11-10</p>
 <ul><li><p>Fixed <code>compute_geodist_PtE()</code> failing with “subscript out of bounds” when the points contained duplicates or locations that coincide on the graph (for instance, the end of one edge and the start of the next). The distances are now computed directly, and the returned matrix has one row and column per input point, in the input order, duplicates included (<a href="https://github.com/davidbolin/MetricGraph/issues/20" class="external-link">#20</a>).</p></li>
 <li><p>Fixed <code>likelihood_graph_laplacian()</code> failing with “non-conformable matrix dimensions” whenever the data had more than one replicate.</p></li>
 <li><p>Removed the per-replicate scans in the likelihood, cross-validation and INLA data paths, which located the rows of each replicate by testing the group column against it inside the loop.</p></li>
