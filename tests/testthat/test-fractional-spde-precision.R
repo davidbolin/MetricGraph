@@ -80,7 +80,7 @@ test_that("fractional computation preserves existing bases and uses raw BC seman
   g <- fractional_precision_test_graph()
   g$PtV <- rev(seq_len(g$nV))
   g$buildC(2, edge_constraint = FALSE)
-  g$build_constraints()
+  for (alpha in 1:3) g$build_constraints(alpha = alpha)
   before <- serialize(list(g$E, g$PtV, g$C, g$CoB, g$constraints), NULL)
   for (alpha in c(0.75, 1.5, 2.5)) {
     Q <- spde_precision(1.7, 0.8, alpha, g)

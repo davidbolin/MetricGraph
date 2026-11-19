@@ -1,3 +1,8 @@
+build_all_constraint_test_cases <- function(graph) {
+  for (alpha in 1:3) graph$build_constraints(alpha = alpha)
+  invisible(NULL)
+}
+
 constraint_test_graph <- function(E) {
   # Explicit V/E retains edge orientation, loops and repeated edges.
   nV <- max(E)
@@ -16,13 +21,13 @@ test_that("integer constraint setup is opt-in and preserves the legacy caches", 
   expect_null(g$constraints)
   expect_null(g$C)
   expect_null(g$CoB)
-  expect_error(g$build_constraints(), "PtV is NULL")
+  expect_error(g$build_constraints(alpha = 1), "PtV is NULL")
   expect_null(g$constraints)
 
   g$PtV <- c(2L, 1L, 2L)
   g$buildC(alpha = 2, edge_constraint = FALSE)
   before <- serialize(list(g$C, g$CoB, g$E, g$PtV), NULL)
-  expect_invisible(g$build_constraints())
+  expect_invisible(build_all_constraint_test_cases(g))
   expect_identical(before, serialize(list(g$C, g$CoB, g$E, g$PtV), NULL))
   expect_named(g$constraints, paste0("alpha", 1:3))
   expect_error(g$constraints <- list(), "read-only")
@@ -45,7 +50,7 @@ test_that("all integer bases impose the correct endpoint conditions", {
   for (E in graphs) {
     g <- constraint_test_graph(E)
     g$PtV <- rev(seq_len(g$nV))
-    g$build_constraints()
+    build_all_constraint_test_cases(g)
     incidence <- as.vector(t(g$E))
     degree <- tabulate(incidence, nbins = g$nV)
     nc <- sum(pmax(degree - 1L, 0L))
@@ -86,7 +91,9 @@ test_that("all integer bases impose the correct endpoint conditions", {
 
 test_that("vertex selection prefers starts and preserves repeated PtV order", {
   E <- matrix(c(2L, 1L, 3L, 2L, 2L, 2L), ncol = 2, byrow = TRUE)
-  setups <- build_constraint_matrices(E, 3L, c(1L, 2L, 3L, 2L))
+  setups <- lapply(1:3, function(alpha) {
+    build_constraint_matrices(E, 3L, c(1L, 2L, 3L, 2L), alpha)
+  })
   # Vertex 1 only ends an edge; vertex 2 starts the first edge, even though
   # it is also an end elsewhere; vertex 3 starts the second edge.
   ends <- c(2L, 1L, 3L, 1L)
@@ -103,7 +110,7 @@ test_that("alpha-two covariance agrees with buildC including Neumann conditions"
   E <- matrix(c(1L, 2L, 2L, 3L, 2L, 2L), ncol = 2, byrow = TRUE)
   g <- constraint_test_graph(E)
   g$PtV <- c(3L, 1L, 2L, 2L)
-  g$build_constraints()
+  build_all_constraint_test_cases(g)
   setup <- g$constraints$alpha2
   g$buildC(alpha = 2, edge_constraint = TRUE)
   T <- g$CoB$T
@@ -121,14 +128,14 @@ test_that("alpha-two covariance agrees with buildC including Neumann conditions"
 test_that("constraint cache is reused and invalidates on changes to its inputs", {
   g <- constraint_test_graph(matrix(c(1L, 2L, 2L, 3L), ncol = 2, byrow = TRUE))
   g$PtV <- c(1L, 3L)
-  g$build_constraints()
+  build_all_constraint_test_cases(g)
   cached <- g$constraints
   # A cached call must not invoke the constructor again.
   local_mocked_bindings(
     build_constraint_matrices = function(...) stop("unexpected rebuild"),
     .package = "MetricGraph"
   )
-  expect_invisible(g$build_constraints())
+  expect_invisible(build_all_constraint_test_cases(g))
   expect_identical(g$constraints, cached)
   g$set_manual_edge_lengths(g$edge_lengths * 2)
   expect_identical(g$constraints, cached)
@@ -145,13 +152,13 @@ test_that("observation changes invalidate constraint maps", {
   g$add_observations(data = data.frame(edge_number = 1, distance_on_edge = 0.25, y = 1),
                      normalized = TRUE, verbose = 0)
   g$observation_to_vertex(mesh_warning = FALSE)
-  g$build_constraints()
+  build_all_constraint_test_cases(g)
   expect_type(g$constraints, "list")
   g$add_observations(data = data.frame(edge_number = 1, distance_on_edge = 0.5, y = 2),
                      normalized = TRUE, verbose = 0)
   g$observation_to_vertex(mesh_warning = FALSE)
   expect_null(g$constraints)
-  g$build_constraints()
+  build_all_constraint_test_cases(g)
   expect_type(g$constraints, "list")
   g$clear_observations()
   expect_null(g$constraints)
@@ -159,16 +166,17 @@ test_that("observation changes invalidate constraint maps", {
 
 test_that("empty selections and invalid inputs are handled explicitly", {
   E <- matrix(c(1L, 2L), ncol = 2)
-  setup <- build_constraint_matrices(E, 2L, integer(0))
-  for (case in setup) {
-    expect_equal(nrow(case$A), 0L)
-    expect_equal(ncol(case$A), nrow(case$Tc))
+  for (alpha in 1:3) {
+    setup <- build_constraint_matrices(E, 2L, integer(0), alpha)
+    expect_equal(nrow(setup$A), 0L)
+    expect_equal(ncol(setup$A), nrow(setup$Tc))
+    empty <- build_constraint_matrices(matrix(integer(0), ncol = 2), 0L,
+                                       integer(0), alpha)
+    expect_equal(dim(empty$A), c(0L, 0L))
   }
-  empty <- build_constraint_matrices(matrix(integer(0), ncol = 2), 0L, integer(0))
-  for (case in empty) expect_equal(dim(case$A), c(0L, 0L))
-  expect_error(build_constraint_matrices(E, 3L, 3L), "incident to an edge")
-  expect_error(build_constraint_matrices(E, 2L, c(NA, 1)), "PtV must be")
-  expect_error(build_constraint_matrices(E, 2L, 1.5), "PtV must be")
+  expect_error(build_constraint_matrices(E, 3L, 3L, 1), "incident to an edge")
+  expect_error(build_constraint_matrices(E, 2L, c(NA, 1), 1), "PtV must be")
+  expect_error(build_constraint_matrices(E, 2L, 1.5, 1), "PtV must be")
   expect_error(build_kirchhoff_constraint_matrix(E, 2L, 4), "alpha must be")
   expect_error(build_kirchhoff_constraint_matrix(E * 2, 2L, 1), "vertex indices")
 })

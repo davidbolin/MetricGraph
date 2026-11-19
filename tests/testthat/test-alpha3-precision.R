@@ -68,7 +68,7 @@ test_that("alpha-three triplets are built without sparse matrix assembly", {
 test_that("alpha-three raw precision can be constrained externally without changing caches", {
   g <- alpha3_precision_test_graph()
   g$PtV <- c(rev(seq_len(g$nV)), 1L)
-  g$build_constraints()
+  g$build_constraints(alpha = 3)
   g$buildC(2, edge_constraint = FALSE)
   before <- serialize(list(g$C, g$CoB, g$constraints), NULL)
   Q <- spde_precision(1.4, 0.7, 3, g)

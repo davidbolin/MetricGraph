@@ -5361,33 +5361,84 @@ coordinates!"))
        }
      },
 
-     #' @description Build and cache unweighted constraint matrices for
-     #' integer orders 1, 2, and 3.
-     #' @details Stores a list in `constraints`, with entries `alpha1`, `alpha2`,
-     #' and `alpha3`. Each entry contains `K` (the constraint matrix), `T` (the
-     #' orthogonal change of basis, with basis vectors in rows), `S` (the
-     #' singular values for constrained coordinates), `keep` (free coordinate
-     #' indices), `Tc` (the free rows of `T`), `indices` (endpoint value indices
-     #' in `PtV` order), and `A` (the map from free coordinates to those values).
-     #' Continuity of the process is imposed for all orders. Orders 2 and 3
-     #' additionally impose the Kirchhoff condition on first derivatives,
-     #' including Neumann conditions at degree-one vertices. Order 3 also
-     #' imposes continuity of second derivatives. Loops count both edge ends.
+     #' @description Build and cache one integer setup or fractional template pair.
+     #' @param alpha Smoothness, strictly greater than 0.5 and at most 3. Must
+     #' be specified explicitly.
+     #' @param directional Whether to build directional alpha-one constraints.
+     #' @details Stores only the requested setup in `constraints`: `alpha1`,
+     #' `alpha2`, `alpha3`, `alpha1_directional`, `alpha01`, `alpha12`, or
+     #' `alpha23`. Other valid entries remain. Integer entries contain
+     #' `K`, `T` (basis vectors in rows), `S`, `keep`, and
+     #' `Tc`. Non-directional entries also contain `indices` and `A` in `PtV`
+     #' order and require `PtV` to be initialized by `observation_to_vertex()`.
+     #' Directional construction uses the same weighting rules as
+     #' `buildDirectionalConstraints()` and does not require `PtV`.
      #'
-     #' `PtV` must be initialized, normally by `observation_to_vertex()`.
-     #' Repeated vertices retain their order. No graph transformation is
-     #' performed, and the existing `C` and `CoB` objects are left unchanged.
-     #' Repeated calls reuse the cache while `E`, `nV`, and `PtV` are unchanged.
-     #' Changing any of these invalidates `constraints`; call this method
-     #' again to rebuild it. The matrices do not depend on edge lengths or
-     #' covariance parameters. This method is opt-in and is not run during
-     #' graph initialization.
+     #' Noninteger orders select `alpha01` for 0.5 < alpha < 1, `alpha12`
+     #' for 1 < alpha < 2, or `alpha23` for 2 < alpha < 3. These entries contain
+     #' `Tc_joint = list(Tc1, Tc2)` and `A = list(A1, A2)`: the first component
+     #' once, and a template for each repeated rational component. Below one,
+     #' `Tc1` is the vertex identity and `A1` selects vertices in `PtV` order.
+     #' Above one, the two templates use the floor and ceiling integer orders.
+     #' No blocks are repeated here and no rational order `m` is required.
+     #' Templates are reused for any alpha in the same open interval.
+     #'
+     #' Non-directional orders enforce process continuity; orders 2 and 3 also
+     #' enforce Kirchhoff conditions on first derivatives, including Neumann
+     #' conditions at degree-one vertices. Order 3 adds continuity of second
+     #' derivatives. The original `C`, `CoB`, `buildC()`, and
+     #' `buildDirectionalConstraints()` are unchanged.
+     #'
+     #' Repeated calls reuse the requested entry. Changes to `E` or `nV`
+     #' invalidate all entries; `PtV` changes invalidate non-directional entries
+     #' only. Directional weights and weighting functions additionally control
+     #' the validity of the directional entry. Edge lengths and covariance
+     #' parameters do not enter these setups. Reading `constraints` discards
+     #' stale entries without rebuilding them; call this method to rebuild.
      #' @return No return value. Called for its side effects.
-     build_constraints = function() {
-       if (!is.null(self$constraints)) return(invisible(NULL))
-       matrices <- build_constraint_matrices(self$E, self$nV, self$PtV)
-       private$constraint_matrices <- matrices
-       private$constraint_state <- list(E = self$E, nV = self$nV, PtV = self$PtV)
+     build_constraints = function(alpha, directional = FALSE) {
+       validate_constraint_case(alpha, directional)
+       fractional <- alpha != floor(alpha)
+       if (fractional) {
+         q <- floor(alpha)
+         key <- paste0("alpha", q, q + 1L)
+         interval <- if (q == 0) "0.5 < alpha < 1" else paste0(q, " < alpha < ", q + 1L)
+         location <- paste0("Constraint templates for ", interval,
+                            " are available in graph$constraints$", key, ".")
+       } else {
+         key <- paste0("alpha", as.integer(alpha),
+                       if (directional) "_directional" else "")
+         location <- paste0("Constraint objects are available in graph$constraints$", key, ".")
+       }
+       cached <- self$constraints
+       if (!is.null(cached[[key]])) {
+         message(location)
+         return(invisible(NULL))
+       }
+
+       state <- list(E = self$E, nV = self$nV, directional = directional)
+       if (directional) {
+         weight <- as.vector(self$get_edge_weights()[[private$directional_weights]])
+         matrices <- build_directional_constraint_matrices(
+           self$E, self$nV, weight,
+           self$DirectionalWeightFunction_out, self$DirectionalWeightFunction_in
+         )
+         state$weight <- weight
+         state$f_out <- self$DirectionalWeightFunction_out
+         state$f_in <- self$DirectionalWeightFunction_in
+       } else {
+         if (fractional) {
+           matrices <- build_fractional_constraint_templates(
+             self$E, self$nV, self$PtV, alpha, integer_setups = cached
+           )
+         } else {
+           matrices <- build_constraint_matrices(self$E, self$nV, self$PtV, alpha)
+         }
+         state$PtV <- self$PtV
+       }
+       private$constraint_matrices[[key]] <- matrices
+       private$constraint_state[[key]] <- state
+       message(location)
        invisible(NULL)
      },
 
@@ -7591,39 +7642,48 @@ larger than 1")
    ),
 
    active = list(
-     #' @field constraints Read-only list of the integer-order constraint
-     #' setups, populated by `build_constraints()`. Entries are named `alpha1`,
-     #' `alpha2`, and `alpha3`. Returns `NULL` before construction or after
-     #' changes to `E`, `nV`, or `PtV`. Separate from the existing `C` and `CoB`.
+     #' @field constraints Read-only list populated case by case by
+     #' `build_constraints(alpha, directional)`. Entries may be `alpha1`,
+     #' `alpha2`, `alpha3`, `alpha1_directional`, `alpha01`, `alpha12`, and
+     #' `alpha23`. Fractional entries hold first/repeated template pairs and
+     #' do not depend on rational order. Stale entries are discarded
+     #' independently; returns `NULL` when no valid entries remain. Entry names
+     #' use exact matching, so an unbuilt `alpha1` returns `NULL` even if
+     #' `alpha1_directional` exists. Separate
+     #' from the legacy `C` and `CoB` objects.
      constraints = function(value) {
-       # R6 calls this function whenever graph$constraints is read or assigned.
-       # Assignment supplies `value`; reading does not. Only build_constraints()
-       # should populate the cache, so reject direct assignments here.
        if (!missing(value)) {
          stop("constraints is read-only; use build_constraints()")
        }
-       # Compare the current topology and vertex ordering with the inputs
-       # saved when the matrices were built. Edge lengths and covariance
-       # parameters are not checked because these matrices do not use them.
-       state <- private$constraint_state
-       if (!is.null(state) &&
-           (!identical(self$E, state$E) || !identical(self$nV, state$nV) ||
-            !identical(self$PtV, state$PtV))) {
-         # Discard stale matrices and their input snapshot together.
-         # Rebuilding remains explicit: call graph$build_constraints().
+       for (key in names(private$constraint_matrices)) {
+         state <- private$constraint_state[[key]]
+         stale <- is.null(state) || !identical(self$E, state$E) ||
+           !identical(self$nV, state$nV)
+         if (!stale && isTRUE(state$directional)) {
+           weight <- as.vector(self$get_edge_weights()[[private$directional_weights]])
+           stale <- !identical(weight, state$weight) ||
+             !identical(self$DirectionalWeightFunction_out, state$f_out) ||
+             !identical(self$DirectionalWeightFunction_in, state$f_in)
+         } else if (!stale) {
+           stale <- !identical(self$PtV, state$PtV)
+         }
+         if (stale) {
+           private$constraint_matrices[[key]] <- NULL
+           private$constraint_state[[key]] <- NULL
+         }
+       }
+       if (!length(private$constraint_matrices)) {
          private$constraint_matrices <- NULL
          private$constraint_state <- NULL
        }
-       # Return the cached alpha1/alpha2/alpha3 list, or NULL if it has not
-       # been built or was invalidated above. Reading never rebuilds it.
-       private$constraint_matrices
+       if (is.null(private$constraint_matrices)) return(NULL)
+       structure(private$constraint_matrices, class = "metric_graph_constraints")
      }
    ),
 
    private = list(
-     # Computed constraint setups; kept separate from the legacy C and CoB.
+     # Independent cached setups and the input snapshot for each case.
      constraint_matrices = NULL,
-     # Snapshot of E, nV and PtV used to build constraint_matrices.
      constraint_state = NULL,
 
      # Compute and cache the connected-component decomposition. Called once
