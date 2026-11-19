@@ -92,7 +92,7 @@
 Alexandre B. Simas, and Jonas Wallin</h4>
             
             <h4 data-toc-skip class="date">Created: 2024-02-09. Last
-modified: 2026-11-18.</h4>
+modified: 2026-11-19.</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/davidbolin/MetricGraph/blob/devel/vignettes/comparison.rmd" class="external-link"><code>vignettes/comparison.rmd</code></a></small>
       <div class="d-none name"><code>comparison.rmd</code></div>
@@ -188,7 +188,7 @@ corrections):</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 245</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  8.46931 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  7.29739 secs</span></span></code></pre></div>
 <p>Now, we will fit a Whittle-Matérn field with
 <code>alpha = 2</code>:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
@@ -228,7 +228,7 @@ corrections):</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 227</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  9.00097 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  8.14025 secs</span></span></code></pre></div>
 <p>We will now fit Whittle-Matérn fields with <code>alpha = 1</code> and
 <code>alpha=2</code>, and by performing a boundary correction on
 vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
@@ -272,7 +272,7 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 193</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  6.84423 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  5.71494 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_alpha2_bc</span><span class="op">)</span></span>
@@ -307,7 +307,7 @@ vertices of degree 1. To such an end, we set <code>BC=1</code>:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 257</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  9.62524 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  9.23328 secs</span></span></code></pre></div>
 <p>Similarly, let us now fit a Matérn Gaussian model based on the graph
 Laplacian for <code>alpha=1</code> and <code>alpha=2</code>. For these,
 we first fit the models without fixed effects, and then use those
@@ -355,7 +355,7 @@ models.</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 143</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  0.87139 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  0.70649 secs</span></span></code></pre></div>
 <p>and</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_GL2</span><span class="op">)</span></span>
@@ -390,7 +390,7 @@ models.</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 181</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  1.25474 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  0.95854 secs</span></span></code></pre></div>
 <p>Observe that the default optimizer (L-BFGS-B) failed to converge,
 thus an alternative optimizer was used, when fitting the graph Laplacian
 model with <code>alpha=2</code>.</p>
@@ -435,7 +435,7 @@ function:</p>
 <span><span class="co">#&gt; Number of function calls by 'optim' = 299</span></span>
 <span><span class="co">#&gt; Optimization method used in 'optim' = Nelder-Mead</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Time used to:     fit the model =  3.83909 secs</span></span></code></pre></div>
+<span><span class="co">#&gt; Time used to:     fit the model =  1.455 secs</span></span></code></pre></div>
 <p>Observe the warning, message. This message tells us that we did not
 check if the metric graph has Euclidean edges. Let us check now:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
