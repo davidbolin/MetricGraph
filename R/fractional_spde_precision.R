@@ -11,17 +11,30 @@ Qfractional <- function(theta, alpha, graph, build = TRUE, m = 2,
                   m = m, type_rational_approx = type_rational_approx,
                   type_interp = type_interp)
     })
-    return(Matrix::bdiag(Qs))
+    # Compatibility path for the deprecated graph_components class only.
+    # Keep Qi$Gj matrices separate, with Gj following graph$graphs order.
+    # A disconnected metric_graph uses the full-graph path below instead.
+    graph_names <- paste0("G", seq_along(Qs))
+    components <- lapply(names(Qs[[1L]]), function(component) {
+      stats::setNames(lapply(Qs, function(Q) Q[[component]]), graph_names)
+    })
+    names(components) <- names(Qs[[1L]])
+    return(components)
   }
 
+  # Connected and disconnected metric_graph objects share this path. Each
+  # Qi retains all vertices or edge endpoints in the original graph order,
+  # matching constraint templates built on the same full graph. Do not split
+  # or reorder connected pieces here; get_components() has its own ordering.
   Qraw <- fractional_spde_precision_components(
     kappa = theta[2], tau = theta[1], alpha = alpha, graph = graph, m = m,
     type_rational_approx = type_rational_approx, type_interp = type_interp
   )
-  entries <- combine_spde_precision_triplets(Qraw)
-  if (!build) return(entries)
-  return(Matrix::sparseMatrix(i = entries$i, j = entries$j,
-                              x = entries$x, dims = entries$dims))
+  if (!build) return(Qraw)
+  return(lapply(Qraw, function(entries) {
+    Matrix::sparseMatrix(i = entries$i, j = entries$j,
+                         x = entries$x, dims = entries$dims)
+  }))
 }
 
 # Scaled boundaryless component precisions, before any graph conditioning.
@@ -97,6 +110,31 @@ fractional_spde_precision_components <- function(
   Qraw
 }
 
+# Invert in standardized derivative coordinates, then restore the original
+# precision units: C = D R D implies C^{-1} = D^{-1} R^{-1} D^{-1}.
+# This removes coordinate-scale imbalance, not dependence between endpoints.
+# Keep solve()'s default singularity check for intrinsically singular inputs.
+invert_spde_covariance <- function(covariance) {
+  if (!is.matrix(covariance) || !is.numeric(covariance) ||
+      is.complex(covariance) || nrow(covariance) == 0L ||
+      nrow(covariance) != ncol(covariance) || any(!is.finite(covariance))) {
+    stop("Covariance must be a finite, nonempty, real square matrix", call. = FALSE)
+  }
+  variances <- diag(covariance)
+  if (any(variances <= 0)) {
+    stop("Covariance must have strictly positive diagonal entries", call. = FALSE)
+  }
+  scales <- outer(sqrt(variances), sqrt(variances))
+  if (any(!is.finite(scales)) || any(scales <= 0)) {
+    stop("Covariance scales must be finite and strictly positive", call. = FALSE)
+  }
+  precision <- solve(covariance / scales) / scales
+  if (any(!is.finite(precision))) {
+    stop("Non-finite covariance precision; check covariance scaling", call. = FALSE)
+  }
+  return(precision)
+}
+
 # Work only with small dense endpoint covariances (at most 6 x 6). The
 # stationary covariance comes from rSPDE, and half the same-point precision
 # is removed at each endpoint to give the boundaryless edge contribution.
@@ -104,7 +142,7 @@ spde_endpoint_precision_triplets <- function(lengths, kappa, p, alpha) {
   R00 <- rSPDE:::matern.p.joint(s = 0, t = 0, kappa = kappa, p = p, alpha = alpha)
   n_state <- nrow(R00)
   indices <- seq_len(n_state)
-  R00_inverse <- solve(R00)
+  R00_inverse <- invert_spde_covariance(R00)
   correction <- matrix(0, 2L * n_state, 2L * n_state)
   correction[indices, indices] <- R00_inverse / 2
   correction[n_state + indices, n_state + indices] <- R00_inverse / 2
@@ -125,7 +163,7 @@ spde_endpoint_precision_triplets <- function(lengths, kappa, p, alpha) {
         s = 0, t = l_e, kappa = kappa, p = p, alpha = alpha
       )
       covariance <- rbind(cbind(R00, R0l), cbind(t(R0l), R00))
-      block <- solve(covariance)
+      block <- invert_spde_covariance(covariance)
     }
     block <- block - correction
     # Retain the same upper-triangle convention as the stationary precision
@@ -139,7 +177,7 @@ spde_endpoint_precision_triplets <- function(lengths, kappa, p, alpha) {
 }
 
 # Concatenate block-diagonal triplets by offsetting their local indices.
-# Used both for edge blocks within one component and for the joint precision.
+# Used for edge blocks within each component; rational components stay separate.
 # No sparse matrix is created here, including for the build = FALSE path.
 combine_spde_precision_triplets <- function(blocks) {
   nrow_total <- sum(vapply(blocks, function(block) block$dims[1], numeric(1)))

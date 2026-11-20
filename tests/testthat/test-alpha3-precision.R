@@ -108,3 +108,23 @@ test_that("alpha-three raw assembly validates parameters and graph inputs", {
   g$edge_lengths[1] <- NA_real_
   expect_error(spde_precision(1.4, 0.7, 3, g), "edge_lengths must")
 })
+
+
+test_that("alpha-three public precision supports different derivative units", {
+  g <- alpha3_precision_test_graph(matrix(c(1L, 2L), ncol = 2))
+  # Independent unit-parameter reference; no poorly scaled inverse is needed.
+  R00 <- alpha3_stationary_joint(0, 0, kappa = 1, tau = 1)
+  R01 <- alpha3_stationary_joint(0, 1, kappa = 1, tau = 1)
+  stationary <- rbind(cbind(R00, R01), cbind(t(R01), R00))
+  reference <- solve(stationary) - as.matrix(Matrix::bdiag(solve(R00), solve(R00))) / 2
+  for (kappa in c(1e-4, 1e4)) {
+    # Includes the reported kappa=1e-4, length=10000, tau=1 failure.
+    g$set_manual_edge_lengths(1 / kappa)
+    Q <- spde_precision(kappa, tau = 1, alpha = 3, graph = g)
+    expect_s4_class(Q, "sparseMatrix")
+    expect_true(all(is.finite(Q)))
+    scales <- rep(kappa^(0:2), 2)
+    dimensionless <- as.matrix(Q) * outer(scales, scales) / kappa^5
+    expect_equal(dimensionless, reference, tolerance = 1e-10)
+  }
+})
