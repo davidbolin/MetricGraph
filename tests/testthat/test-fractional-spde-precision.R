@@ -25,7 +25,7 @@ test_that("integer precision matrices and triplets retain their existing formats
   expect_identical(spde_precision(0, 0.8, 1, g), Qalpha1(c(0.8, 0), g))
 })
 
-test_that("fractional precision is raw, scaled, sparse, and reconstructible", {
+test_that("fractional precision returns separate scaled matrices or triplets", {
   g <- fractional_precision_test_graph()
   before <- serialize(list(g$E, g$V, g$PtV, g$C, g$CoB, g$constraints), NULL)
   for (alpha in c(0.75, 1.5, 2.5)) {
@@ -34,18 +34,22 @@ test_that("fractional precision is raw, scaled, sparse, and reconstructible", {
       n0 <- if (q == 0) g$nV else 2L * q * g$nE
       ni <- 2L * ceiling(alpha) * g$nE
       Q <- spde_precision(1.7, 0.8, alpha, g, m = m)
-      expect_s4_class(Q, "sparseMatrix")
-      expect_equal(dim(Q), rep(n0 + m * ni, 2))
-      expect_equal(as.matrix(Q), t(as.matrix(Q)), tolerance = 1e-12)
-      # Components are independent, with no off-diagonal block coupling.
-      expect_equal(Matrix::nnzero(Q[seq_len(n0), -seq_len(n0), drop = FALSE]), 0)
-      expect_equal(spde_precision(1.7, 1.6, alpha, g, m = m), 4 * Q,
-                   tolerance = 1e-12)
       entries <- spde_precision(1.7, 0.8, alpha, g, m = m, build = FALSE)
-      expect_named(entries, c("i", "j", "x", "dims"))
-      rebuilt <- Matrix::sparseMatrix(i = entries$i, j = entries$j,
-                                      x = entries$x, dims = entries$dims)
-      expect_equal(as.matrix(rebuilt), as.matrix(Q), tolerance = 1e-12)
+      scaled <- spde_precision(1.7, 1.6, alpha, g, m = m)
+      expect_type(Q, "list")
+      expect_named(Q, paste0("Q", 0:m))
+      expect_named(entries, names(Q))
+      for (i in seq_along(Q)) {
+        expect_s4_class(Q[[i]], "sparseMatrix")
+        expect_equal(dim(Q[[i]]), rep(if (i == 1L) n0 else ni, 2))
+        expect_equal(as.matrix(Q[[i]]), t(as.matrix(Q[[i]])), tolerance = 1e-12)
+        expect_equal(scaled[[i]], 4 * Q[[i]], tolerance = 1e-12)
+        component <- entries[[i]]
+        expect_named(component, c("i", "j", "x", "dims"))
+        rebuilt <- Matrix::sparseMatrix(i = component$i, j = component$j,
+                                        x = component$x, dims = component$dims)
+        expect_identical(rebuilt, Q[[i]])
+      }
     }
   }
   expect_identical(before, serialize(list(g$E, g$V, g$PtV, g$C, g$CoB, g$constraints), NULL))
@@ -71,8 +75,7 @@ test_that("zeroth fractional blocks agree with the integer spectral component", 
       expected <- integer_raw * tau^2 * kappa^(2 * (alpha - q)) / coefficients$k
     }
     Q <- spde_precision(kappa, tau, alpha, g)
-    ind <- seq_len(nrow(expected))
-    expect_equal(as.matrix(Q[ind, ind]), as.matrix(expected), tolerance = 1e-10)
+    expect_equal(as.matrix(Q$Q0), as.matrix(expected), tolerance = 1e-10)
   }
 })
 
@@ -89,22 +92,46 @@ test_that("fractional computation preserves existing bases and uses raw BC seman
   expect_identical(before, serialize(list(g$E, g$PtV, g$C, g$CoB, g$constraints), NULL))
 })
 
-test_that("fractional option combinations and disconnected graphs are supported", {
+test_that("fractional option combinations retain component matrices", {
   g <- fractional_precision_test_graph()
   for (method in c("chebfun", "brasil", "chebfunLB")) {
     for (interpolation in c("linear", "log", "spline", "logspline")) {
-      expect_s4_class(spde_precision(1.7, 0.8, 1.5, g,
-                                    type_rational_approx = method,
-                                    type_interp = interpolation), "sparseMatrix")
+      Q <- spde_precision(1.7, 0.8, 1.5, g,
+                          type_rational_approx = method, type_interp = interpolation)
+      expect_named(Q, c("Q0", "Q1", "Q2"))
+      for (component in Q) expect_s4_class(component, "sparseMatrix")
     }
   }
-  edges <- list(rbind(c(0, 0), c(1, 0)), rbind(c(3, 0), c(4, 0)))
+})
+
+test_that("disconnected fractional precision keeps components and graphs separate", {
+  # Unequal graph sizes make accidental concatenation or transposition visible.
+  edges <- list(rbind(c(0, 0), c(1, 0)), rbind(c(3, 0), c(4, 0)),
+                rbind(c(4, 0), c(5, 1)))
   components <- suppressWarnings(graph_components$new(edges = edges, verbose = 0))
+  before <- lapply(components$graphs, function(g) {
+    serialize(list(g$E, g$PtV, g$C, g$CoB, g$constraints), NULL)
+  })
   for (alpha in c(0.75, 1.5, 2.5)) {
-    expected <- Matrix::bdiag(lapply(components$graphs, function(component) {
-      spde_precision(1.7, 0.8, alpha, component)
-    }))
-    expect_identical(spde_precision(1.7, 0.8, alpha, components), expected)
+    for (m in c(1L, 3L)) {
+      expected <- lapply(components$graphs, function(g) {
+        spde_precision(1.7, 0.8, alpha, g, m = m)
+      })
+      Q <- spde_precision(1.7, 0.8, alpha, components, m = m)
+      expect_named(Q, paste0("Q", 0:m))
+      for (component in names(Q)) {
+        expect_named(Q[[component]], paste0("G", seq_along(expected)))
+        for (i in seq_along(expected)) {
+          expect_identical(Q[[component]][[i]], expected[[i]][[component]])
+        }
+      }
+    }
+  }
+  after <- lapply(components$graphs, function(g) {
+    serialize(list(g$E, g$PtV, g$C, g$CoB, g$constraints), NULL)
+  })
+  expect_identical(after, before)
+  for (alpha in c(0.75, 1, 1.5, 2, 2.5, 3)) {
     expect_error(spde_precision(1.7, 0.8, alpha, components, build = FALSE),
                  "build = FALSE is not supported")
   }
@@ -194,9 +221,20 @@ test_that("fractional components and build FALSE remain triplets throughout", {
       expect_true(all(is.finite(component$x)))
     }
     entries <- spde_precision(1.7, 0.8, alpha, g, build = FALSE)
-    expect_named(entries, c("i", "j", "x", "dims"))
-    expect_equal(sum(vapply(components, function(x) x$dims[1], numeric(1))),
-                 entries$dims[1])
+    expect_identical(entries, components)
+  }
+})
+
+test_that("fractional matrix output does not assemble a joint block matrix", {
+  g <- fractional_precision_test_graph()
+  local_mocked_bindings(
+    bdiag = function(...) stop("unexpected block-matrix construction"),
+    .package = "Matrix"
+  )
+  for (alpha in c(0.75, 1.5, 2.5)) {
+    Q <- spde_precision(1.7, 0.8, alpha, g)
+    expect_named(Q, c("Q0", "Q1", "Q2"))
+    for (component in Q) expect_s4_class(component, "sparseMatrix")
   }
 })
 
@@ -229,6 +267,33 @@ test_that("BC is not validated or used by raw alpha-three and fractional backend
     expected <- spde_precision(1.7, 0.8, alpha, g)
     for (ignored in list(NULL, NA, Inf, c(0, 1), "unused")) {
       expect_identical(spde_precision(1.7, 0.8, alpha, g, BC = ignored), expected)
+    }
+  }
+})
+
+
+test_that("fractional components retain their values across derivative units", {
+  g <- metric_graph$new(edges = list(rbind(c(0, 0), c(1, 0))), verbose = 0)
+  for (alpha in c(0.75, 1.4, 2.6)) {
+    g$set_manual_edge_lengths(1)
+    reference <- spde_precision(kappa = 1, tau = 0.8, alpha = alpha, graph = g)
+    for (kappa in c(1e-4, 1e4)) {
+      g$set_manual_edge_lengths(1 / kappa)
+      Q <- spde_precision(kappa, tau = 0.8, alpha = alpha, graph = g)
+      expect_named(Q, names(reference))
+      for (i in seq_along(Q)) {
+        expect_true(all(is.finite(Q[[i]])))
+        q <- floor(alpha)
+        if (i == 1L && q == 0L) {
+          dimensionless <- as.matrix(Q[[i]]) / kappa^(2 * alpha)
+        } else {
+          n_state <- if (i == 1L) q else q + 1L
+          scales <- rep(kappa^(0:(n_state - 1L)), 2)
+          dimensionless <- as.matrix(Q[[i]]) * outer(scales, scales) /
+            kappa^(2 * alpha - 1)
+        }
+        expect_equal(dimensionless, as.matrix(reference[[i]]), tolerance = 1e-9)
+      }
     }
   }
 })
