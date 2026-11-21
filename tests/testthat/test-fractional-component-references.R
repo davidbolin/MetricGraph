@@ -69,6 +69,10 @@ fractional_ref_endpoint_block <- function(length, kappa, tau, alpha, pole, resid
       list(rate = a, polynomial = beta / (2 * a * delta^2))
     )
   )
+  fractional_ref_precision_from_terms(length, n, terms)
+}
+
+fractional_ref_precision_from_terms <- function(length, n, terms) {
   joint <- function(distance) {
     outer(0:(n - 1L), 0:(n - 1L), Vectorize(function(i, j) {
       order <- i + j
@@ -200,5 +204,113 @@ test_that("fractional constrained covariance matches independent interval resolv
     actual <- A_joint %*% solve(Q, t(A_joint))
     fractional_ref_expect_lt(fractional_ref_relative_error(actual, expected), 2e-8,
       info = sprintf("alpha=%g, m=%d, joint covariance", args$alpha, args$m))
+  }
+})
+
+
+test_that("disconnected metric_graph keeps original coordinates for every fractional component", {
+  # Two intervals, with interleaved edges A1, B1, A2, B2. The last edge is
+  # reversed, all lengths differ, and PtV is reordered with a repeated vertex.
+  # References below use these explicit fixture coordinates, never
+  # get_components(), production endpoint kernels, or production output order.
+  # Vertex IDs follow first endpoint occurrence, matching the constructor's
+  # canonical numbering without grouping vertices by connected piece.
+  vertices <- rbind(c(0, 0), c(0.8, 0), c(5, 0),
+                    c(6.1, 0), c(2.4, 0), c(6.75, 0))
+  edges <- matrix(c(1L, 2L, 3L, 4L, 2L, 5L, 6L, 4L), ncol = 2, byrow = TRUE)
+  lengths <- c(0.8, 1.1, 1.6, 0.65)
+  observed <- c(6L, 2L, 4L, 1L, 5L, 3L, 2L)
+  g <- metric_graph$new(V = vertices, E = edges, manual_edge_lengths = lengths,
+                        auto_remove_point_edges = FALSE,
+                        check_connected = FALSE, verbose = 0)
+  g$PtV <- observed
+  expect_true(g$is_disconnected())
+  expect_equal(g$E, edges)
+  expect_equal(unname(g$V), vertices)
+  expect_equal(g$edge_lengths, lengths)
+
+  interval_vertices <- list(c(1L, 2L, 5L), c(3L, 4L, 6L))
+  interval_points <- list(c(0, 0.8, 2.4), c(0, 1.1, 1.75))
+  for (case in seq_len(nrow(fractional_ref_cases))) {
+    args <- as.list(fractional_ref_cases[case, ])
+    q <- floor(args$alpha)
+    coeff <- fractional_ref_coefficients(args$alpha, args$m)
+    beta0 <- coeff$k * args$kappa^(2 * (q - args$alpha)) / args$tau^2
+    matrices <- do.call(spde_precision, c(args, list(graph = g)))
+    entries <- do.call(spde_precision, c(args, list(graph = g, build = FALSE)))
+    rebuilt <- lapply(entries, fractional_ref_triplet_matrix)
+    expect_named(matrices, paste0("Q", 0:args$m))
+    expect_named(entries, names(matrices))
+    suppressMessages(g$build_constraints(alpha = args$alpha))
+    templates <- g$constraints[[paste0("alpha", q, q + 1L)]]
+    setup0 <- list(Tc = templates$Tc_joint$Tc1, A = templates$A$A1)
+    setupi <- list(Tc = templates$Tc_joint$Tc2, A = templates$A$A2)
+    expected_joint <- matrix(0, length(observed), length(observed))
+
+    for (i in 0:args$m) {
+      component <- paste0("Q", i)
+      info <- sprintf("disconnected alpha=%g, m=%d, %s", args$alpha, args$m, component)
+      if (i == 0L && q == 0L) {
+        # Discrete vertex white noise is ordered by the original vertices.
+        variance <- coeff$k / (args$tau^2 * args$kappa^(2 * args$alpha))
+        expected_raw <- diag(nrow(vertices)) / variance
+        expected_cov <- outer(observed, observed, "==") * variance
+      } else {
+        n_state <- if (i == 0L) q else q + 1L
+        expected_raw <- matrix(0, 2L * n_state * nrow(edges),
+                               2L * n_state * nrow(edges))
+        for (edge in seq_along(lengths)) {
+          if (i == 0L) {
+            # Integer Green kernel for beta0 * (kappa^2 - d^2/ds^2)^(-q).
+            polynomial <- if (q == 1L) beta0 / (2 * args$kappa) else {
+              beta0 * c(1, args$kappa) / (4 * args$kappa^3)
+            }
+            block <- fractional_ref_precision_from_terms(lengths[edge], n_state,
+              list(list(rate = args$kappa, polynomial = polynomial)))
+          } else {
+            block <- fractional_ref_endpoint_block(lengths[edge], args$kappa,
+              args$tau, args$alpha, coeff$p[i], coeff$r[i])
+          }
+          ids <- 2L * n_state * (edge - 1L) + seq_len(2L * n_state)
+          expected_raw[ids, ids] <- block
+        }
+        # Neumann kernels on the two intervals, placed directly in the
+        # original full graph's PtV order. Cross-piece covariance is zero.
+        expected_cov <- matrix(0, length(observed), length(observed))
+        for (piece in seq_along(interval_vertices)) {
+          ids <- which(observed %in% interval_vertices[[piece]])
+          points <- interval_points[[piece]][match(observed[ids], interval_vertices[[piece]])]
+          L <- tail(interval_points[[piece]], 1L)
+          expected_cov[ids, ids] <- if (i == 0L) {
+            beta0 * fractional_ref_neumann_kernel(points, L, args$kappa, power = q)
+          } else {
+            fractional_ref_interval_component(points, L, args$kappa, args$tau,
+              args$alpha, coeff$p[i], coeff$r[i])
+          }
+        }
+      }
+      setup <- if (i == 0L) setup0 else setupi
+      for (output in list(matrices, rebuilt)) {
+        fractional_ref_expect_lt(fractional_ref_relative_error(
+          as.matrix(output[[component]]), expected_raw), 2e-8, info = paste("raw", info))
+        actual_cov <- fractional_ref_constrained_covariance(output[[component]], setup)
+        fractional_ref_expect_lt(fractional_ref_relative_error(actual_cov, expected_cov),
+                                 2e-8, info = paste("constrained", info))
+      }
+      expected_joint <- expected_joint + expected_cov
+    }
+    setups <- c(list(setup0), rep(list(setupi), args$m))
+    Tc <- as.matrix(Matrix::bdiag(lapply(setups, function(s) s$Tc)))
+    A <- do.call(cbind, lapply(setups, function(s) as.matrix(s$A)))
+    for (output in list(matrices, rebuilt)) {
+      raw <- as.matrix(Matrix::bdiag(output))
+      actual_joint <- A %*% solve(Tc %*% raw %*% t(Tc), t(A))
+      fractional_ref_expect_lt(fractional_ref_relative_error(actual_joint, expected_joint),
+                               2e-8, info = sprintf("joint disconnected alpha=%g, m=%d",
+                                                    args$alpha, args$m))
+    }
+    expect_equal(g$E, edges)
+    expect_identical(g$PtV, observed)
+    expect_equal(g$edge_lengths, lengths)
   }
 })
