@@ -2,7 +2,7 @@
 
 Computes a sparse precision matrix for a Whittle-Matérn field. Order
 three returns an unconstrained edge-endpoint precision. Fractional
-orders return the unconstrained joint precision of the
+orders return a list of unconstrained precisions for the
 rational-approximation components.
 
 ## Usage
@@ -37,7 +37,8 @@ spde_precision(
 
 - graph:
 
-  A `metric_graph` object.
+  A connected or disconnected `metric_graph` object. The deprecated
+  `graph_components` class is retained for compatibility.
 
 - BC:
 
@@ -50,10 +51,12 @@ spde_precision(
 
 - build:
 
-  If `TRUE`, the precision matrix is returned. Otherwise a list with
-  entries `i`, `j`, `x`, and `dims` is returned. As for the integer
-  cases, `build = FALSE` is not supported for `graph_components`
-  objects.
+  If `TRUE`, sparse precision matrices are returned; otherwise triplet
+  lists with entries `i`, `j`, `x`, and `dims` are returned. For
+  fractional alpha, either representation is returned separately for
+  each rational component, including on a disconnected `metric_graph`.
+  `build = FALSE` is not supported for the deprecated `graph_components`
+  class.
 
 - m:
 
@@ -74,24 +77,41 @@ spde_precision(
 
 ## Value
 
-Precision matrix or triplet list. The existing alpha-one and alpha-two
-representations are unchanged.
+For integer alpha, a sparse precision matrix or a triplet list,
+retaining the existing representation. For fractional alpha, a named
+list of component matrices or triplet lists. For fractional
+`graph_components`, a named list of components, each containing a named
+list of graph matrices.
 
 ## Details
 
-For fractional alpha, the component order is `Q0`, `Q1`, ..., `Qm`. The
-zeroth component has `graph$nV` vertex coordinates when alpha is below
-one, and `2 * floor(alpha) * graph$nE` endpoint coordinates otherwise.
-Each remaining component has `2 * ceiling(alpha) * graph$nE`
-coordinates. Endpoint coordinates follow edge order, with the process
-and its successive derivatives at the start followed by those at the end
-of each edge. Parameter scaling and the boundaryless edge correction are
-included, but no constraint basis or observation map is applied. For
-alpha 3, the result is a single `6 * graph$nE` square raw matrix,
-ordered as process value, first derivative, and second derivative at
-each edge start and then end. No rational approximation is used for
-alpha 3. The returned raw matrix need not be positive definite before
-the graph constraints are imposed. Neither observations nor `graph$PtV`
-are required, and `C`, `CoB`, and the constraint cache are left
-unchanged. For `graph_components`, entire joint matrices are assembled
-in component order, as in the integer cases.
+For fractional alpha, the result is a named list `Q0`, `Q1`, ..., `Qm`,
+containing one sparse matrix (`build = TRUE`) or one triplet list
+(`build = FALSE`) per rational component. This structure is the same for
+connected and disconnected `metric_graph` objects: each `Qi` covers the
+entire graph in its original vertex or edge-endpoint coordinate order.
+Disconnected pieces are not extracted or reordered with
+`get_components()`. To assemble the joint raw precision, use
+`Matrix::bdiag(spde_precision(..., build = TRUE))`. Its coordinates
+match constraint templates built on that same full graph, as in the
+alpha-two workflow; disconnected graphs require no additional coordinate
+permutation. The zeroth component has `graph$nV` vertex coordinates when
+alpha is below one, and `2 * floor(alpha) * graph$nE` endpoint
+coordinates otherwise. Each remaining component has
+`2 * ceiling(alpha) * graph$nE` coordinates. Endpoint coordinates follow
+edge order, with the process and its successive derivatives at the start
+followed by those at the end of each edge. Parameter scaling and the
+boundaryless edge correction are included, but no constraint basis or
+observation map is applied. For alpha 3, the result is a single
+`6 * graph$nE` square raw matrix, ordered as process value, first
+derivative, and second derivative at each edge start and then end. No
+rational approximation is used for alpha 3. The returned raw matrix need
+not be positive definite before the graph constraints are imposed.
+Neither observations nor `graph$PtV` are required, and `C`, `CoB`, and
+the constraint cache are left unchanged. For compatibility with the
+deprecated `graph_components` class only, fractional output has an
+additional graph level: each `Qi` is a named list `G1`, `G2`, ..., in
+`graph$graphs` order, containing one sparse matrix per graph. This
+nested structure does not apply to a disconnected `metric_graph`. The
+deprecated path performs no block-diagonal assembly across graphs or
+rational components.

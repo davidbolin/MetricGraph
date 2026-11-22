@@ -94,7 +94,7 @@ summary(fit_alpha1)
 #> Number of function calls by 'optim' = 245
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  7.29739 secs
+#> Time used to:     fit the model =  9.85257 secs
 ```
 
 Now, we will fit a Whittle-Matérn field with `alpha = 2`:
@@ -141,7 +141,7 @@ summary(fit_alpha2)
 #> Number of function calls by 'optim' = 227
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  8.14025 secs
+#> Time used to:     fit the model =  10.14498 secs
 ```
 
 We will now fit Whittle-Matérn fields with `alpha = 1` and `alpha=2`,
@@ -193,7 +193,7 @@ summary(fit_alpha1_bc)
 #> Number of function calls by 'optim' = 193
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  5.71494 secs
+#> Time used to:     fit the model =  7.94416 secs
 ```
 
 and
@@ -232,7 +232,7 @@ summary(fit_alpha2_bc)
 #> Number of function calls by 'optim' = 257
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  9.23328 secs
+#> Time used to:     fit the model =  11.8666 secs
 ```
 
 Similarly, let us now fit a Matérn Gaussian model based on the graph
@@ -287,7 +287,7 @@ summary(fit_GL1)
 #> Number of function calls by 'optim' = 143
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  0.70649 secs
+#> Time used to:     fit the model =  0.88961 secs
 ```
 
 and
@@ -326,7 +326,7 @@ summary(fit_GL2)
 #> Number of function calls by 'optim' = 181
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  0.95854 secs
+#> Time used to:     fit the model =  1.2408 secs
 ```
 
 Observe that the default optimizer (L-BFGS-B) failed to converge, thus
@@ -380,7 +380,7 @@ summary(fit_isoexp)
 #> Number of function calls by 'optim' = 299
 #> Optimization method used in 'optim' = Nelder-Mead
 #> 
-#> Time used to:     fit the model =  1.455 secs
+#> Time used to:     fit the model =  3.31141 secs
 ```
 
 Observe the warning, message. This message tells us that we did not
