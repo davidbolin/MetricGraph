@@ -23,7 +23,8 @@ spde_precision(
 
 \item{alpha}{Smoothness parameter, strictly greater than 0.5 and at most 3.}
 
-\item{graph}{A \code{metric_graph} object.}
+\item{graph}{A connected or disconnected \code{metric_graph} object. The
+deprecated \code{graph_components} class is retained for compatibility.}
 
 \item{BC}{Boundary-condition code, one of 0, 1, 2, or 3, passed unchanged
 to the alpha-one and alpha-two backends. \code{BC = 1} adds stationary endpoint
@@ -32,9 +33,11 @@ their backend-specific interpretation. Ignored for alpha 3 and fractional
 alpha: these return boundaryless raw precisions, with constraints imposed
 separately.}
 
-\item{build}{If \code{TRUE}, the precision matrix is returned. Otherwise a list
-with entries \code{i}, \code{j}, \code{x}, and \code{dims} is returned. As for the integer
-cases, \code{build = FALSE} is not supported for \code{graph_components} objects.}
+\item{build}{If \code{TRUE}, sparse precision matrices are returned; otherwise
+triplet lists with entries \code{i}, \code{j}, \code{x}, and \code{dims} are returned. For
+fractional alpha, either representation is returned separately for each
+rational component, including on a disconnected \code{metric_graph}.
+\code{build = FALSE} is not supported for the deprecated \code{graph_components} class.}
 
 \item{m}{Rational approximation order for fractional alpha. A positive
 integer; ignored for alpha 1, 2, and 3. Defaults to 2.}
@@ -48,16 +51,27 @@ one of \code{"linear"}, \code{"log"}, \code{"spline"}, and \code{"logspline"}. U
 for fractional alpha. Defaults to \code{"spline"}.}
 }
 \value{
-Precision matrix or triplet list. The existing alpha-one and
-alpha-two representations are unchanged.
+For integer alpha, a sparse precision matrix or a triplet list,
+retaining the existing representation. For fractional alpha, a named list
+of component matrices or triplet lists. For fractional \code{graph_components},
+a named list of components, each containing a named list of graph matrices.
 }
 \description{
 Computes a sparse precision matrix for a Whittle-Matérn field. Order three
 returns an unconstrained edge-endpoint precision. Fractional orders return
-the unconstrained joint precision of the rational-approximation components.
+a list of unconstrained precisions for the rational-approximation components.
 }
 \details{
-For fractional alpha, the component order is \code{Q0}, \code{Q1}, ..., \code{Qm}.
+For fractional alpha, the result is a named list \code{Q0}, \code{Q1}, ...,
+\code{Qm}, containing one sparse matrix (\code{build = TRUE}) or one triplet list
+(\code{build = FALSE}) per rational component. This structure is the same for
+connected and disconnected \code{metric_graph} objects: each \code{Qi} covers the
+entire graph in its original vertex or edge-endpoint coordinate order.
+Disconnected pieces are not extracted or reordered with \code{get_components()}.
+To assemble the joint raw precision, use
+\code{Matrix::bdiag(spde_precision(..., build = TRUE))}. Its coordinates match
+constraint templates built on that same full graph, as in the alpha-two
+workflow; disconnected graphs require no additional coordinate permutation.
 The zeroth component has \code{graph$nV} vertex coordinates when alpha is below
 one, and \code{2 * floor(alpha) * graph$nE} endpoint coordinates otherwise.
 Each remaining component has \code{2 * ceiling(alpha) * graph$nE} coordinates.
@@ -70,6 +84,10 @@ first derivative, and second derivative at each edge start and then end.
 No rational approximation is used for alpha 3. The returned raw matrix
 need not be positive definite before the graph constraints are imposed.
 Neither observations nor \code{graph$PtV} are required, and \code{C}, \code{CoB}, and the
-constraint cache are left unchanged. For \code{graph_components}, entire joint
-matrices are assembled in component order, as in the integer cases.
+constraint cache are left unchanged. For compatibility with the deprecated
+\code{graph_components} class only, fractional output has an additional graph
+level: each \code{Qi} is a named list \code{G1}, \code{G2}, ..., in \code{graph$graphs} order,
+containing one sparse matrix per graph. This nested structure does not
+apply to a disconnected \code{metric_graph}. The deprecated path performs no
+block-diagonal assembly across graphs or rational components.
 }

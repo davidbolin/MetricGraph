@@ -112,17 +112,16 @@ test_that("template pairs reconstruct joint covariance for different rational or
         joint <- Matrix::bdiag(c(list(T1), rep(list(T2), m)))
         A <- cbind(A1, do.call(cbind, rep(list(A2), m)))
         raw <- spde_precision(1.7, 0.8, alpha, g, BC = 0, m = m)
-        expect_equal(ncol(joint), nrow(raw))
+        expect_equal(ncol(joint), sum(vapply(raw, nrow, integer(1))))
+        raw_joint <- Matrix::bdiag(raw)
         expect_equal(ncol(A), nrow(joint))
-        reduced <- joint %*% raw %*% t(joint)
+        reduced <- joint %*% raw_joint %*% t(joint)
         Sigma <- A %*% solve(reduced, t(A))
         # Independent components contribute additive observed covariances.
-        first <- seq_len(ncol(T1))
-        Q0 <- T1 %*% raw[first, first, drop = FALSE] %*% t(T1)
+        Q0 <- T1 %*% raw$Q0 %*% t(T1)
         sum_cov <- A1 %*% solve(Q0, t(A1))
         for (i in seq_len(m)) {
-          ids <- ncol(T1) + (i - 1L) * ncol(T2) + seq_len(ncol(T2))
-          Qi <- T2 %*% raw[ids, ids, drop = FALSE] %*% t(T2)
+          Qi <- T2 %*% raw[[i + 1L]] %*% t(T2)
           sum_cov <- sum_cov + A2 %*% solve(Qi, t(A2))
         }
         expect_equal(as.matrix(Sigma), as.matrix(sum_cov), tolerance = 1e-8)
